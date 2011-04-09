@@ -12,7 +12,6 @@ trait Fun {
 }
 
 
-
 case object ZeroFun extends Fun {
   def apply(x: Float, y: Float, sampleSize: Float) = 0f
 }
@@ -143,8 +142,18 @@ case class InterpolateFun(select: Fun, a: Fun, b: Fun) extends Fun {
 
 
 
-case class NoiseFun extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = SimplexNoise.noise(x, y).toFloat
+case class NoiseFun(inputScale: Fun = OneFun,
+                    resultScale: Fun = OneFun,
+                    resultAdd: Fun = ZeroFun,
+                    offsetX: Fun = ZeroFun,
+                    offsetY: Fun = ZeroFun) extends Fun {
+  def apply(x: Float, y: Float, sampleSize: Float) = {
+    val s = inputScale(x, y, sampleSize)
+    (SimplexNoise.noise(s * (x + offsetX(x, y, sampleSize)),
+                        s * (y + offsetY(x, y, sampleSize))) *
+        resultScale(x, y, sampleSize) +
+        resultAdd(x, y, sampleSize)).toFloat
+  }
 }
 
 
