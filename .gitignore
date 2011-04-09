@@ -3,3 +3,9 @@
 *.iml
 out/
 target/
+lib_managed/
+project/boot/
+project/plugins/target/
+project/plugins/project/build.properties
+
+
