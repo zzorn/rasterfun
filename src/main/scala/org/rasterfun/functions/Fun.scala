@@ -1,123 +1,266 @@
 package org.rasterfun.functions
 
 import org.rasterfun.util.SimplexNoise
+import java.util.HashSet
+import xml.Elem
 
 /**
  * Calculates a value at given coordinates.
  */
-trait Fun {
+abstract class Fun(val parameterNames: List[Symbol], val constantNames: List[Symbol] = Nil) {
+  private var parameters: Map[Symbol, Fun] = Map()
+  private var constants: Map[Symbol, AnyRef] = Map()
+
+  def setParameter(parameterName: Symbol, fun: Fun) {
+    require(parameterNames contains parameterName)
+    parameters += (parameterName -> fun)
+  }
+
+  def setConst(name: Symbol, value: AnyRef) {
+    constants += (name -> value)
+  }
+
+  protected def get(parameter: Symbol): Fun = get(parameter, ZeroFun)
+  protected def get(parameter: Symbol, default: Fun): Fun = parameters.getOrElse(parameter, default)
 
   def apply(x: Float, y: Float, sampleSize: Float): Float
 
+  final def getFuncs(funcs: HashSet[Fun]) {
+    if (!funcs.contains(this)) {
+      funcs.add(this)
+      parameters.values.foreach{ _.getFuncs(funcs)}
+    }
+  }
+
+  def id: String = "" + hashCode
+  def kind: String = getClass.getSimpleName
+
+  def getParam(paramName: String): Fun = {
+    getClass.getMethods.find(_.getName == paramName).get.invoke(this).asInstanceOf[Fun]
+  }
+
+  def getConst(name: String): AnyRef = {
+    getClass.getMethods.find(_.getName == name).get.invoke(this).asInstanceOf[AnyRef]
+  }
+
+  def setParam(paramName: String, fun: Fun) {
+    getClass.getMethods.find(_.getName == paramName + "_$eq").get.invoke(this, fun.asInstanceOf[AnyRef])
+  }
+
+  def toXml(): String = {
+    val sb = new StringBuilder()
+    toXml(sb)
+    sb.toString
+  }
+
+  def toXml(sb: StringBuilder) {
+    sb.append("  <fun id=\"")
+      .append(id)
+      .append("\" type=\"")
+      .append(kind)
+      .append("\"")
+
+    if (parameterNames.isEmpty && constantNames.isEmpty) {
+      sb.append("/>\n")
+    }
+    else {
+      sb.append(">\n")
+      constantNames foreach { name =>
+        sb.append("    <const ")
+          .append("name=\"").append(name.name).append("\" ")
+          .append("value=\"").append(getConst(name.name).toString.replace("\"", "'")).append("\"")
+          .append("/>\n")
+      }
+
+      parameterNames.foreach{ name =>
+        sb.append("    <param ")
+          .append("name=\"").append(name.name).append("\" ")
+          .append("ref=\"").append(getParam(name.name).id).append("\"")
+          .append("/>\n")
+      }
+      sb.append("  </fun>\n")
+    }
+
+  }
 }
 
 
-case object ZeroFun extends Fun {
+case object ZeroFun extends Fun(List()) {
   def apply(x: Float, y: Float, sampleSize: Float) = 0f
 }
 
-case object OneFun extends Fun {
+case object OneFun extends Fun(List()) {
   def apply(x: Float, y: Float, sampleSize: Float) = 1f
 }
 
-case class ConstFun(const: Float) extends Fun {
+// ConstFun is special case as it takes a constant as parameter.
+case class ConstFun(const: Float) extends Fun(List(), List('const)) {
   def apply(x: Float, y: Float, sampleSize: Float) = const
 }
 
 
-case class AddFun(a: Fun, b: Fun) extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = a(x, y, sampleSize) + b(x, y, sampleSize)
+case class AddFun(a: Fun, b: Fun) extends Fun(List('a, 'b)) {
+  setParameter('a, a)
+  setParameter('b, b)
+
+  def apply(x: Float, y: Float, sample: Float) = get('a)(x, y, sample) + get('b)(x, y, sample)
 }
 
-case class SubFun(a: Fun, b: Fun) extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = a(x, y, sampleSize) - b(x, y, sampleSize)
+case class SubFun(a: Fun, b: Fun) extends Fun(List('a, 'b)) {
+  setParameter('a, a)
+  setParameter('b, b)
+
+  def apply(x: Float, y: Float, sample: Float) = a(x, y, sample) - b(x, y, sample)
 }
 
-case class MulFun(a: Fun, b: Fun) extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = a(x, y, sampleSize) * b(x, y, sampleSize)
+case class MulFun(a: Fun, b: Fun) extends Fun(List('a, 'b)) {
+  setParameter('a, a)
+  setParameter('b, b)
+
+  def apply(x: Float, y: Float, sample: Float) = a(x, y, sample) * b(x, y, sample)
 }
 
-case class DivFun(a: Fun, b: Fun, divZeroValue: Float) extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = {
-    val dividend = b(x, y, sampleSize)
+case class DivFun(a: Fun, b: Fun, divZeroValue: Float) extends Fun(List('a, 'b, 'divZeroValue)) {
+  setParameter('a, a)
+  setParameter('b, b)
+  setParameter('divZeroValue, divZeroValue)
+
+  def apply(x: Float, y: Float, sample: Float) = {
+    val dividend = b(x, y, sample)
     if (dividend == 0) divZeroValue
-    else a(x, y, sampleSize) / dividend
+    else a(x, y, sample) / dividend
   }
 }
 
-case class ModFun(a: Fun, b: Fun, divZeroValue: Float) extends Fun {
-  def apply(x: Float, y: Float, sampleSize: Float) = {
-    val dividend = b(x, y, sampleSize)
+case class ModFun(a: Fun, b: Fun, divZeroValue: Float) extends Fun(List('a, 'b, 'divZeroValue)) {
+  setParameter('a, a)
+  setParameter('b, b)
+  setParameter('divZeroValue, divZeroValue)
+
+  def apply(x: Float, y: Float, sample: Float) = {
+    val dividend = b(x, y, sample)
     if (dividend == 0) divZeroValue
-    else a(x, y, sampleSize) % dividend
+    else a(x, y, sample) % dividend
   }
+
 }
 
 
 
-case class SinFun(a: Fun) extends Fun {
+case class SinFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.sin(a(x, y, sampleSize)).floatValue
+
 }
 
-case class CosFun(a: Fun) extends Fun {
+case class CosFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.cos(a(x, y, sampleSize)).floatValue
+
 }
 
-case class TanFun(a: Fun) extends Fun {
+case class TanFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.tan(a(x, y, sampleSize)).floatValue
+
 }
 
 
-case class LogFun(a: Fun) extends Fun {
+case class LogFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.log(a(x, y, sampleSize)).floatValue
+
 }
 
-case class PowFun(base: Fun, exp: Fun) extends Fun {
+case class PowFun(base: Fun, exp: Fun) extends Fun(List('base, 'exp)) {
+  setParameter('base, base)
+  setParameter('exp, exp)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.pow(base(x, y, sampleSize), exp(x, y, sampleSize)).floatValue
+
 }
 
 
-case class CeilFun(a: Fun) extends Fun {
+case class CeilFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.ceil(a(x, y, sampleSize)).floatValue
+
 }
 
-case class FloorFun(a: Fun) extends Fun {
+case class FloorFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.floor(a(x, y, sampleSize)).floatValue
+
 }
 
 
-case class MinFun(a: Fun, b: Fun) extends Fun {
+case class MinFun(a: Fun, b: Fun) extends Fun(List('a, 'b)) {
+  setParameter('a, a)
+  setParameter('b, b)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.min(a(x, y, sampleSize), b(x, y, sampleSize))
+
 }
 
-case class MaxFun(a: Fun, b: Fun) extends Fun {
+case class MaxFun(a: Fun, b: Fun) extends Fun(List('a, 'b)) {
+  setParameter('a, a)
+  setParameter('b, b)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.max(a(x, y, sampleSize), b(x, y, sampleSize))
+
 }
 
-case class AbsFun(a: Fun) extends Fun {
+case class AbsFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.abs(a(x, y, sampleSize))
 }
-case class SigFun(a: Fun) extends Fun {
+
+case class SigFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = math.signum(a(x, y, sampleSize))
+
 }
 
-case class PositiveFun(a: Fun) extends Fun {
+case class PositiveFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = if (a(x, y, sampleSize) > 0) 1f else 0f
+
 }
 
-case class NegFun(a: Fun) extends Fun {
+case class NegFun(a: Fun) extends Fun(List('a)) {
+  setParameter('a, a)
+
   def apply(x: Float, y: Float, sampleSize: Float) = -a(x, y, sampleSize)
+
 }
 
 
-case class SelectFun(select: Fun, a: Fun, b: Fun) extends Fun {
+case class SelectFun(select: Fun, a: Fun, b: Fun) extends Fun(List('select, 'a, 'b)) {
+  setParameter('select, select)
+  setParameter('a, a)
+  setParameter('b, b)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     if (select(x, y, sampleSize) <= 0) a(x, y, sampleSize)
     else b(x, y, sampleSize)
   }
+
 }
 
-case class MixFun(select: Fun, a: Fun, b: Fun) extends Fun {
+case class MixFun(select: Fun, a: Fun, b: Fun) extends Fun(List('select, 'a, 'b)) {
+  setParameter('select, select)
+  setParameter('a, a)
+  setParameter('b, b)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val tv = select(x, y, sampleSize)
     if (tv <= 0) a(x, y, sampleSize)
@@ -129,15 +272,21 @@ case class MixFun(select: Fun, a: Fun, b: Fun) extends Fun {
     }
 
   }
+
 }
 
-case class InterpolateFun(select: Fun, a: Fun, b: Fun) extends Fun {
+case class InterpolateFun(select: Fun, a: Fun, b: Fun) extends Fun(List('select, 'a, 'b)) {
+  setParameter('select, select)
+  setParameter('a, a)
+  setParameter('b, b)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val tv = select(x, y, sampleSize)
     val av = a(x, y, sampleSize)
     val bv = b(x, y, sampleSize)
     av + tv * (bv - av)
   }
+
 }
 
 
@@ -146,7 +295,13 @@ case class NoiseFun(inputScale: Fun = OneFun,
                     resultScale: Fun = OneFun,
                     resultAdd: Fun = ZeroFun,
                     offsetX: Fun = ZeroFun,
-                    offsetY: Fun = ZeroFun) extends Fun {
+                    offsetY: Fun = ZeroFun) extends Fun(List('inputScale, 'resultScale, 'resultAdd, 'offsetX, 'offsetY)) {
+  setParameter('inputScale, inputScale)
+  setParameter('resultScale, resultScale)
+  setParameter('resultAdd, resultAdd)
+  setParameter('offsetX, offsetX)
+  setParameter('offsetY, offsetY)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val s = inputScale(x, y, sampleSize)
     (SimplexNoise.noise(s * (x + offsetX(x, y, sampleSize)),
@@ -154,25 +309,38 @@ case class NoiseFun(inputScale: Fun = OneFun,
         resultScale(x, y, sampleSize) +
         resultAdd(x, y, sampleSize)).toFloat
   }
+
 }
 
 
-case class ScaleFun(source: Fun, scale: Fun) extends Fun {
+case class ScaleFun(source: Fun, scale: Fun) extends Fun(List('source, 'scale)) {
+  setParameter('source, source)
+  setParameter('scale, scale)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val s = scale(x, y, sampleSize)
     source(x * s, y * x, sampleSize * s)
   }
+
 }
 
 
-case class OffsetFun(source: Fun, xOffs: Fun, yOffs: Fun) extends Fun {
+case class OffsetFun(source: Fun, xOffs: Fun, yOffs: Fun) extends Fun(List('source, 'xOffs, 'yOffs)) {
+  setParameter('source, source)
+  setParameter('xOffs, xOffs)
+  setParameter('yOffs, yOffs)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     source(x + xOffs(x, y, sampleSize),
            y + yOffs(x, y, sampleSize), sampleSize)
   }
+
 }
 
-case class RotFun(source: Fun, angle: Fun) extends Fun {
+case class RotFun(source: Fun, angle: Fun) extends Fun(List('source, 'angle)) {
+  setParameter('source, source)
+  setParameter('angle, angle)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val a = angle(x, y, sampleSize)
     val cosA = math.cos(a).toFloat
@@ -181,10 +349,17 @@ case class RotFun(source: Fun, angle: Fun) extends Fun {
            x * sinA + y * cosA,
            sampleSize)
   }
+
 }
 
 
-case class CopyFun(source: Fun, scale: Fun, angle: Fun, xPos: Fun, yPos: Fun) extends Fun {
+case class CopyFun(source: Fun, scale: Fun, angle: Fun, xPos: Fun, yPos: Fun) extends Fun(List('source, 'scale, 'angle, 'xPos, 'yPos)) {
+  setParameter('source, source)
+  setParameter('scale, scale)
+  setParameter('angle, angle)
+  setParameter('xPos, xPos)
+  setParameter('yPos, yPos)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val a = angle(x, y, sampleSize)
     val cosA = math.cos(a).toFloat
@@ -196,10 +371,15 @@ case class CopyFun(source: Fun, scale: Fun, angle: Fun, xPos: Fun, yPos: Fun) ex
            (sx * sinA + sy * cosA) * s,
            sampleSize * s)
   }
+
 }
 
 
-case class HueFun(red: Fun, green: Fun, blue: Fun) extends Fun {
+case class HueFun(red: Fun, green: Fun, blue: Fun) extends Fun(List('red, 'green, 'blue)) {
+  setParameter('red, red)
+  setParameter('green, green)
+  setParameter('blue, blue)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     def clampZeroOne(v: Float): Float = (if (v < 0) 0 else if (v > 1) 1 else v)
 
@@ -224,9 +404,14 @@ case class HueFun(red: Fun, green: Fun, blue: Fun) extends Fun {
       h / 6f
     }
   }
+
 }
 
-case class SatFun(red: Fun, green: Fun, blue: Fun) extends Fun {
+case class SatFun(red: Fun, green: Fun, blue: Fun) extends Fun(List('red, 'green, 'blue)) {
+  setParameter('red, red)
+  setParameter('green, green)
+  setParameter('blue, blue)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     def clampZeroOne(v: Float): Float = (if (v < 0) 0 else if (v > 1) 1 else v)
 
@@ -248,9 +433,14 @@ case class SatFun(red: Fun, green: Fun, blue: Fun) extends Fun {
       if (l > 0.5f) d / (2f - max - min) else d / (max + min)
     }
   }
+
 }
 
-case class LightnessFun(red: Fun, green: Fun, blue: Fun) extends Fun {
+case class LightnessFun(red: Fun, green: Fun, blue: Fun) extends Fun(List('red, 'green, 'blue)) {
+  setParameter('red, red)
+  setParameter('green, green)
+  setParameter('blue, blue)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     def clampZeroOne(v: Float): Float = (if (v < 0) 0 else if (v > 1) 1 else v)
 
@@ -263,33 +453,49 @@ case class LightnessFun(red: Fun, green: Fun, blue: Fun) extends Fun {
 
     (max + min) / 2f
   }
+
 }
 
-case class RedFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun {
+case class RedFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun(List('hue, 'saturation, 'lightness)) {
+  setParameter('hue, hue)
+  setParameter('saturation, saturation)
+  setParameter('lightness, lightness)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val h = hue(x, y, sampleSize)
     val s = saturation(x, y, sampleSize)
     val l = lightness(x, y, sampleSize)
     ColorComponentUtil.getColorComponent(h, s, l, 1f / 3f)
   }
+
 }
 
-case class GreenFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun {
+case class GreenFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun(List('hue, 'saturation, 'lightness)) {
+  setParameter('hue, hue)
+  setParameter('saturation, saturation)
+  setParameter('lightness, lightness)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val h = hue(x, y, sampleSize)
     val s = saturation(x, y, sampleSize)
     val l = lightness(x, y, sampleSize)
     ColorComponentUtil.getColorComponent(h, s, l, 0f)
   }
+
 }
 
-case class BlueFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun {
+case class BlueFun(hue: Fun, saturation: Fun, lightness: Fun) extends Fun(List('hue, 'saturation, 'lightness)) {
+  setParameter('hue, hue)
+  setParameter('saturation, saturation)
+  setParameter('lightness, lightness)
+
   def apply(x: Float, y: Float, sampleSize: Float) = {
     val h = hue(x, y, sampleSize)
     val s = saturation(x, y, sampleSize)
     val l = lightness(x, y, sampleSize)
     ColorComponentUtil.getColorComponent(h, s, l, -1f / 3f)
   }
+
 }
 
 object ColorComponentUtil {
