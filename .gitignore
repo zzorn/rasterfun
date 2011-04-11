@@ -7,5 +7,6 @@ lib_managed/
 project/boot/
 project/plugins/target/
 project/plugins/project/build.properties
+project/plugins/src_managed/
 
 
