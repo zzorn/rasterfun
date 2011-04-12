@@ -7,9 +7,9 @@ import org.rasterfun.functions.Fun
  */
 class BuiltinComponent(val id: Symbol, source: String) extends Component {
 
-  var config = Nil
-  var outputs = Nil
-  var inputs = Nil
+  var config: List[ComponentConfig] = Nil
+  var outputs: List[ComponentOutput] = Nil
+  var inputs: List[ComponentInput] = Nil
 
   def toXml: String = {
     "<component id=\""+id.name+"\">" +
