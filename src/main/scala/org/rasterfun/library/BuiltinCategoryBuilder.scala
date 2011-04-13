@@ -1,6 +1,6 @@
 package org.rasterfun.library
 
-import org.rasterfun.component.BuiltinComponent
+import org.rasterfun.components.{Noise, Solid, Blend}
 
 /**
  * 
@@ -9,18 +9,11 @@ import org.rasterfun.component.BuiltinComponent
 object BuiltinCategoryBuilder {
 
   def createBuiltins: Category = {
-    val cat = new Category()
+    val cat = new Category('Simple)
 
-    def add(id: Symbol, source: String) {
-      cat.addComponent(new BuiltinComponent(id, source))
-    }
-
-    add('add, "$a ")
-
-
-
-
-
+    cat.addComponent(new Blend())
+    cat.addComponent(new Solid())
+    cat.addComponent(new Noise())
 
     cat
   }

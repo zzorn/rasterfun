@@ -1,63 +1,111 @@
 package org.rasterfun.component
 
+import simplex3d.math._
+import simplex3d.math.float._
+import simplex3d.math.float.functions._
+import org.scalaprops.{Property, Bean}
+import org.rasterfun.util.ColorUtils
+
 /**
  * 
  */
-trait Component {
+// TODO: Cache a value caclulated for a specific coordinate,
+//       invalidate cached value when own or any input components properties change
+// TODO: Some effects may need to know e.g. max and min intensity of an image.
+//       To get that, there may need to be a pre-compute step that computes all
+//       pixels of the current tree at some lowish resolution.
+// TODO: For wrap around etc, we could specify that original input x and y range from 0 to 1.
+trait Component extends Bean {
 
-  def id: Symbol
+  private var _inputNames: List[Symbol] = Nil
 
-  def inputs: List[ComponentInput]
-  def outputs: List[ComponentOutput]
-  def config: List[ComponentConfig]
+  def name: String = beanName.name.replace("Component", "")
 
-  def toXml: String
+  def inputNames: List[Symbol] = _inputNames
 
-  def generateCode: String
-
-  /** Creates a copy of this component without any inputs or outputs assigned. */
-  def copy(nameContext: NameContext): Component
-}
-
-trait ComponentPart {
-  def parent: Component
-  def id: Symbol
-  def copy(parent: Component): ComponentPart
-}
-
-class ComponentConfig(val parent: Component, val id: Symbol) extends ComponentPart {
-  var value: AnyRef = null
-
-  def copy(parent: Component): ComponentConfig = {
-    val c = new ComponentConfig(parent, id)
-    c.value = value
-    c
-  }
-}
-
-class ComponentOutput(val parent: Component, val id: Symbol) extends ComponentPart {
-  def copy(parent: Component): ComponentOutput = new ComponentOutput(parent, id)
-}
-
-class ComponentInput(val parent: Component, val id: Symbol, val valueRange: ValueRange) extends ComponentPart {
-  private var _source: ComponentOutput = null
-  private var _constant: Float = 0
-
-  def source = _source
-  def source_=(source: ComponentOutput) {
-    _source = source
+  def addInput(name: Symbol): Property[Component] = {
+    require(!_inputNames.contains(name), "Input name already exists")
+    _inputNames = _inputNames ::: List(name)
+    p[Component](name, null)
   }
 
-  def constant = _constant
-  def constant_=(value: Float) {
-    _source = null
-    _constant = value
+  /**
+   * Get single intensity channel.
+   * Defaults to average of color channel values.
+   */
+  def intensity(pos: inVec2): Float = {
+    val c = rgba(pos)
+    (c.r + c.g + c.b) / 3f
   }
 
-  def copy(parent: Component): ComponentInput = {
-    val ci = new ComponentInput(parent, id)
-    ci._source = _source
-    ci._constant = _constant
-    ci
+  /**
+   * Get RGBA channels.
+   * @param posSize x and y position, and the sample size
+   * @return rgba color at the sampled area.
+   */
+  def rgba(pos: inVec2): Vec4
+
+  /**
+   * Get RGBA channels.
+   * @param posSize x and y position, and the sample size
+   * @return rgba color at the sampled area.
+   */
+  def apply(pos: inVec2): Vec4 = rgba(pos)
+
+  /**
+   * The available channels.
+   */
+  def channels: Set[Symbol] = Set('intensity, 'red, 'green, 'blue, 'alpha, 'hue, 'saturation, 'lightness)
+
+  /**
+   * Get channel value at specified position of specified name (e.g. height, luminance, specular, etc.).
+   * Also supports the standard channels red, green, blue, alpha, hue, sat, lightness.
+   * Could also be used for more special channels, such as cartographic channels (height, terrain type, soil parameters, etc..)
+   */
+  def channel(channel: Symbol, pos: Vec2): Float = {
+    channel match {
+      case 'intensity => intensity(pos)
+      case 'red => rgba(pos).r
+      case 'green => rgba(pos).g
+      case 'blue => rgba(pos).b
+      case 'alpha => rgba(pos).a
+      case 'hue => ColorUtils.hue(rgba(pos))
+      case 'saturation => ColorUtils.saturation(rgba(pos))
+      case 'lightness => ColorUtils.lightness(rgba(pos))
+      case _ => 0f
+    }
   }
+
+  /** Creates a copy of this component without any properties. */
+  def copyComponent(): Component = {
+    getClass.newInstance().asInstanceOf[Component]
+  }
+
+  /** Creates a copy of this component including input components. */
+  def copyTree(): Component = {
+    val copy = copyComponent()
+
+    // Copy properties
+    properties.foreach{ p =>
+      {
+        val propName: Symbol = p._1
+        if (inputNames.contains(propName) && p._2.get != null) {
+          // Copy child tree
+          copy.set[Component](propName, get[Component](propName, null).copyTree())
+        }
+        else {
+          // Copy normal property
+          copy.set(propName, p._2.get)
+        }
+      }
+    }
+
+    copy
+  }
+
+
+  def toXml: String = ""
+
 }
+
+
