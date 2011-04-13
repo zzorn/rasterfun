@@ -22,8 +22,8 @@ class Group extends Component {
 
   def this(root: Component, components: List[Component]) {
     this()
-    _root = root
     _components = components
+    _root = root
   }
 
   def addComponent(component: Component) {

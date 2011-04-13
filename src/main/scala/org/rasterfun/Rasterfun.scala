@@ -1,12 +1,14 @@
 package org.rasterfun
 
+import components._
 import functions._
+import ui.RasterfunUi
 import util.{RasterPanel, SimpleFrame}
 
 /**
  * 
  */
-object RasterfunUtility {
+object Rasterfun {
 
   def main(args: Array[ String ])
   {
@@ -21,9 +23,27 @@ object RasterfunUtility {
       new GreenFun(h, s, l),
       new BlueFun(h, s, l))
 
-    println(renderFun.toXml)
 
-    val frame = new SimpleFrame("Rasterfun", renderFun.createPanel)
+    val noiseA = new Noise()
+    noiseA.scale := 2
+    noiseA.detail := 3
+
+    val noiseB = new Noise()
+    val color = new Solid()
+    color.red := 1f
+    color.green := 0.5f
+
+    val blend = new Blend()
+    blend.foreground := noiseA
+    blend.background := color
+    blend.selector := noiseB
+
+    val model = new Group(blend, List(blend, noiseA, noiseB, color))
+
+
+    val ui = new RasterfunUi()
+
+    ui.setModel(model)
 
   }
 

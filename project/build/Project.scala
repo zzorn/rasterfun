@@ -8,6 +8,8 @@ class Project(info: ProjectInfo) extends DefaultProject(info) with IdeaProject
 
   val janino = "org.codehaus.janino" % "janino" % "2.5.16"
 
+  val migLayout = "com.miglayout" % "miglayout" % "3.7.4"
+
   def simplex3dJars = descendents("lib" / "simplex3d", "*.jar")
   override def unmanagedClasspath = super.unmanagedClasspath +++ simplex3dJars
 

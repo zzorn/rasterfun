@@ -1,0 +1,18 @@
+package org.rasterfun.ui
+
+import net.miginfocom.swing.MigLayout
+import javax.swing.JPanel
+import org.rasterfun.component.Component
+import java.awt.Dimension
+import simplex3d.math.Vec2i
+
+/**
+ * 
+ */
+class ComponentView(component: Component) extends RichPanel(component.name, true) {
+
+  val pos: Vec2i = Vec2i(0,0)
+
+  setPreferredSize(UiSettings.componentSize)
+
+}
