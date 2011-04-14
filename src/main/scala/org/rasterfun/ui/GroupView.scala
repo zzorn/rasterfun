@@ -8,7 +8,7 @@ import java.awt.{Dimension, Color}
 /**
  * View of a group of nodes.
  */
-class GroupView extends JPanel(new GraphLayoutManager()) {
+class GroupView extends JPanel(new TreeLayoutManager()) {
 
   private var _group: Group = null
   private var components: Map[Component, ComponentView] = Map[Component, ComponentView]()
