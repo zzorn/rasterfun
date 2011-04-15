@@ -2,8 +2,8 @@ package org.rasterfun.ui
 
 import org.rasterfun.components.Group
 import org.rasterfun.component.Component
-import javax.swing.{JLabel, JPanel}
 import java.awt.{Dimension, Color}
+import javax.swing.{BorderFactory, JLabel, JPanel}
 
 /**
  * View of a group of nodes.
@@ -12,6 +12,8 @@ class GroupView extends JPanel(new TreeLayoutManager()) {
 
   private var _group: Group = null
   private var components: Map[Component, ComponentView] = Map[Component, ComponentView]()
+
+  setBorder(BorderFactory.createLineBorder(Color.RED)) // For debugging layout
 
   def group = _group
 
@@ -25,20 +27,30 @@ class GroupView extends JPanel(new TreeLayoutManager()) {
   }
 
   private def addComponents(group: Group) {
-    // New components
-    components = (group.components map {(c: Component) => (c, new ComponentView(c))}).toMap
 
-    // Add to UI
-    components.values foreach {(v: ComponentView) => add(v) }
+    def addWithChildren(comp: Component, parent: ComponentView) {
+      if (comp != null) {
 
-    // Arrange
-    // TODO
+        // Create view
+        val view = new ComponentView(comp, parent)
 
-    // Setup connection lines to be drawn
-    // TODO
+        // Store reference
+        components += comp -> view
+
+        // Add to UI
+        add(view)
+
+        // Add children
+        comp.inputComponents foreach {c => addWithChildren(c, view) }
+      }
+    }
+
+    addWithChildren(group.root, null)
 
     revalidate()
   }
+
+
 
 }
 
