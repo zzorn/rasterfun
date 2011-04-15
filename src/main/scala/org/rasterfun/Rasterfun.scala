@@ -24,49 +24,23 @@ object Rasterfun {
       new BlueFun(h, s, l))
 
 
-    val noiseA = new Noise()
-    noiseA.setBeanName('noiseA)
-    noiseA.scale := 2
-    noiseA.detail := 3
+    val orangey = new Blend(new Noise(2, 3),
+                          new Solid(1f, 0.5f),
+                          new Noise())
 
-    val noiseB = new Noise()
-    noiseB.setBeanName('noiseB)
+    val pink = new Solid(0.5f, 0.2f, 0.6f)
 
-    val color = new Solid()
-    color.red := 1f
-    color.green := 0.5f
+    val ocean = new Solid(0, 0.1f, 0.4f)
 
-    val blend = new Blend()
-    blend.foreground := noiseA
-    blend.background := color
-    blend.selector := noiseB
+    val sea = new Blend(pink,
+                        new Blend(ocean,
+                                  new Noise(1, 2, 123.4f, 12.3f),
+                                  new Noise(9, 8, 543123.34f)),
+                        new Noise(2, 3))
 
-    val noiseC = new Noise()
-    noiseC.setBeanName('noiseC)
+    val blend = new Blend(orangey, sea, new Noise(0.4f, 2, 98.3f))
 
-    val noiseD = new Noise()
-    noiseD.setBeanName('noiseD)
-    noiseD.scale := 2
-    noiseD.detail := 3
-
-    val noiseE = new Noise()
-    noiseE.setBeanName('noiseE)
-
-    val noiseF = new Noise()
-    noiseF.setBeanName('noiseF)
-
-    val blend3 = new Blend()
-    blend3.setBeanName('blend3)
-    blend3.foreground := noiseD
-    blend3.selector := noiseF
-
-    val blend2 = new Blend()
-    blend2.foreground := blend
-    blend2.background := noiseC
-    blend2.selector := blend3
-
-    val model = new Group(blend2)
-
+    val model = new Group(blend)
 
     val ui = new RasterfunUi()
 

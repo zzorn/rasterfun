@@ -79,10 +79,10 @@ class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
         val comp = v._1
         val view = v._2
 
-        val viewAnchor = Vec2i(view.getX + view.getWidth/2, view.getY + view.getHeight)
+        val viewAnchor = Vec2i(view.getX + view.getWidth/2, view.getY)
         comp.inputComponents foreach {input =>
           views.get(input).foreach{ child =>
-            val childAnchor = Vec2i(child.getX + child.getWidth/2, child.getY)
+            val childAnchor = Vec2i(child.getX + child.getWidth/2, child.getY + child.getHeight)
             g2.drawLine(viewAnchor.x, viewAnchor.y, childAnchor.x, childAnchor.y)
           }
         }

@@ -28,10 +28,10 @@ trait Comp extends Bean {
 
   def inputComponents: List[Comp] = inputNames flatMap (n => get[Comp](n).filterNot(_ == null))
 
-  def addInput(name: Symbol): Property[Comp] = {
+  def addInput(name: Symbol, initial: Comp = new Empty): Property[Comp] = {
     require(!_inputNames.contains(name), "Input name already exists")
     _inputNames = _inputNames ::: List(name)
-    p[Comp](name, new Empty())
+    p[Comp](name, initial)
   }
 
   /**

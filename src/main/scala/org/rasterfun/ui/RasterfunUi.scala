@@ -12,20 +12,28 @@ import javax.swing._
 class RasterfunUi {
 
   private val groupView: GroupView = new GroupView()
+  private val preview: Preview = new Preview()
 
   private val frame: JFrame = createFrame()
 
   def setModel(group: Group) {
     groupView.group = group
+    preview.comp = group.root
   }
 
   private def createFrame(): JFrame = {
 
     val mainPanel = new JPanel(new MigLayout("fill"))
-    mainPanel.add(createGraphView(), "width 64:800:3000, height 64:600:3000, grow")
+    mainPanel.add(createGraphView(), "width 100%, height 100%, grow")
     mainPanel.add(createToolbar(), "dock north, height 32!, growx")
+
+    val eastPanel = new JPanel(new MigLayout())
+    eastPanel.add(createPreview(), "dock north, width 300!, height 300!")
+    eastPanel.add(createComponentEditor(), "dock south, growx, growy")
+    mainPanel.add(eastPanel, "dock east, growy, growx")
+
     mainPanel.add(createLibrary(), "dock west, width 64:256:512")
-    mainPanel.add(createComponentEditor(), "dock east, width 100:200:300, growy, growx 0")
+
 
     new SimpleFrame("Rasterfun", mainPanel)
   }
@@ -42,6 +50,12 @@ class RasterfunUi {
 
   private def createComponentEditor(): JComponent = {
     val panel = new RichPanel("Component", true)
+    panel
+  }
+
+  private def createPreview(): JComponent = {
+    val panel = new RichPanel("Preview", true)
+    panel.add(preview, "grow, width 100%, height 100%")
     panel
   }
 

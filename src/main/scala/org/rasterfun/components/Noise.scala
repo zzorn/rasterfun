@@ -10,14 +10,13 @@ import org.rasterfun.BlackWhiteGradient
 /**
  * 
  */
-class Noise extends Comp {
+class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f) extends Comp {
 
   private val maxDetail = 8
 
-  val seed     = p('seed, 0)
-  val detail   = p('detail, 4).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
-  val scale    = p('scale, 1f)
-  val offset   = p('offset, Vec2(0f, 0f))
+  val detail   = p('detail, _detail).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
+  val scale    = p('scale, _scale)
+  val offset   = p('offset, Vec2(_x, _y))
   val gradient = p('gradient, BlackWhiteGradient)
 
   override def intensity(pos: inVec2): Float = {

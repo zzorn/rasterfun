@@ -10,12 +10,12 @@ import org.rasterfun.util.ColorUtils
 /**
  * 
  */
-class Solid extends Comp {
+class Solid(r: Float = 1f, g: Float = 0f, b: Float = 0f, a: Float = 1f) extends Comp {
 
-  val red    = p('red,   1f).onChange( () => {updateColor()} )
-  val green  = p('green, 0f).onChange( () => {updateColor()} )
-  val blue   = p('blue,  0f).onChange( () => {updateColor()} )
-  val alpha  = p('alpha, 1f).onChange( () => {updateColor()} )
+  val red    = p('red,   r).onChange( () => {updateColor()} )
+  val green  = p('green, g).onChange( () => {updateColor()} )
+  val blue   = p('blue,  b).onChange( () => {updateColor()} )
+  val alpha  = p('alpha, a).onChange( () => {updateColor()} )
 
   private var _color: Vec4 = Vec4(1,0,0,1)
   private var _intensity: Float = 1f
