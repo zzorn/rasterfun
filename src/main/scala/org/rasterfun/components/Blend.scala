@@ -1,13 +1,13 @@
 package org.rasterfun.components
 
-import org.rasterfun.component.Component
+import org.rasterfun.component.Comp
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
 
 /**
  * Blends between two components using a third.
  */
-class Blend extends Component {
+class Blend extends Comp {
 
   val background = addInput('background)
   val foreground = addInput('foreground)
@@ -42,7 +42,7 @@ class Blend extends Component {
       t)
   }
 
-  override def channel(channel: Symbol, pos: Vec2): Float = {
+  override def channel(channel: Symbol, pos: inVec2): Float = {
     val t: Float = selector().intensity(pos)
     val c = clamp()
     if (c && t <= 0f)

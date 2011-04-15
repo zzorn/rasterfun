@@ -1,6 +1,6 @@
 package org.rasterfun.components
 
-import org.rasterfun.component.Component
+import org.rasterfun.component.Comp
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -10,7 +10,7 @@ import org.rasterfun.BlackWhiteGradient
 /**
  * 
  */
-class Noise extends Component {
+class Noise extends Comp {
 
   private val maxDetail = 8
 

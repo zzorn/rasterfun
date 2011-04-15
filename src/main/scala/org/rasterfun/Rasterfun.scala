@@ -58,7 +58,6 @@ object Rasterfun {
     val blend3 = new Blend()
     blend3.setBeanName('blend3)
     blend3.foreground := noiseD
-    blend3.background := noiseE
     blend3.selector := noiseF
 
     val blend2 = new Blend()
@@ -66,7 +65,7 @@ object Rasterfun {
     blend2.background := noiseC
     blend2.selector := blend3
 
-    val model = new Group(blend2, List(color, blend, noiseA, noiseB, noiseC, noiseD, noiseE, noiseF, blend2))
+    val model = new Group(blend2)
 
 
     val ui = new RasterfunUi()

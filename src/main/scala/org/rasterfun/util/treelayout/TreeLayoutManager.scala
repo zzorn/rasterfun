@@ -1,4 +1,4 @@
-package org.rasterfun.ui
+package org.rasterfun.util.treelayout
 
 import java.lang.String
 import java.awt.Component

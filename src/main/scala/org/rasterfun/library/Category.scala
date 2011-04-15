@@ -1,6 +1,6 @@
 package org.rasterfun.library
 
-import org.rasterfun.component.Component
+import org.rasterfun.component.Comp
 
 /**
  * A category of components.
@@ -8,12 +8,12 @@ import org.rasterfun.component.Component
 class Category(id: Symbol) {
 
   private var _subCategories: List[Category] = Nil
-  private var _components: List[Component] = Nil
+  private var _components: List[Comp] = Nil
 
-  def components: List[Component] = _components
+  def components: List[Comp] = _components
   def subCategories: List[Category] = _subCategories
 
-  def addComponent(component: Component) {
+  def addComponent(component: Comp) {
     if (component != null && !_components.contains(component)) {
       _components ::= component
     }

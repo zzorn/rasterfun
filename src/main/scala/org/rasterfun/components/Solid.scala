@@ -1,6 +1,6 @@
 package org.rasterfun.components
 
-import org.rasterfun.component.Component
+import org.rasterfun.component.Comp
 
 import simplex3d.math._
 import simplex3d.math.float._
@@ -10,7 +10,7 @@ import org.rasterfun.util.ColorUtils
 /**
  * 
  */
-class Solid extends Component {
+class Solid extends Comp {
 
   val red    = p('red,   1f).onChange( () => {updateColor()} )
   val green  = p('green, 0f).onChange( () => {updateColor()} )
@@ -29,7 +29,7 @@ class Solid extends Component {
 
   override def intensity(pos: inVec2) = _intensity
 
-  override def channel(channel: Symbol, pos: Vec2): Float = {
+  override def channel(channel: Symbol, pos: inVec2): Float = {
     channel match {
       case 'intensity => _intensity
       case 'red => _color.r
