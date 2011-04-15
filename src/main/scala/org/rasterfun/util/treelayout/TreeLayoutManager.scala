@@ -22,7 +22,10 @@ trait TreeNodeComponent {
  * Uses improved Walkers tree layout algorithm (for linear time performance)
  * Based on http://citeseer.ist.psu.edu/buchheim02improving.html
  */
-class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int = 30) extends LayoutManager2 {
+class TreeLayoutManager(orientation: TreeOrientation = TopToBottom,
+                        siblingGap: Int = 10,
+                        branchGap: Int = 20,
+                        layerGap: Int = 30) extends LayoutManager2 {
 
   private var components: List[Component] = Nil
   private var parents: Map[Component, Component] = Map()
@@ -141,8 +144,11 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
 
     def isLeaf = children.isEmpty
 
-    def uSize: Float = if (component == null) 0 else component.getPreferredSize.width
-    def vSize: Float = if (component == null) 0 else component.getPreferredSize.height
+    def uSize: Float = if (component == null) 0 else orientation.uSize(component.getPreferredSize)
+    def vSize: Float = if (component == null) 0 else orientation.vSize(component.getPreferredSize)
+
+    def xSize: Float = if (component == null) 0 else component.getPreferredSize.getWidth.toFloat
+    def ySize: Float = if (component == null) 0 else component.getPreferredSize.getHeight.toFloat
 
     def firstChild = if (children.isEmpty) null else children.get(0)
     def lastChild = if (children.isEmpty) null else children.get(children.size - 1)
@@ -326,12 +332,10 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
 
       val u = preliminary + uOffset
       val v = vOffset
-      val xSize = uSize
-      val ySize = vSize
 
-      // TODO: We can support different orientations here if desired
-      x = u
-      y = v
+      // Support different orientations
+      x = orientation.x(u, v)
+      y = orientation.y(u, v)
 
       // We treat depth 0 specially, because it is always the artificially added root element that we do not want to show up.
       if (depth > 0) area.addArea(x, y, xSize, ySize)

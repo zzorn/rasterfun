@@ -5,12 +5,15 @@ import org.rasterfun.component.Comp
 import javax.swing.{BorderFactory, JPanel}
 import simplex3d.math.Vec2i
 import java.awt._
-import org.rasterfun.util.treelayout.TreeLayoutManager
+import org.rasterfun.util.treelayout.{BottomToTop, TreeLayoutManager}
 
 /**
  * View of a group of nodes.
  */
-class GroupView extends JPanel(new TreeLayoutManager(siblingGap = 20, branchGap = 40, layerGap = 60)) {
+class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
+                                                     siblingGap = 20,
+                                                     branchGap = 40,
+                                                     layerGap = 60)) {
 
   private var _group: Group = null
   private var views: Map[Comp, CompView] = Map[Comp, CompView]()
