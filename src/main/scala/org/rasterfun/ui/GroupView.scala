@@ -89,6 +89,10 @@ class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
       }
     }
 
+    // Fill bacground
+    g2.setColor(UiSettings.componentViewBackgroundColor)
+    g2.fillRect(0, 0, getWidth, getHeight)
+
     // Smooth edges to lines
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
