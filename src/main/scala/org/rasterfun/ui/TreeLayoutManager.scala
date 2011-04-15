@@ -5,6 +5,8 @@ import java.awt.Component
 import java.awt.LayoutManager2
 import java.awt.Container
 import java.awt.Dimension
+import java.util.ArrayList
+import collection.JavaConversions._
 
 /**
  * One way for added component to communicate their tree structure is to implement this trait.
@@ -71,7 +73,10 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
 
       // Create invisible root for all
       val root = new TreeNode(null)
-      root.children = rootNodes
+      rootNodes.foreach {r =>
+        root.children.add(r)
+        r.parentNode = Some(root)
+      }
 
       // Calculate and set positions
       layoutSize = root.layout()
@@ -104,9 +109,9 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
       val parentComponent <- parents.get(c)
       val parentNode: TreeNode <- nodes.get(parentComponent)
     } {
-      if (!parentNode.hasParent(node)) {
+      if (node != null && !parentNode.hasParent(node) && node.parentNode == None) {
         node.parentNode = Some(parentNode)
-        parentNode.children ::= node
+        parentNode.children.add(node)
       }
     }
 
@@ -118,9 +123,9 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
 
   private class TreeNode(component: Component) {
     var parentNode: Option[TreeNode] = None
-    var children: List[TreeNode] = Nil
+    var children: ArrayList[TreeNode] = new ArrayList()
 
-    var leftSibling: Option[TreeNode] = None
+    var leftSibling: TreeNode = null
     var ancestor: TreeNode = this
     var thread: TreeNode = null
 
@@ -131,13 +136,16 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
     var modifier: Float = 0
     var change: Float = 0
     var shift: Float = 0
-    var number: Int = -2
+    var childNumber: Int = -2
     var depth: Int = 0
 
     def isLeaf = children.isEmpty
 
     def uSize: Float = if (component == null) 0 else component.getPreferredSize.width
     def vSize: Float = if (component == null) 0 else component.getPreferredSize.height
+
+    def firstChild = if (children.isEmpty) null else children.get(0)
+    def lastChild = if (children.isEmpty) null else children.get(children.size - 1)
 
     def hasParent(node: TreeNode): Boolean = {
       if (this == node ) true
@@ -157,13 +165,8 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
       treeArea.dimension
     }
 
-    private def leftMostSibling: TreeNode = {
-      if (leftSibling.isDefined) leftSibling.get.leftMostSibling
-      else this
-    }
-
     private def initLayout(d: Int): Int = {
-      leftSibling = None
+      leftSibling = null
       ancestor= this
       thread = null
 
@@ -171,63 +174,66 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
       modifier = 0
       change = 0
       shift = 0
-      number = -2
+      childNumber = 0
       depth = d
 
       var maxDepth = depth
-      var sibling: Option[TreeNode] = None
+      var sibling: TreeNode = null
       children foreach { c =>
         val childDepth = c.initLayout(depth + 1)
         maxDepth = maxDepth max childDepth
 
         c.leftSibling = sibling
-        sibling = Some(c)
+        sibling = c
       }
 
       maxDepth
     }
 
     private def firstWalk(num: Int, vSizes: Array[Float]) {
-      number = num
+      childNumber = num
 
       // Update layer depth
       vSizes(depth) = vSizes(depth) max vSize
 
       if (isLeaf) {
-        leftSibling match {
-          case Some(ls) => preliminary = ls.preliminary + uSpacing(this, ls, true)
-          case None => preliminary = 0
+        if (leftSibling != null) {
+          preliminary = leftSibling.preliminary + uSpacing(this, leftSibling, true)
+        }
+        else {
+          preliminary = 0
         }
       } else {
-        val defaultAncestor = children.head
+        var defaultAncestor = firstChild
 
         var i = 0
         children foreach {c =>
           c.firstWalk(i, vSizes)
-          c.apportion(defaultAncestor)
+          defaultAncestor = c.apportion(defaultAncestor)
           i += 1
         }
 
         executeShifts()
 
-        val midPoint = (children.head.preliminary + children.last.preliminary) / 2
+        val midPoint = (firstChild.preliminary + lastChild.preliminary) / 2
 
-        leftSibling match {
-          case Some(sibling) =>
-            preliminary = sibling.preliminary + uSpacing(sibling, this, true)
-            modifier = preliminary - midPoint
-          case None => preliminary = midPoint
+        if (leftSibling != null) {
+          preliminary = leftSibling.preliminary + uSpacing(leftSibling, this, true)
+          modifier = preliminary - midPoint
+        }
+        else {
+          preliminary = midPoint
         }
       }
     }
 
     private def apportion(a: TreeNode): TreeNode = {
       var defaultAncestor = a
-      leftSibling foreach {sibling =>  // If we have a left sibling do:
+      if (leftSibling != null) {
         var vip = this
         var vop = this
-        var vim = sibling
-        var vom = vip.leftMostSibling
+        var vim = leftSibling
+        var vom = vip.parentNode.get.firstChild
 
         var sip = vip.modifier
         var sop = vop.modifier
@@ -260,33 +266,33 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
           vipNextLeft = vip.nextLeft
         }
 
-        if (vimNextRight != null && vop.nextRight != null) {
+        if (vimNextRight != null && vop.nextRight == null) {
           vop.thread = vimNextRight
           vop.modifier += sim - sop
         }
 
-        if (vipNextLeft != null && vom.nextLeft != null) {
+        if (vipNextLeft != null && vom.nextLeft == null) {
           vom.thread = vipNextLeft
           vom.modifier += sip - som
           defaultAncestor = this
         }
       }
       
-      return defaultAncestor
+      defaultAncestor
     }
 
     private def nextLeft: TreeNode = {
-      if (!children.isEmpty) children.head
+      if (!isLeaf) firstChild
       else thread
     }
 
     private def nextRight: TreeNode = {
-      if (!children.isEmpty) children.last
+      if (!isLeaf) lastChild
       else thread
     }
 
     private def moveSubtree(wm: TreeNode, wp: TreeNode, shift: Float) {
-      val subTrees = wp.number - wm.number
+      val subTrees = wp.childNumber - wm.childNumber
       wp.change -= shift / subTrees
       wp.shift += shift
       wm.change += shift / subTrees
@@ -297,11 +303,17 @@ class TreeLayoutManager(siblingGap: Int = 10, branchGap: Int = 20, layerGap: Int
     private def executeShifts() {
       var shift = 0f
       var change = 0f
-      children foreach { c =>
-        c.preliminary += shift
-        c.modifier += shift
-        change += c.change
-        shift += c.shift + change
+      
+      var i = children.size - 1
+      while (i >= 0) {
+        val child = children.get(i)
+
+        child.preliminary += shift
+        child.modifier += shift
+        change += child.change
+        shift += child.shift + change
+
+        i -= 1
       }
     }
 

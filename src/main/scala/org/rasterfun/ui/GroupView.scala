@@ -2,8 +2,8 @@ package org.rasterfun.ui
 
 import org.rasterfun.components.Group
 import org.rasterfun.component.Component
-import java.awt.{Dimension, Color}
-import javax.swing.{BorderFactory, JLabel, JPanel}
+import java.awt.{Color}
+import javax.swing.{BorderFactory, JPanel}
 
 /**
  * View of a group of nodes.

@@ -23,7 +23,7 @@ trait Component extends Bean {
 
   def inputNames: List[Symbol] = _inputNames
 
-  def inputComponents: List[Component] = inputNames flatMap (n => get[Component](n))
+  def inputComponents: List[Component] = inputNames flatMap (n => get[Component](n).filterNot(_ == null))
 
   def addInput(name: Symbol): Property[Component] = {
     require(!_inputNames.contains(name), "Input name already exists")

@@ -25,10 +25,13 @@ object Rasterfun {
 
 
     val noiseA = new Noise()
+    noiseA.setBeanName('noiseA)
     noiseA.scale := 2
     noiseA.detail := 3
 
     val noiseB = new Noise()
+    noiseB.setBeanName('noiseB)
+
     val color = new Solid()
     color.red := 1f
     color.green := 0.5f
@@ -38,7 +41,32 @@ object Rasterfun {
     blend.background := color
     blend.selector := noiseB
 
-    val model = new Group(blend, List(blend, noiseA, noiseB, color))
+    val noiseC = new Noise()
+    noiseC.setBeanName('noiseC)
+
+    val noiseD = new Noise()
+    noiseD.setBeanName('noiseD)
+    noiseD.scale := 2
+    noiseD.detail := 3
+
+    val noiseE = new Noise()
+    noiseE.setBeanName('noiseE)
+
+    val noiseF = new Noise()
+    noiseF.setBeanName('noiseF)
+
+    val blend3 = new Blend()
+    blend3.setBeanName('blend3)
+    blend3.foreground := noiseD
+    blend3.background := noiseE
+    blend3.selector := noiseF
+
+    val blend2 = new Blend()
+    blend2.foreground := blend
+    blend2.background := noiseC
+    blend2.selector := blend3
+
+    val model = new Group(blend2, List(color, blend, noiseA, noiseB, noiseC, noiseD, noiseE, noiseF, blend2))
 
 
     val ui = new RasterfunUi()
