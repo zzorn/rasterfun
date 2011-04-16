@@ -22,7 +22,7 @@ trait Comp extends Bean {
 
   private var _inputNames: List[Symbol] = Nil
 
-  def name: String = beanName.name.replace("Component", "")
+  var name: String = beanName.name.replace("Component", "")
 
   def inputNames: List[Symbol] = _inputNames
 

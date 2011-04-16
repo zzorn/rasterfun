@@ -9,7 +9,7 @@ class Library {
 
   private var listeners: List[LibraryListener] = Nil
 
-  val root: Category = new Category('root, this)
+  val root: Category = new Category('Library, this)
   BuiltinCategoryBuilder.createBuiltins(root)
 
   def addLibraryListener(l: LibraryListener) {listeners ::= l}

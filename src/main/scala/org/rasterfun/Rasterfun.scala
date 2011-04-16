@@ -2,7 +2,7 @@ package org.rasterfun
 
 import components._
 import functions._
-import library.Library
+import library.{Category, Library}
 import ui.RasterfunUi
 import util.{RasterPanel, SimpleFrame}
 
@@ -28,10 +28,12 @@ object Rasterfun {
     val orangey = new Blend(new Noise(2, 3),
                           new Solid(1f, 0.5f),
                           new Noise())
+    orangey.name = "Orangey"
 
     val pink = new Solid(0.5f, 0.2f, 0.6f)
 
     val ocean = new Solid(0, 0.1f, 0.4f)
+    ocean.name = "Ocean"
 
     val sea = new Blend(pink,
                         new Blend(ocean,
@@ -42,8 +44,20 @@ object Rasterfun {
     val blend = new Blend(orangey, sea, new Noise(0.4f, 2, 98.3f))
 
     val model = new Group(blend)
+    model.name = "Mystery Coral"
 
-    val ui = new RasterfunUi(new Library())
+    val library = new Library()
+
+    val userComps = new Category(Symbol("My Components"))
+    library.root.addCategory(userComps)
+    val corals = new Category(Symbol("Corals"))
+    userComps.addCategory(corals)
+
+    corals.addComponent(model)
+    corals.addComponent(orangey)
+    corals.addComponent(sea)
+    
+    val ui = new RasterfunUi(library)
 
     ui.setModel(model)
 

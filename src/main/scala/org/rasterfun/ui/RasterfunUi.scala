@@ -25,17 +25,16 @@ class RasterfunUi(library: Library) {
 
     val mainPanel = new JPanel(new MigLayout("fill"))
 
-    mainPanel.add(createLibrary(), "dock west, width 25%, height 100%, growx, growy")
-
     mainPanel.add(createGraphView(), "width 100%, height 100%, grow")
+
     mainPanel.add(createToolbar(), "dock north, height 32!, growx")
+
+    mainPanel.add(createLibrary(), "dock west, width 200!, height 100%, growx, growy")
 
     val eastPanel = new JPanel(new MigLayout())
     eastPanel.add(createPreview(), "dock north, width 300!, height 300!")
     eastPanel.add(createComponentEditor(), "dock south, growx, growy")
     mainPanel.add(eastPanel, "dock east, growy, growx")
-
-
 
     new SimpleFrame("Rasterfun", mainPanel)
   }
@@ -71,10 +70,7 @@ class RasterfunUi(library: Library) {
     panel.add(groupView, "grow")
 
     val scrollPane = new JScrollPane(panel)
-    scrollPane.getVerticalScrollBar.setUnitIncrement(UiSettings.scrollUnitSize)
-    scrollPane.getVerticalScrollBar.setBlockIncrement(UiSettings.scrollBlockSize)
-    scrollPane.getHorizontalScrollBar.setUnitIncrement(UiSettings.scrollUnitSize)
-    scrollPane.getHorizontalScrollBar.setBlockIncrement(UiSettings.scrollBlockSize)
+    UiSettings.setScrollIncrements(scrollPane)
     scrollPane
   }
 

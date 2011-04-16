@@ -12,6 +12,8 @@ import simplex3d.math.Vec2i
 /**
  * Preview panel for a component.
  */
+// TODO: Extract camera
+// TODO: Use as base / part of CompView
 class Preview extends JPanel() {
 
   var scale: Float = 4f

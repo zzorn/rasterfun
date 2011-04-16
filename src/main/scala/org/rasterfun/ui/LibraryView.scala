@@ -3,8 +3,11 @@ package org.rasterfun.ui
 import javax.swing.tree.{TreePath, TreeModel}
 import org.rasterfun.library.{LibraryListener, Category, Library}
 import org.rasterfun.component.Comp
-import javax.swing.event.{TreeModelEvent, TreeModelListener}
-import javax.swing.{JPanel, JSplitPane, JTree}
+import net.miginfocom.swing.MigLayout
+import java.awt.event.ComponentAdapter
+import javax.swing.event.{TreeSelectionEvent, TreeSelectionListener, TreeModelEvent, TreeModelListener}
+import java.awt.Dimension
+import javax.swing._
 
 /**
  * 
@@ -14,20 +17,7 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
 
   private var categoryListeners: List[TreeModelListener] = Nil
 
-  private def notifyTreeChanged() {
-    val path: Array[AnyRef] = Array(library.root)
-    categoryListeners foreach {_.treeStructureChanged(new TreeModelEvent(null, path)) }
-  }
-
-  library.addLibraryListener(new LibraryListener {
-    def onCategoryAdded(category: Category) {notifyTreeChanged()}
-    def onCategoryRemoved(category: Category) {notifyTreeChanged()}
-    def onComponentAdded(category: Category, comp: Comp) {}
-    def onComponentRemoved(category: Category, comp: Comp) {}
-  })
-
-  val categoryBrowser = new JTree(new TreeModel(){
-
+  private val categoryBrowser = new JTree(new TreeModel(){
     def addTreeModelListener(l: TreeModelListener) { categoryListeners ::= l }
     def removeTreeModelListener(l: TreeModelListener) { categoryListeners = categoryListeners filterNot ( _ == l)}
     def getIndexOfChild(parent: Object, child: Object): Int =parent.asInstanceOf[Category].indexOf(child.asInstanceOf[Category])
@@ -38,8 +28,56 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
     def getRoot = library.root
   })
 
+  private var componentBrowser: JComponent = null
 
-  add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, categoryBrowser, new JPanel()))
+  init()
+
+  private def init() {
+    categoryBrowser.setPreferredSize(new Dimension(200, 300))
+    categoryBrowser.setRootVisible(false)
+    categoryBrowser.addTreeSelectionListener(new TreeSelectionListener{
+      def valueChanged(e: TreeSelectionEvent) {
+        val selectedCategory = e.getNewLeadSelectionPath.getLastPathComponent.asInstanceOf[Category]
+        updateComponentBrowser(selectedCategory)
+      }
+    })
+
+    componentBrowser = new JPanel(new MigLayout("wrap 2"))
+    val componentScroll = new JScrollPane(componentBrowser,
+                                          ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                          ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER)
+    UiSettings.setScrollIncrements(componentScroll)
+
+    add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, true,
+                       categoryBrowser,
+                       componentScroll), "width 100%, height 100%")
+
+    library.addLibraryListener(new LibraryListener {
+      def onCategoryAdded(category: Category) {notifyTreeChanged()}
+      def onCategoryRemoved(category: Category) {notifyTreeChanged()}
+      def onComponentAdded(category: Category, comp: Comp) {}
+      def onComponentRemoved(category: Category, comp: Comp) {}
+    })
+
+    categoryBrowser.setSelectionPath(new TreePath(library.root))
+  }
+
+  private def notifyTreeChanged() {
+    val path: Array[AnyRef] = Array(library.root)
+    categoryListeners foreach {_.treeStructureChanged(new TreeModelEvent(null, path)) }
+  }
+
+  def updateComponentBrowser(category: Category) {
+    componentBrowser.removeAll()
+
+    if (category != null) category.components foreach { c =>
+      componentBrowser.add(new CompView(c, size = UiSettings.libraryPreviewSize), "gap 3px")
+    }
+
+    revalidate()
+    repaint()
+  }
+
 
 
 }

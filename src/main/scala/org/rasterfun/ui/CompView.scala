@@ -13,17 +13,19 @@ import sas.swing.plaf.MultiLineShadowUI
 /**
  * 
  */
-class CompView(component: Comp, parentView: java.awt.Component) extends RichPanel(border = true) with TreeNodeComponent {
+class CompView(component: Comp,
+               parentView: java.awt.Component = null,
+               size: Int = UiSettings.componentWidth) extends RichPanel(border = true) with TreeNodeComponent {
 
   var area: Area = new Area(-1, -1, 3, 3)
 
   private var bitmap: FastImage = null
 
-  setPreferredSize(UiSettings.componentSize)
+  setPreferredSize(new Dimension(size, size))
   val title = new JLabel(component.name, SwingConstants.CENTER)
   title.setUI(MultiLineShadowUI.labelUI)
   title.setForeground(Color.WHITE)
-  title.setFont(title.getFont.deriveFont(16f));
+  title.setFont(title.getFont.deriveFont(size / 8f));
   add(title, "dock north, width 100%, gaptop 3px")
 
 
@@ -31,8 +33,8 @@ class CompView(component: Comp, parentView: java.awt.Component) extends RichPane
 
   private def renderImage() {
     // TODO: Do / call this in a background thread
-    val w = UiSettings.componentWidth
-    val h = UiSettings.componentHeight
+    val w = size
+    val h = size
     bitmap = new FastImage(w, h)
 
     component.render(bitmap.buffer, w, h, area)
