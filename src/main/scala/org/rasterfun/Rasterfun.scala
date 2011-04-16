@@ -2,6 +2,7 @@ package org.rasterfun
 
 import components._
 import functions._
+import library.Library
 import ui.RasterfunUi
 import util.{RasterPanel, SimpleFrame}
 
@@ -42,7 +43,7 @@ object Rasterfun {
 
     val model = new Group(blend)
 
-    val ui = new RasterfunUi()
+    val ui = new RasterfunUi(new Library())
 
     ui.setModel(model)
 

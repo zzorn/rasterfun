@@ -5,15 +5,15 @@ import net.miginfocom.swing.MigLayout
 import org.rasterfun.components.Group
 import java.awt.ScrollPane
 import javax.swing._
+import org.rasterfun.library.Library
 
 /**
  * Main Rasterfun UI
  */
-class RasterfunUi {
+class RasterfunUi(library: Library) {
 
   private val groupView: GroupView = new GroupView()
   private val preview: Preview = new Preview()
-
   private val frame: JFrame = createFrame()
 
   def setModel(group: Group) {
@@ -24,6 +24,9 @@ class RasterfunUi {
   private def createFrame(): JFrame = {
 
     val mainPanel = new JPanel(new MigLayout("fill"))
+
+    mainPanel.add(createLibrary(), "dock west, width 25%, height 100%, growx, growy")
+
     mainPanel.add(createGraphView(), "width 100%, height 100%, grow")
     mainPanel.add(createToolbar(), "dock north, height 32!, growx")
 
@@ -32,7 +35,6 @@ class RasterfunUi {
     eastPanel.add(createComponentEditor(), "dock south, growx, growy")
     mainPanel.add(eastPanel, "dock east, growy, growx")
 
-    mainPanel.add(createLibrary(), "dock west, width 64:256:512")
 
 
     new SimpleFrame("Rasterfun", mainPanel)
@@ -44,8 +46,7 @@ class RasterfunUi {
   }
 
   private def createLibrary(): JComponent = {
-    val panel = new RichPanel("Library", true)
-    panel
+    return new LibraryView(library)
   }
 
   private def createComponentEditor(): JComponent = {

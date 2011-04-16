@@ -8,8 +8,9 @@ import org.rasterfun.components.{Noise, Solid, Blend}
 
 object BuiltinCategoryBuilder {
 
-  def createBuiltins: Category = {
+  def createBuiltins(root: Category) {
     val cat = new Category('Simple)
+    root.addCategory(cat)
 
     cat.addComponent(new Blend())
     cat.addComponent(new Solid())
