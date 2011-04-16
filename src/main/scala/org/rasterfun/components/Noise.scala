@@ -19,6 +19,8 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
   val offset   = p('offset, Vec2(_x, _y))
   val gradient = p('gradient, BlackWhiteGradient)
 
+  override protected def createCopy = new Noise()
+
   override def intensity(pos: inVec2): Float = {
 
     val detailLevels = detail()

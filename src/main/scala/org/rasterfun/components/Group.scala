@@ -12,6 +12,7 @@ import org.rasterfun.component.Comp
  */
 // TODO: Allow users to add properties to this component with selectable editors, and bind contained component properties to them
 // TODO: Allow adding inputs
+// TODO: Make root a property?
 class Group(private var _root: Comp) extends Comp {
   require(_root != null, "Root should not be null")
   
@@ -21,6 +22,8 @@ class Group(private var _root: Comp) extends Comp {
     require(newRoot != null, "Root should not be null")
     _root = newRoot
   }
+
+  override protected def createCopy = new Group(root)
 
   // Forward pixel calculations to the root.
   def rgba(pos: inVec2) = _root.rgba(pos)

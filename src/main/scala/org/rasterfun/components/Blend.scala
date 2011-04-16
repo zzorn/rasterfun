@@ -16,6 +16,8 @@ class Blend(fg: Comp = new Empty, bg: Comp = new Empty, sel: Comp = new Empty) e
 
   override def channels = background().channels union foreground().channels
 
+  override protected def createCopy = new Blend()
+
   def rgba(pos: inVec2): Vec4 = {
     val t: Float = selector().intensity(pos)
     val c = clamp()

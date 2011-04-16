@@ -1,11 +1,13 @@
 package org.rasterfun.ui
 
-import org.rasterfun.util.SimpleFrame
+import graph.GroupView
+import library.LibraryView
 import net.miginfocom.swing.MigLayout
 import org.rasterfun.components.Group
 import java.awt.ScrollPane
 import javax.swing._
 import org.rasterfun.library.Library
+import org.rasterfun.util.{RichPanel, SimpleFrame}
 
 /**
  * Main Rasterfun UI

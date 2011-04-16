@@ -18,11 +18,15 @@ import org.rasterfun.components.Empty
 //       pixels of the current tree at some lowish resolution.
 // TODO: For wrap around etc, we could specify that original input x and y range from 0 to 1.
 // TODO: Better name.  Component and Node are both overloaded to annoyance though, something unique plz.
+// TODO: Add parent component reference, so that we can check for cycles
+// TODO: Also add link to group that the component is in?  Or it can be retrieved by following parent pointers
 trait Comp extends Bean {
+
+  var parent: Comp = null
 
   private var _inputNames: List[Symbol] = Nil
 
-  var name: String = beanName.name.replace("Component", "")
+  val name = p('name, getClass.getSimpleName)
 
   def inputNames: List[Symbol] = _inputNames
 
@@ -31,7 +35,9 @@ trait Comp extends Bean {
   def addInput(name: Symbol, initial: Comp = new Empty): Property[Comp] = {
     require(!_inputNames.contains(name), "Input name already exists")
     _inputNames = _inputNames ::: List(name)
-    p[Comp](name, initial)
+    initial.parent = this
+    // TODO: When the property changes, set the parent of the old component to null..
+    p[Comp](name, initial).onChange((p: Property[Comp]) => p.get.parent = this)
   }
 
   /**
@@ -81,32 +87,44 @@ trait Comp extends Bean {
     }
   }
 
-  /** Creates a copy of this component without any properties. */
-  def copyComponent(): Comp = {
-    getClass.newInstance().asInstanceOf[Comp]
-  }
+  /** Creates a copy of this component, with input references replaced with empty components. */
+  def copyComponent: Comp = createCopyWithProperties(false)
 
   /** Creates a copy of this component including input components. */
-  def copyTree(): Comp = {
-    val copy = copyComponent()
+  def copyTree: Comp = createCopyWithProperties(true)
 
-    // Copy properties
+  private def createCopyWithProperties(copyInputComponents: Boolean): Comp = {
+    val copy = createCopy
+    
     properties.foreach{ p =>
-      {
-        val propName: Symbol = p._1
-        if (inputNames.contains(propName) && p._2.get != null) {
+      val propName: Symbol = p._1
+      if (inputNames.contains(propName) && p._2.get != null) {
+        val childComp: Comp = if (copyInputComponents) {
           // Copy child tree
-          copy.set[Comp](propName, get[Comp](propName, null).copyTree())
+          get[Comp](propName, null).copyTree
         }
         else {
-          // Copy normal property
-          copy.set(propName, p._2.get)
+          // Empty component
+          new Empty()
         }
+        copy.set[Comp](propName, childComp)
+      }
+      else {
+        // Copy normal property
+        copy.set(propName, p._2.get)
       }
     }
 
     copy
   }
+
+  /**
+   * Create a copy of this component, including any vars and vals.
+   * Does not need to copy bean properties.
+   * By default creates a new instance by calling a no-argument constructor.
+   */
+  protected def createCopy: Comp = getClass.newInstance().asInstanceOf[Comp]
+
 
   def render(buffer: Array[Int], width: Int, height: Int, area: Area) {
     require(buffer != null)
@@ -151,6 +169,31 @@ trait Comp extends Bean {
 
   }
 
+  /**
+   * Replaces this component with the specified component
+   */
+  def replace(newComponent: Comp) {
+    if (parent != null) {
+      parent.replaceChild(this, newComponent)
+    }
+
+    // TODO: If this is referenced somewhere, replace one of the references with this component and update the other
+
+    // TODO: Free any resources or such, call any listeners
+  }
+
+  /**
+   * Replaces a child component with the specified component.
+   */
+  def replaceChild(oldComp: Comp, newComp: Comp) {
+
+    inputNames.filter(name => contains(name)) foreach {name =>
+      if (get[Comp](name) == oldComp) {
+        set[Comp](name, newComp)
+        oldComp.parent = null
+      }
+    }
+  }
 
   def toXml: String = ""
 

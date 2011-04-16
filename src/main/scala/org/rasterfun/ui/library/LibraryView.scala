@@ -1,4 +1,4 @@
-package org.rasterfun.ui
+package org.rasterfun.ui.library
 
 import javax.swing.tree.{TreePath, TreeModel}
 import org.rasterfun.library.{LibraryListener, Category, Library}
@@ -8,11 +8,14 @@ import java.awt.event.ComponentAdapter
 import javax.swing.event.{TreeSelectionEvent, TreeSelectionListener, TreeModelEvent, TreeModelListener}
 import java.awt.Dimension
 import javax.swing._
+import org.rasterfun.util.RichPanel
+import org.rasterfun.ui.UiSettings
+import org.rasterfun.ui.graph.GroupCompView
 
 /**
  * 
  */
-
+// TODO: Separate category and component browsers?
 class LibraryView(library: Library) extends RichPanel("Library", true) {
 
   private var categoryListeners: List[TreeModelListener] = Nil
@@ -68,10 +71,12 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
   }
 
   def updateComponentBrowser(category: Category) {
+    UiSettings.sourceManager.clearSource()
+
     componentBrowser.removeAll()
 
     if (category != null) category.components foreach { c =>
-      componentBrowser.add(new CompView(c, size = UiSettings.libraryPreviewSize), "gap 3px")
+      componentBrowser.add(new LibraryCompView(c), "gap 3px")
     }
 
     revalidate()

@@ -22,6 +22,8 @@ class Solid(r: Float = 1f, g: Float = 0f, b: Float = 0f, a: Float = 1f) extends 
 
   updateColor()
 
+  override protected def createCopy = new Solid()
+
   private def updateColor() {
     _color = Vec4(red(), green(), blue(), alpha())
     _intensity = (red() + green() + blue()) / 3f

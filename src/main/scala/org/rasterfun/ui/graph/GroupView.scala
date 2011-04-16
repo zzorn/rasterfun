@@ -1,22 +1,23 @@
-package org.rasterfun.ui
+package org.rasterfun.ui.graph
 
 import org.rasterfun.components.Group
 import org.rasterfun.component.Comp
-import javax.swing.{BorderFactory, JPanel}
+import javax.swing.{JPanel}
 import simplex3d.math.Vec2i
 import java.awt._
 import org.rasterfun.util.treelayout.{BottomToTop, TreeLayoutManager}
+import org.rasterfun.ui.{UiSettings}
 
 /**
  * View of a group of nodes.
  */
 class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
                                                      siblingGap = 20,
-                                                     branchGap = 40,
+                                                     branchGap = 50,
                                                      layerGap = 60)) {
 
   private var _group: Group = null
-  private var views: Map[Comp, CompView] = Map[Comp, CompView]()
+  private var views: Map[Comp, GroupCompView] = Map[Comp, GroupCompView]()
 
   val bgColor = UiSettings.componentViewBackgroundColor
   val connectionColor = Color.WHITE
@@ -39,25 +40,40 @@ class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
   }
 
   private def addComponents(group: Group) {
+    addWithChildren(group.root)
+  }
 
-    def addWithChildren(comp: Comp, parent: CompView) {
-      if (comp != null) {
+  def addWithChildren(comp: Comp, parent: GroupCompView = null) {
+    if (comp != null) {
 
-        // Create view
-        val view = new CompView(comp, parent)
+      // Create view
+      val view = new GroupCompView(this, comp, parent)
 
-        // Store reference
-        views += comp -> view
+      // Store reference
+      views += comp -> view
 
-        // Add to UI
-        add(view)
+      // Add to UI
+      add(view)
 
-        // Add children
-        comp.inputComponents foreach {c => addWithChildren(c, view) }
-      }
+      // Add children
+      comp.inputComponents foreach {c => addWithChildren(c, view) }
     }
 
-    addWithChildren(group.root, null)
+    revalidate()
+  }
+
+  def removeWithChildren(comp: Comp) {
+    if (comp != null) {
+
+      // Remove view
+      views.get(comp) foreach {view => remove(view)}
+
+      // Remove reference
+      views -= comp
+
+      // Remove children
+      comp.inputComponents foreach {c => removeWithChildren(c) }
+    }
 
     revalidate()
   }

@@ -2,17 +2,21 @@ package org.rasterfun.ui
 
 import java.awt.{Color, Dimension}
 import javax.swing.JScrollPane
+import library.LibraryCompView
 
 /**
  * 
  */
 object UiSettings {
 
-  val componentWidth = 128
-  val componentHeight = 128
+  val clipboard: Clipboard = new Clipboard()
+  val sourceManager: SourceManager = new SourceManager()
+
+  val graphComponentSize = 128
   val libraryPreviewSize = 80
 
-  var componentSize = new Dimension(componentWidth, componentHeight)
+  val previewBorderSize = 4
+
   var componentColor = Color.LIGHT_GRAY
   var componentViewBackgroundColor = new Color(0.5f, 0.5f, 0.5f)
 

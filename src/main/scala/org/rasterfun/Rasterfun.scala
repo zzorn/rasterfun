@@ -28,12 +28,12 @@ object Rasterfun {
     val orangey = new Blend(new Noise(2, 3),
                           new Solid(1f, 0.5f),
                           new Noise())
-    orangey.name = "Orangey"
+    orangey.name := "Orangey"
 
     val pink = new Solid(0.5f, 0.2f, 0.6f)
 
     val ocean = new Solid(0, 0.1f, 0.4f)
-    ocean.name = "Ocean"
+    ocean.name := "Ocean"
 
     val sea = new Blend(pink,
                         new Blend(ocean,
@@ -42,9 +42,9 @@ object Rasterfun {
                         new Noise(2, 3))
 
     val blend = new Blend(orangey, sea, new Noise(0.4f, 2, 98.3f))
+    blend.name := "Mystery Coral"
 
     val model = new Group(blend)
-    model.name = "Mystery Coral"
 
     val library = new Library()
 

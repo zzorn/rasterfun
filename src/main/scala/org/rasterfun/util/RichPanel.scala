@@ -1,4 +1,4 @@
-package org.rasterfun.ui
+package org.rasterfun.util
 
 import net.miginfocom.swing.MigLayout
 import javax.swing.border.BevelBorder
