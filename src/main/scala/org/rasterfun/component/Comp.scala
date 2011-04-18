@@ -36,8 +36,10 @@ trait Comp extends Bean {
     require(!_inputNames.contains(name), "Input name already exists")
     _inputNames = _inputNames ::: List(name)
     initial.parent = this
-    // TODO: When the property changes, set the parent of the old component to null..
-    p[Comp](name, initial).onChange((p: Property[Comp]) => p.get.parent = this)
+    p[Comp](name, initial).onValueChange{ (oldComp: Comp, newComp: Comp) =>
+      oldComp.parent = null
+      newComp.parent = this
+    }
   }
 
   /**
@@ -190,7 +192,6 @@ trait Comp extends Bean {
     inputNames.filter(name => contains(name)) foreach {name =>
       if (get[Comp](name) == oldComp) {
         set[Comp](name, newComp)
-        oldComp.parent = null
       }
     }
   }

@@ -28,9 +28,9 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
   private var title: JLabel = null
   private var _state: ViewState = Normal
 
-  private val nameChangeListener: Property[String]#ChangeListener = { p: Property[String] =>
+  private def nameChangeListener(oldName: String, newName: String) {
     if (title != null) {
-      title.setText(p.value)
+      title.setText(newName)
       repaint()
     }
   }
@@ -50,8 +50,8 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
 
       _comp = c
 
-      _comp.name.onChange(nameChangeListener)
-      nameChangeListener(_comp.name)
+      _comp.name.onValueChange(nameChangeListener)
+      nameChangeListener(null, _comp.name())
 
       bitmap = null
       repaint()
