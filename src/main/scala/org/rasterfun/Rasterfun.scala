@@ -53,10 +53,10 @@ object Rasterfun {
     val corals = new Category(Symbol("Corals"))
     userComps.addCategory(corals)
 
-    corals.addComponent(model)
-    corals.addComponent(orangey)
-    corals.addComponent(sea)
-    
+    corals.addComponent(model.copyTree)
+    corals.addComponent(orangey.copyTree)
+    corals.addComponent(sea.copyTree)
+
     val ui = new RasterfunUi(library)
 
     ui.setModel(model)

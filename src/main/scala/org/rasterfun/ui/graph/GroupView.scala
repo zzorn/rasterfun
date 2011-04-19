@@ -11,73 +11,59 @@ import org.rasterfun.ui.{UiSettings}
 /**
  * View of a group of nodes.
  */
+// TODO: Move component connection drawing to tree layout manager related helper class
 class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
                                                      siblingGap = 20,
                                                      branchGap = 50,
                                                      layerGap = 60)) {
 
-  private var _group: Group = null
+  private var _group: Comp = null
   private var views: Map[Comp, GroupCompView] = Map[Comp, GroupCompView]()
 
   val bgColor = UiSettings.componentViewBackgroundColor
   val connectionColor = Color.WHITE
   val edgeColor = Color.DARK_GRAY
   val connectionWidth = 2
-  val edge = 2
+  val edge = 4
 
   private val connectionInnerStroke = new BasicStroke(connectionWidth)
   private val connectionOuterStroke = new BasicStroke(connectionWidth + edge)
 
   def group = _group
 
-  def group_= (group: Group) {
+  private val structureChangeListener: ((Comp) => Unit) =  { c => group_=(c)  }
+
+  def group_= (comp: Comp) {
     // Remove old
-    views.values foreach (v => remove(v))
+    if (_group != null) _group.removeStructureListener(structureChangeListener)
+    views = Map[Comp, GroupCompView]()
+    removeAll()
 
-    _group = group
+    _group = comp
 
-    if (group != null) addComponents(group)
-  }
+    if (_group != null) {
+      addWithChildren(_group)
 
-  private def addComponents(group: Group) {
-    addWithChildren(group.root)
-  }
-
-  def addWithChildren(comp: Comp, parent: GroupCompView = null) {
-    if (comp != null) {
-
-      // Create view
-      val view = new GroupCompView(this, comp, parent)
-
-      // Store reference
-      views += comp -> view
-
-      // Add to UI
-      add(view)
-
-      // Add children
-      comp.inputComponents foreach {c => addWithChildren(c, view) }
+      // If the structure changes, call this method to remove the old views and add new ones using the specified new root.
+      _group.addStructureListener(structureChangeListener)
     }
 
     revalidate()
   }
 
-  def removeWithChildren(comp: Comp) {
-    if (comp != null) {
+  private def addWithChildren(comp: Comp, parent: GroupCompView = null) {
+    // Create view
+    val view = new GroupCompView(this, comp, parent)
 
-      // Remove view
-      views.get(comp) foreach {view => remove(view)}
+    // Store reference
+    views += comp -> view
 
-      // Remove reference
-      views -= comp
+    // Add to UI
+    add(view)
 
-      // Remove children
-      comp.inputComponents foreach {c => removeWithChildren(c) }
-    }
-
-    revalidate()
+    // Add children
+    comp.inputComponents foreach {c => addWithChildren(c, view) }
   }
-
 
 
   override def paintComponent(g: Graphics) {
@@ -105,7 +91,7 @@ class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
       }
     }
 
-    // Fill bacground
+    // Fill background
     g2.setColor(UiSettings.componentViewBackgroundColor)
     g2.fillRect(0, 0, getWidth, getHeight)
 

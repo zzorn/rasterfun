@@ -36,11 +36,7 @@ class GroupCompView(val groupView: GroupView,
         val newComp = UiSettings.sourceManager.copySourceTree
 
         // Replace component
-        oldComp.replace(newComp)
-
-        // Update view
-        groupView.removeWithChildren(oldComp)
-        groupView.addWithChildren(newComp, parentView)
+        oldComp.replaceWith(newComp)
 
         // Clear source
         UiSettings.sourceManager.clearSource()

@@ -7,6 +7,8 @@ import org.scalaprops.{Property, Bean}
 import org.rasterfun.util.ColorUtils
 import org.rasterfun.Area
 import org.rasterfun.components.Empty
+import java.util.HashSet
+import collection.JavaConversions._
 
 /**
  * 
@@ -22,29 +24,60 @@ import org.rasterfun.components.Empty
 // TODO: Also add link to group that the component is in?  Or it can be retrieved by following parent pointers
 trait Comp extends Bean {
 
+  private var _inputNames: List[Symbol] = Nil
+  private var _outputName: Symbol = Symbol(null)
   private var _parent: Comp = null
 
-  private var _inputNames: List[Symbol] = Nil
-
   val name = p('name, getClass.getSimpleName)
+
+  private var _structureListeners: Set[((Comp) => Unit)] = Set()
+
+  def addStructureListener(listener: ((Comp) => Unit)) {_structureListeners += listener}
+  def removeStructureListener(listener: ((Comp) => Unit)) {_structureListeners -= listener}
+
+  def outputName: Symbol = _outputName
 
   def inputNames: List[Symbol] = _inputNames
 
   def inputComponents: List[Comp] = inputNames flatMap (n => get[Comp](n).filterNot(_ == null))
 
-  def addInput(name: Symbol, initial: Comp = new Empty): Property[Comp] = {
-    require(!_inputNames.contains(name), "Input name already exists")
-    _inputNames = _inputNames ::: List(name)
-    initial.parent = this
-    p[Comp](name, initial).onValueChange{ (oldComp: Comp, newComp: Comp) =>
-      oldComp.parent = null
-      newComp.parent = this
+  protected def addInput(inputName: Symbol, initial: Comp = new Empty): Property[Comp] = {
+    require(!_inputNames.contains(inputName), "Input name already exists")
+    _inputNames = _inputNames ::: List(inputName)
+    initial.setParent(this, inputName)
+    p[Comp](inputName, initial).onValueChange{ (oldComp: Comp, newComp: Comp) =>
+      oldComp.clearParent()
+      newComp.setParent(this, inputName)
     }
   }
 
-  def parent = _parent
-  def parent_=(p: Comp) {
+  final def parent = _parent
+
+  final def root: Comp = if (_parent == null) this else _parent.root
+
+  private def clearParent() {
+    if (_parent != null)
+    {
+      _parent.removeInput(this)
+    }
+    _parent = null
+    _outputName = Symbol(null)
+  }
+
+  private def setParent(p: Comp, inputChannel: Symbol) {
+    if (_parent != null)
+    {
+      _parent.removeInput(this)
+    }
     _parent = p
+    _outputName = inputChannel
+  }
+
+  def removeInput(child: Comp) {
+    inputNames find {name => get(name, null) == child} match {
+      case Some(n) => set(n, new Empty())
+      case None => // Not found, do nothing
+    }
   }
 
   /**
@@ -105,20 +138,15 @@ trait Comp extends Bean {
     
     properties.foreach{ p =>
       val propName: Symbol = p._1
-      if (inputNames.contains(propName) && p._2.get != null) {
-        val childComp: Comp = if (copyInputComponents) {
-          // Copy child tree
-          get[Comp](propName, null).copyTree
-        }
-        else {
-          // Empty component
-          new Empty()
-        }
+      val propValue: AnyRef = p._2.get.asInstanceOf[AnyRef]
+
+      if (propValue != null && propValue.isInstanceOf[Comp]) {
+        val childComp = if (copyInputComponents) propValue.asInstanceOf[Comp].copyTree else new Empty()
         copy.set[Comp](propName, childComp)
       }
       else {
         // Copy normal property
-        copy.set(propName, p._2.get)
+        copy.set(propName, propValue)
       }
     }
 
@@ -138,9 +166,18 @@ trait Comp extends Bean {
     require(buffer.length == width * height, "Buffer length should match size")
 
     def zeroOneToByte(v: Float): Int = {
-      if (v >= 1) 255
-      else if (v <= 0) 0
-      else (v * 255).toInt
+      if (v >= 1)
+      {
+        255
+      }
+      else if (v <= 0)
+      {
+        0
+      }
+      else
+      {
+        (v * 255).toInt
+      }
     }
 
     val xDelta = area.width / width
@@ -179,26 +216,31 @@ trait Comp extends Bean {
   /**
    * Replaces this component with the specified component
    */
-  def replace(newComponent: Comp) {
+  def replaceWith(newComponent: Comp) {
+    val oldRoot = root
+
     if (parent != null) {
-      parent.replaceChild(this, newComponent)
+      parent.set(outputName, newComponent)
     }
 
     // TODO: If this is referenced somewhere, replace one of the references with this component and update the other
 
     // TODO: Free any resources or such, call any listeners
+
+    val newRoot = newComponent.root
+    oldRoot._structureListeners foreach {_(newRoot)}
+
+    //deepClear()
   }
 
-  /**
-   * Replaces a child component with the specified component.
-   */
-  def replaceChild(oldComp: Comp, newComp: Comp) {
+  // TODO: addAfter, and replaceAndKeepInputs
 
-    inputNames.filter(name => contains(name)) foreach {name =>
-      if (get[Comp](name) == oldComp) {
-        set[Comp](name, newComp)
-      }
-    }
+  private def deepClear() {
+
+    inputComponents.foreach(_.deepClear())
+
+    _structureListeners = Set()
+    _parent = null
   }
 
   def toXml: String = ""
