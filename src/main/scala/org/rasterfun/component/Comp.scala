@@ -22,7 +22,7 @@ import org.rasterfun.components.Empty
 // TODO: Also add link to group that the component is in?  Or it can be retrieved by following parent pointers
 trait Comp extends Bean {
 
-  var parent: Comp = null
+  private var _parent: Comp = null
 
   private var _inputNames: List[Symbol] = Nil
 
@@ -40,6 +40,11 @@ trait Comp extends Bean {
       oldComp.parent = null
       newComp.parent = this
     }
+  }
+
+  def parent = _parent
+  def parent_=(p: Comp) {
+    _parent = p
   }
 
   /**
