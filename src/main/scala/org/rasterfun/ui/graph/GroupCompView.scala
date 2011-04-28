@@ -40,6 +40,9 @@ class GroupCompView(val groupView: GroupView,
 
         // Clear source
         UiSettings.sourceManager.clearSource()
+      } else {
+        // Select clicked component
+        UiSettings.selectionManager.setSelection(GroupCompView.this)
       }
     }
   })

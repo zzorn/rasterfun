@@ -16,6 +16,7 @@ class SourceManager {
       if (libSource != null) {
         // Click again to de-select
         libSource.state = Normal
+        libSource = null
       }
     }
     else {

@@ -1,6 +1,6 @@
 package org.rasterfun.ui
 
-import graph.GroupView
+import graph.{GroupCompView, GroupView}
 import library.LibraryView
 import net.miginfocom.swing.MigLayout
 import org.rasterfun.components.Group
@@ -19,6 +19,7 @@ class RasterfunUi(library: Library) {
   private val frame: JFrame = createFrame()
 
   def setModel(group: Group) {
+    UiSettings.selectionManager.clearSelection()
     groupView.group = group
     preview.comp = group.root
   }
@@ -35,8 +36,8 @@ class RasterfunUi(library: Library) {
 
     val eastPanel = new JPanel(new MigLayout())
     eastPanel.add(createPreview(), "dock north, width 300!, height 300!")
-    eastPanel.add(createComponentEditor(), "dock south, growx, growy")
-    mainPanel.add(eastPanel, "dock east, growy, growx")
+    eastPanel.add(createComponentEditor(), "dock south, height 100%, growx, growy")
+    mainPanel.add(eastPanel, "dock east, width 300px, growy")
 
     new SimpleFrame("Rasterfun", mainPanel)
   }
@@ -52,7 +53,30 @@ class RasterfunUi(library: Library) {
 
   private def createComponentEditor(): JComponent = {
     val panel = new RichPanel("Component", true)
-    panel
+
+    val scrollPane = new JScrollPane(panel,
+                                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER)
+
+    UiSettings.selectionManager.addSelectionListener({(view: GroupCompView) =>
+      if (view == null) {
+        panel.removeAll()
+        panel.revalidate()
+        panel.repaint()
+      }
+      else {
+        panel.removeAll()
+        panel.add(view.comp.createEditor, "growy, growx")
+        panel.revalidate()
+        panel.invalidate()
+        panel.repaint()
+        scrollPane.revalidate()
+        scrollPane.invalidate()
+        scrollPane.repaint()
+      }
+    })
+
+    scrollPane
   }
 
   private def createPreview(): JComponent = {

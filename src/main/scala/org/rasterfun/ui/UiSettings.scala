@@ -12,6 +12,9 @@ object UiSettings {
   val clipboard: Clipboard = new Clipboard()
   val sourceManager: SourceManager = new SourceManager()
 
+  // TODO: Move selection manager to GroupView or similar
+  val selectionManager: SelectionManager = new SelectionManager()
+
   val graphComponentSize = 128
   val libraryPreviewSize = 80
 
