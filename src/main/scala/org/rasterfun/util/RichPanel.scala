@@ -2,10 +2,11 @@ package org.rasterfun.util
 
 import net.miginfocom.swing.MigLayout
 import javax.swing.border.BevelBorder
-import java.awt.Color
-import javax.swing.{SwingConstants, BorderFactory, JLabel, JPanel}
 import sas.swing.GradientPanel
 import sas.swing.plaf.MultiLineShadowUI
+import javax.swing._
+import java.awt.{Rectangle, Color}
+import org.rasterfun.ui.UiSettings
 
 /**
  * Somewhat beefed up panel.
@@ -16,8 +17,10 @@ class RichPanel(title: String = null,
                 align: Int = SwingConstants.LEADING,
                 textColor: Color = Color.BLACK,
                 textShadow: Boolean = false,
-                bgColor: Color = null)
-        extends JPanel(new MigLayout(constraints)) {
+                bgColor: Color = null,
+                scrollableTrackViewportHeight: Boolean = false,
+                scrollableTrackViewportWidth: Boolean = false )
+        extends JPanel(new MigLayout(constraints)) with Scrollable {
 
   if (bgColor != null) setBackground(bgColor)
 
@@ -31,4 +34,9 @@ class RichPanel(title: String = null,
 
   if (border) setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED))
 
+  def getScrollableTracksViewportHeight = scrollableTrackViewportHeight
+  def getScrollableTracksViewportWidth = scrollableTrackViewportWidth
+  def getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = UiSettings.scrollBlockSize
+  def getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = UiSettings.scrollUnitSize
+  def getPreferredScrollableViewportSize = getPreferredSize
 }

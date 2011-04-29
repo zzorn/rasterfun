@@ -15,8 +15,8 @@ object UiSettings {
   // TODO: Move selection manager to GroupView or similar
   val selectionManager: SelectionManager = new SelectionManager()
 
-  val graphComponentSize = 128
-  val libraryPreviewSize = 80
+  val graphComponentSize = 80
+  val libraryPreviewSize = 64
 
   val previewBorderSize = 4
 

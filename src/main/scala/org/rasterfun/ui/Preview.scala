@@ -9,10 +9,10 @@ import simplex3d.math.Vec2i
 import net.miginfocom.swing.MigLayout
 import sas.swing.plaf.MultiLineShadowUI
 import java.awt.Container._
-import org.scalaprops.Property
 import java.awt.{Dimension, Color, Graphics2D, Graphics}
 import javax.swing.{BorderFactory, SwingConstants, JLabel, JPanel}
 import javax.swing.border.{LineBorder, Border}
+import org.scalaprops.{Bean, BeanListener, Property}
 
 /**
  * Preview panel for a component.
@@ -35,6 +35,13 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
     }
   }
 
+  private val deepCompListener: BeanListener = new BeanListener {
+    def onPropertyRemoved(bean: Bean, property: Property[ _ ]) {}
+    def onPropertyAdded(bean: Bean, property: Property[ _ ]) {}
+    def onPropertyChanged(bean: Bean, property: Property[ _ ]) {
+      forceReRender()
+    }
+  }
 
   comp = component
 
@@ -43,15 +50,22 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
   def comp = _comp
 
   def comp_=(c: Comp) {
-    require (c != null, "component should notify be null")
-
     if (c != _comp) {
-      if (_comp != null) _comp.name.removeListener(nameChangeListener)
+      if (_comp != null) {
+        _comp.name.removeListener(nameChangeListener)
+        _comp.removeDeepListener(deepCompListener)
+      }
 
       _comp = c
 
-      _comp.name.onValueChange(nameChangeListener)
-      nameChangeListener(null, _comp.name())
+      if (_comp != null) {
+        _comp.name.onValueChange(nameChangeListener)
+        _comp.addDeepListener(deepCompListener)
+        nameChangeListener(null, _comp.name())
+      }
+      else {
+        nameChangeListener(null, "")
+      }
 
       bitmap = null
       repaint()
@@ -78,6 +92,11 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
     repaint()
   }
 
+  private def forceReRender() {
+    bitmap = null
+    repaint()
+  }
+
   private def initUi() {
     setPreferredSize(new Dimension(size, size))
 
@@ -85,13 +104,12 @@ class Preview(component: Comp = new Empty(), showTitle: Boolean = true, size: In
 
     addComponentListener(new ComponentAdapter {
       override def componentResized(e: ComponentEvent) {
-        bitmap = null
-        repaint()
+        forceReRender()
       }
     })
 
     if (showTitle) {
-      val title = new JLabel(comp.name(), SwingConstants.CENTER)
+      title = new JLabel(if(comp != null)comp.name() else "", SwingConstants.CENTER)
       title.setUI(MultiLineShadowUI.labelUI)
       title.setForeground(Color.WHITE)
       title.setFont(title.getFont.deriveFont(UiSettings.graphComponentSize / 8f));

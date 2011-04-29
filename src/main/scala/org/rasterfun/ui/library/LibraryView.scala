@@ -6,11 +6,11 @@ import org.rasterfun.component.Comp
 import net.miginfocom.swing.MigLayout
 import java.awt.event.ComponentAdapter
 import javax.swing.event.{TreeSelectionEvent, TreeSelectionListener, TreeModelEvent, TreeModelListener}
-import java.awt.Dimension
 import javax.swing._
-import org.rasterfun.util.RichPanel
 import org.rasterfun.ui.UiSettings
 import org.rasterfun.ui.graph.GroupCompView
+import java.awt.{Rectangle, FlowLayout, Dimension}
+import org.rasterfun.util.{WrapLayout, RichPanel}
 
 /**
  * 
@@ -45,7 +45,14 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
       }
     })
 
-    componentBrowser = new JPanel(new MigLayout("wrap 2"))
+    componentBrowser = new JPanel(new WrapLayout(hGap = 8, vGap = 8)) with Scrollable {
+      def getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = UiSettings.scrollBlockSize
+      def getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = UiSettings.scrollUnitSize
+      def getPreferredScrollableViewportSize = getPreferredSize
+      def getScrollableTracksViewportHeight = false
+      def getScrollableTracksViewportWidth = true
+    }
+    
     val componentScroll = new JScrollPane(componentBrowser,
                                           ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                                           ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER)
@@ -62,7 +69,7 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
       def onComponentRemoved(category: Category, comp: Comp) {}
     })
 
-    categoryBrowser.setSelectionPath(new TreePath(library.root))
+    categoryBrowser.setSelectionPath(library.defaultPath)
   }
 
   private def notifyTreeChanged() {
@@ -76,7 +83,7 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
     componentBrowser.removeAll()
 
     if (category != null) category.components foreach { c =>
-      componentBrowser.add(new LibraryCompView(c), "gap 3px")
+      componentBrowser.add(new LibraryCompView(c))
     }
 
     revalidate()
