@@ -6,23 +6,34 @@ import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import org.rasterfun.util.ColorUtils
+import org.scalaprops.ui.editors.SliderFactory._
+import org.scalaprops.ui.editors.{ColoredSliderBackgroundPainter, SliderFactory}
+import java.awt.Color
+import org.scalaprops.Property
 
 /**
- * 
+ * A simple solid color component.
  */
-class Solid(r: Float = 1f, g: Float = 0f, b: Float = 0f, a: Float = 1f) extends Comp {
+class SolidColor(r: Float = 1f, g: Float = 0f, b: Float = 0f, a: Float = 1f) extends Comp {
 
-  val red    = p('red,   r).onValueChange{ (o: Float, n: Float) => updateColor()}
-  val green  = p('green, g).onValueChange{ (o: Float, n: Float) => updateColor()}
-  val blue   = p('blue,  b).onValueChange{ (o: Float, n: Float) => updateColor()}
-  val alpha  = p('alpha, a).onValueChange{ (o: Float, n: Float) => updateColor()}
+  private def makeProp(name: Symbol, value: Float, color: Color): Property[Float] = {
+    property(name, value)
+            .onValueChange{ (o: Float, n: Float) => updateColor()}
+            .editor(new SliderFactory(0f, 1f, backgroundPainter =
+                new ColoredSliderBackgroundPainter(Color.WHITE, color)))
+  }
+
+  val red    = makeProp('red,   r, new Color(0.7f, 0.2f, 0.2f))
+  val green  = makeProp('green, g, new Color(0.2f, 0.7f, 0.2f))
+  val blue   = makeProp('blue,  b, new Color(0.2f, 0.2f, 0.7f))
+  val alpha  = makeProp('alpha, a, new Color(0.5f, 0.5f, 0.5f))
 
   private var _color: Vec4 = Vec4(1,0,0,1)
   private var _intensity: Float = 1f
 
   updateColor()
 
-  override protected def createCopy = new Solid()
+  override protected def createCopy = new SolidColor()
 
   private def updateColor() {
     _color = Vec4(red(), green(), blue(), alpha())

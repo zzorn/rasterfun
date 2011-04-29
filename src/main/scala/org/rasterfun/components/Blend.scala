@@ -7,7 +7,7 @@ import simplex3d.math.float._
 /**
  * Blends between two components using a third.
  */
-class Blend(fg: Comp = new Empty, bg: Comp = new Empty, sel: Comp = new Empty) extends Comp {
+class Blend(fg: Comp = new Empty, bg: Comp = new Empty, sel: Comp = new SolidIntensity()) extends Comp {
 
   val background = addInput('background, bg)
   val foreground = addInput('foreground, fg)

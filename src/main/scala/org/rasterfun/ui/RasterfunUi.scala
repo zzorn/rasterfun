@@ -8,6 +8,7 @@ import javax.swing._
 import org.rasterfun.library.Library
 import org.rasterfun.util.{RichPanel, SimpleFrame}
 import java.awt.{Dimension, BorderLayout, ScrollPane}
+import org.rasterfun.component.Comp
 
 /**
  * Main Rasterfun UI
@@ -15,13 +16,13 @@ import java.awt.{Dimension, BorderLayout, ScrollPane}
 class RasterfunUi(library: Library) {
 
   private val groupView: GroupView = new GroupView()
-  private val preview: Preview = new Preview()
+  private val preview: Preview = new Preview(showTitle = false)
   private val frame: JFrame = createFrame()
 
-  def setModel(group: Group) {
+  def setModel(comp: Comp) {
     UiSettings.selectionManager.clearSelection()
-    groupView.group = group
-    preview.comp = group.root
+    groupView.group = comp
+    preview.comp = comp
   }
 
   private def createFrame(): JFrame = {
@@ -37,16 +38,18 @@ class RasterfunUi(library: Library) {
     //eastPanel.add(createComponentEditor(), "dock south, height 100%, width 100%, growx, growy")
     //mainPanel.add(eastPanel, "dock east, width 300px, growy")
 
-    val right = new JSplitPane(JSplitPane.VERTICAL_SPLIT, createPreview(), createComponentEditor())
-    right.setResizeWeight(0)
-    right.setDividerLocation(300)
+    val right = new JPanel(new MigLayout("fill"))
+    val rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, createPreview(), createComponentEditor())
+    rightSplit.setResizeWeight(0)
+    rightSplit.setDividerLocation(256)
+    right.add(rightSplit, "push, grow")
 
     val centerRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createGraphView(), right)
-    centerRight.setDividerLocation(400)
+    centerRight.setDividerLocation(330)
     centerRight.setResizeWeight(1)
     val root = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLibrary(), centerRight)
     root.setResizeWeight(0)
-    root.setDividerLocation(192)
+    root.setDividerLocation(160)
 
     mainPanel.add(root, "width 100%, height 100%, grow")
 
@@ -63,24 +66,25 @@ class RasterfunUi(library: Library) {
   }
 
   private def createGraphView(): JComponent = {
-    val panel = new RichPanel(constraints = "align 50% 50%")
+    val panel = new RichPanel(constraints = "align 50% 50%, fill")
     panel.setBackground(UiSettings.componentViewBackgroundColor)
 
     // Some space so that the view can be scrolled so that there is some space to the edges
     val sp = UiSettings.extraScrollSpace
     panel.setBorder(BorderFactory.createEmptyBorder(sp, sp, sp, sp))
 
-    panel.add(groupView, "grow")
+    panel.add(groupView, "align 50% 50%")
 
     val scrollPane = new JScrollPane(panel)
     UiSettings.setScrollIncrements(scrollPane)
+    scrollPane.getViewport.setBackground(UiSettings.componentViewBackgroundColor)
     scrollPane
   }
 
 
   private def createPreview(): JComponent = {
-    val panel = new JPanel(new BorderLayout())
-    panel.add(preview, BorderLayout.CENTER)
+    val panel = new JPanel(new MigLayout("fill"))
+    panel.add(preview, "dock north, w 100%, h 100%")
 
     UiSettings.selectionManager.addSelectionListener({(view: GroupCompView) =>
       if (view != null) preview.comp = view.comp
@@ -94,7 +98,7 @@ class RasterfunUi(library: Library) {
 
 
   private def createComponentEditor(): JComponent = {
-    val panel = new RichPanel("Component", true, scrollableTrackViewportWidth = true)
+    val panel = new RichPanel("Component", scrollableTrackViewportWidth = true)
 
     val scrollPane = new JScrollPane(panel,
                                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -110,7 +114,7 @@ class RasterfunUi(library: Library) {
         panel.removeAll()
         val editor = view.comp.createEditor
         //editor.setPreferredSize(new Dimension(300, 300))
-        panel.add(editor, "growy")
+        panel.add(editor, "growy, width 100%")
         panel.revalidate()
         panel.invalidate()
         panel.repaint()

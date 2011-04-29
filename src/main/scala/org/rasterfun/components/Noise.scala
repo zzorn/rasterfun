@@ -6,18 +6,30 @@ import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import org.rasterfun.BlackWhiteGradient
+import java.util.Random
+import org.scalaprops.ui.editors.{NumberEditorFactory, SliderFactory}
 
 /**
  * 
  */
-class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f) extends Comp {
+class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f, _seed: Int = new Random().nextInt(1000)) extends Comp {
 
   private val maxDetail = 8
 
   val detail   = p('detail, _detail).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
-  val scale    = p('scale, _scale)
-  val offset   = p('offset, Vec2(_x, _y))
+  val scale    = p('scale, _scale).editor(new SliderFactory(0f, 5f,restrictNumberFieldMax = false))
+  val seed     = p('seed, _seed).onChange( {recalculateSeedOffsets()} )
   val gradient = p('gradient, BlackWhiteGradient)
+
+  private var seedOffset: Vec2 = Vec2(0,0)
+
+  recalculateSeedOffsets()
+
+  private def recalculateSeedOffsets() {
+    val r = new Random(seed())
+    seedOffset.x = r.nextFloat * 1000f
+    seedOffset.y = r.nextFloat * 1000f
+  }
 
   override protected def createCopy = new Noise()
 
@@ -26,7 +38,7 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
     val detailLevels = detail()
     val noiseVal: Float = if (detailLevels == 1) {
       // Simple noise, one octave
-      noise1(pos * scale() + offset())
+      noise1(pos * scale() + seedOffset)
     }
     else {
       // Turbulence noise made of several octaves
@@ -34,7 +46,7 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
       var noiseSum = 0f
       var amplitude = 1f
       var s: Float = scale()
-      var offs = Vec2(offset())
+      var offs = Vec2(seedOffset)
       while (i < detailLevels) {
         noiseSum += noise1(pos * s + offs) * amplitude
         s *= 2

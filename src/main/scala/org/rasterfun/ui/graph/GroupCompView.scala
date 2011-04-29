@@ -38,6 +38,8 @@ class GroupCompView(val groupView: GroupView,
         // Replace component
         oldComp.replaceWith(newComp)
 
+        groupView.repaint()
+
         // Clear source
         UiSettings.sourceManager.clearSource()
       } else {

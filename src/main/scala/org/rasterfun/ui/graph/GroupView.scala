@@ -12,6 +12,7 @@ import org.rasterfun.ui.{UiSettings}
  * View of a group of nodes.
  */
 // TODO: Move component connection drawing to tree layout manager related helper class
+// TODO: Rename to reflect the viewed thing doesn't have to be a group
 class GroupView extends JPanel(new TreeLayoutManager(orientation = BottomToTop,
                                                      siblingGap = 20,
                                                      branchGap = 50,

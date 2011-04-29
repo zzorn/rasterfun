@@ -9,6 +9,7 @@ import org.rasterfun.Area
 import org.rasterfun.components.Empty
 import java.util.HashSet
 import collection.JavaConversions._
+import org.scalaprops.ui.editors.NoEditorFactory
 
 /**
  * 
@@ -28,7 +29,7 @@ trait Comp extends Bean {
   private var _outputName: Symbol = Symbol(null)
   private var _parent: Comp = null
 
-  val name = p('name, getClass.getSimpleName)
+  val name = p('name, getClass.getSimpleName).editor(new NoEditorFactory())
 
   private var _structureListeners: Set[((Comp) => Unit)] = Set()
 

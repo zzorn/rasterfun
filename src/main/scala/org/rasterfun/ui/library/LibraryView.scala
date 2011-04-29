@@ -16,7 +16,7 @@ import org.rasterfun.util.{WrapLayout, RichPanel}
  * 
  */
 // TODO: Separate category and component browsers?
-class LibraryView(library: Library) extends RichPanel("Library", true) {
+class LibraryView(library: Library) extends RichPanel("Library") {
 
   private var categoryListeners: List[TreeModelListener] = Nil
 
@@ -36,7 +36,7 @@ class LibraryView(library: Library) extends RichPanel("Library", true) {
   init()
 
   private def init() {
-    categoryBrowser.setPreferredSize(new Dimension(200, 300))
+    categoryBrowser.setPreferredSize(new Dimension(200, 200))
     categoryBrowser.setRootVisible(false)
     categoryBrowser.addTreeSelectionListener(new TreeSelectionListener{
       def valueChanged(e: TreeSelectionEvent) {
