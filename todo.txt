@@ -1,0 +1,69 @@
+List of tweaks to do and bugs to fix for Rasterfun.
+
+* Float to Double cast error from ClassUtils in scalaprops when editing e.g. solid intensity numberfield.
+
+* Make noise seamless
+
+* After pasting a node, select it
+
+* Separate windows with render preview
+** For root node, or selected node
+** Specify tasrget texture size
+** Save button -> save to selected png file
+
+* Render alpha using see-trhough checkerboard
+
+* amplitude and offset controls to noise
+
+* Context menu on cell: Copy, Paste, Cut, Delete
+
+* Context menu on library: Copy (and remove for user library entry)
+
+* Remove/disable the unintuitive select library, select target -paste system for library entries 
+
+* Add drag support for library nodes to graph nodes -> repalce empty, on others show popup menu  Replace, Add After, Cancel
+
+* Add drag support for graph nodes to graph nodes -> show popup menu  Move here, Copy here, Copy After, Move after, Swap, Cancel
+
+* Add drag support for graph node to library, copy node to the library category
+
+* Add right click menu to library, create new category
+
+* Add automatic saving of the libray when it is modified, save into ~/.rasterfun/library.json or similar.  Automatically load from there on startup
+
+* Add name of parameter node is used as to the bottom edge of the node (into own area?)
+
+== More nodes ==
+
+* Circle
+
+* Block / square
+
+* Tile node
+
+* Voronoi
+
+* Offset / translate
+
+
+== Low priority ==
+
+* Change title to Rasterfun <version>, set version to 0.1 beta
+
+* Add export / import node in file menu
+
+* Add about dialog with link to homepage etc
+
+* Separate the incoming lines a bit on multi-input nodes
+
+* Better color selector
+ 
+* Clearer name to clamp attribute in blend
+** Add description modified to properties that is used in tooltips etc
+
+* Write some camel case -> space separated thingy for the property and node names
+
+
+
+
+
