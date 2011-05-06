@@ -8,6 +8,7 @@ import simplex3d.math.float.functions._
 import org.rasterfun.BlackWhiteGradient
 import java.util.Random
 import org.scalaprops.ui.editors.{NumberEditorFactory, SliderFactory}
+import org.rasterfun.util.GaborNoise
 
 /**
  * 
@@ -38,7 +39,8 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
     val detailLevels = detail()
     val noiseVal: Float = if (detailLevels == 1) {
       // Simple noise, one octave
-      noise1(pos * scale() + seedOffset)
+      val p = pos * scale() + seedOffset
+      noise1(p)
     }
     else {
       // Turbulence noise made of several octaves
@@ -48,7 +50,8 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
       var s: Float = scale()
       var offs = Vec2(seedOffset)
       while (i < detailLevels) {
-        noiseSum += noise1(pos * s + offs) * amplitude
+        val p = pos * s + offs
+        noiseSum += noise1(p) * amplitude
         s *= 2
         offs += s * i * 344.234f // Some offset to get different pattern for different octaves
         amplitude *= 0.5f
