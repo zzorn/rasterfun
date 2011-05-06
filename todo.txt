@@ -64,6 +64,11 @@ List of tweaks to do and bugs to fix for Rasterfun.
 * Write some camel case -> space separated thingy for the property and node names
 
 
+== Scalaprops ==
+* Include miglayout in exported jar?
+* Add copy method to bean
+* Generalize BeanEditorFactory to type [T] for easier use
+
 
 
 
