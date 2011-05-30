@@ -21,6 +21,7 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new Blend())
     basic.addComponent(new SolidColor())
     basic.addComponent(new Noise())
+    basic.addComponent(new Displace())
     basic.addComponent(new Radial())
     basic.addComponent(new SolidIntensity())
     basic.addComponent(new HslToColor())
