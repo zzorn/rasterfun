@@ -17,10 +17,12 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
 
   private val maxDetail = 8
 
-  val detail   = p('detail, _detail).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
-  val scale    = p('scale, _scale).editor(new SliderFactory(0f, 5f,restrictNumberFieldMax = false))
-  val seed     = p('seed, _seed).onChange( {recalculateSeedOffsets()} )
-  val gradient = p[Gradient]('gradient, BlackWhiteGradient)
+  val detail    = p('detail, _detail).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
+  val scale     = p('scale, _scale).editor(new SliderFactory(0f, 5f,restrictNumberFieldMax = false))
+  val amplitude = p('amplitude, 1f).editor(new SliderFactory(-1f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
+  val offset    = p('offset, 0f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
+  val seed      = p('seed, _seed).onChange( {recalculateSeedOffsets()} )
+  val gradient  = p[Gradient]('gradient, BlackWhiteGradient)
 
   private var seedOffset: Vec2 = Vec2(0,0)
 
@@ -60,7 +62,7 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
       noiseSum
     }
     
-    noiseVal * 0.5f + 0.5f // Scale to 0..1 range from -1..1
+    offset() + amplitude() * (noiseVal * 0.5f + 0.5f) // Scale to 0..1 range from -1..1
   }
 
   def rgba(pos: inVec2): Vec4 = {
