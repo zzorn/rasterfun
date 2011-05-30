@@ -5,10 +5,10 @@ import org.rasterfun.component.Comp
 import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
-import org.rasterfun.BlackWhiteGradient
 import java.util.Random
 import org.scalaprops.ui.editors.{NumberEditorFactory, SliderFactory}
 import org.rasterfun.util.GaborNoise
+import org.rasterfun.{Gradient, BlackWhiteGradient}
 
 /**
  * 
@@ -20,7 +20,7 @@ class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f
   val detail   = p('detail, _detail).translate((v:Int) => clamp(v, 1, maxDetail)) // = Turbulence
   val scale    = p('scale, _scale).editor(new SliderFactory(0f, 5f,restrictNumberFieldMax = false))
   val seed     = p('seed, _seed).onChange( {recalculateSeedOffsets()} )
-  val gradient = p('gradient, BlackWhiteGradient)
+  val gradient = p[Gradient]('gradient, BlackWhiteGradient)
 
   private var seedOffset: Vec2 = Vec2(0,0)
 
