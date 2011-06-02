@@ -65,7 +65,7 @@ trait IntensityComp extends Comp {
     v = v * amplitude() + offset()
 
     if (wrapResult()) {
-      v = v % 1f
+      if (v < -1 || v > 1) v = v % 1f
       if (!minusOneToOne && v < 0) v = 1f - v
     }
     else if (clampResult()) {
