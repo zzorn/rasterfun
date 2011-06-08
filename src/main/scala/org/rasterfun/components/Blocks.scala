@@ -17,10 +17,24 @@ class Blocks extends IntensityComp {
   val tileOffset =  p('tileOffset, 0.5f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
 
   protected def basicIntensity(pos: inVec2): Float = {
-    val vCell = pos.x % tileSizeHorizontal()
-    val hCell = pos.y % tileSizeVertical() + tileOffset()
-    
-    val edgeDist = max(vCell, hCell)
+    val w: Float = if (tileSizeHorizontal() <= 0) 1f else tileSizeHorizontal()
+    val h: Float = if (tileSizeVertical() <= 0) 1f else tileSizeVertical()
+    val offs: Float = tileOffset()
+
+    val cellX = (pos.x / w).toInt
+    val cellY = (pos.y / h).toInt
+
+    val xPos: Float = pos.x - offs * cellY
+
+    var intraCellX: Float = (xPos / w) % 1f
+    var intraCellY: Float = (pos.y / h) % 1f
+    if (intraCellX < 0) intraCellX = 1f + intraCellX
+    if (intraCellY < 0) intraCellY = 1f + intraCellY
+
+    val vertDist = 1f - abs(intraCellX - 0.5f) * 2f
+    val horDist  = 1f - abs(intraCellY - 0.5f) * 2f
+
+    val edgeDist = min(vertDist, horDist)
 
     edgeDist
   }
