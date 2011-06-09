@@ -21,10 +21,10 @@ class Blocks extends IntensityComp {
     val h: Float = if (tileSizeVertical() <= 0) 1f else tileSizeVertical()
     val offs: Float = tileOffset()
 
-    val cellX = (pos.x / w).toInt
-    val cellY = (pos.y / h).toInt
+    val cellX = (scala.math.floor(pos.x / w)).toInt
+    val cellY = (scala.math.floor(pos.y / h)).toInt
 
-    val xPos: Float = pos.x - offs * cellY
+    val xPos: Float = pos.x - w * offs * cellY
 
     var intraCellX: Float = (xPos / w) % 1f
     var intraCellY: Float = (pos.y / h) % 1f
@@ -36,7 +36,7 @@ class Blocks extends IntensityComp {
 
     val edgeDist = min(vertDist, horDist)
 
-    edgeDist
+    edgeDist * 2f - 1f
   }
 
 }
