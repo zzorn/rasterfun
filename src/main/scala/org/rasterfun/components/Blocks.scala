@@ -5,35 +5,42 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import org.scalaprops.ui.editors.SliderFactory
 import org.scalaprops.ui.editors.SliderFactory._
+import org.rasterfun.util.{SegmentCell, XorShiftRandom}
 
 /**
  * Tile or board pattern.
  */
 class Blocks extends IntensityComp {
 
-  val borderAmount =  p('borderAmount, 0.2f).editor(new SliderFactory(0f, 1f))
-  val tileSizeVertical =  p('tileDensityVertical, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
-  val tileSizeHorizontal =  p('tileDensityHorizontal, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
-  val tileShift =  p('tileShift, 0.5f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
+  val tileWidth =  p('tileDensityVertical, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val tileHeight =  p('tileDensityHorizontal, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val tileShift =  p('tileShift, 0.5f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val widthVariation =  p('widthVariation, 0.1f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val heightVariation =  p('heightVariation, 0.1f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val seed =  p('seed, 42)
+
+  private val verCell = new SegmentCell()
+  private val horCell = new SegmentCell()
+
+  updateSettings()
+  
+  private def updateSettings() {
+    horCell.size = tileWidth()
+    horCell.sizeVariation = widthVariation()
+    verCell.size = tileHeight()
+    verCell.sizeVariation = heightVariation()
+  }
 
   protected def basicIntensity(pos: inVec2): Float = {
-    val w: Float = if (tileSizeHorizontal() <= 0) 1f else tileSizeHorizontal()
-    val h: Float = if (tileSizeVertical() <= 0) 1f else tileSizeVertical()
-    val offs: Float = tileShift()
 
-    val cellX = (scala.math.floor(pos.x / w)).toInt
-    val cellY = (scala.math.floor(pos.y / h)).toInt
+    val intraCellY = verCell.calculateCell(pos.y, 0, seed())
 
-    val xPos: Float = pos.x - w * offs * cellY
+    val x: Float = pos.x + tileShift() * tileWidth() * verCell.cellId
+    val intraCellX = horCell.calculateCell(x, verCell.cellId, seed())
 
-    var intraCellX: Float = (xPos / w) % 1f
-    var intraCellY: Float = (pos.y / h) % 1f
-    if (intraCellX < 0) intraCellX = 1f + intraCellX
-    if (intraCellY < 0) intraCellY = 1f + intraCellY
-
+    // Distance from edges
     val vertDist = 1f - abs(intraCellX - 0.5f) * 2f
     val horDist  = 1f - abs(intraCellY - 0.5f) * 2f
-
     val edgeDist = min(vertDist, horDist)
 
     edgeDist * 2f - 1f
