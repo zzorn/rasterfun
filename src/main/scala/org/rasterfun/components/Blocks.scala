@@ -14,12 +14,12 @@ class Blocks extends IntensityComp {
   val borderAmount =  p('borderAmount, 0.2f).editor(new SliderFactory(0f, 1f))
   val tileSizeVertical =  p('tileDensityVertical, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
   val tileSizeHorizontal =  p('tileDensityHorizontal, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
-  val tileOffset =  p('tileOffset, 0.5f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
+  val tileShift =  p('tileShift, 0.5f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
 
   protected def basicIntensity(pos: inVec2): Float = {
     val w: Float = if (tileSizeHorizontal() <= 0) 1f else tileSizeHorizontal()
     val h: Float = if (tileSizeVertical() <= 0) 1f else tileSizeVertical()
-    val offs: Float = tileOffset()
+    val offs: Float = tileShift()
 
     val cellX = (scala.math.floor(pos.x / w)).toInt
     val cellY = (scala.math.floor(pos.y / h)).toInt
