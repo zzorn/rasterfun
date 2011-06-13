@@ -2,6 +2,7 @@ package org.rasterfun.util
 
 import simplex3d.math.float.functions._
 import simplex3d.math.floatx.functions._
+import java.util.Random
 
 /**
  * A 1-dimensional subdivision of a line into separate segments / blocks, where the sizes can vary using a
@@ -9,21 +10,26 @@ import simplex3d.math.floatx.functions._
  */
 final case class SegmentCell(var size: Float = 1, var sizeVariation: Float = 0) {
 
-  private val random = new XorShiftRandom()
+  private val random = new Random()
 
   var start: Float = 0f
   var end: Float = 1f
   var relativePosition: Float = 0.5f
   var cellId: Int = 0
 
-  def calculateCell(pos: Float, seed1: Int, seed2: Int): Float = {
-    
+  def calculateCell(pos: Float, seed: Int): Float = {
+    random.setSeed(seed)
+    random.nextLong()
+    random.nextLong()
+    val seed2 = random.nextLong()
+
     def wallPos(cellId: Int): Float = {
       val basePos: Float = cellId * size
       if (sizeVariation == 0) basePos
       else {
-        random.setSeed(cellId, seed1, seed2)
-        basePos + 0.5f * size * clamp((random.nextGaussian() * sizeVariation).toFloat, -1f, 1f)
+        random.setSeed(cellId ^ seed2)
+        //basePos + 0.5f * size * clamp((random.nextGaussian() * sizeVariation).toFloat, -1f, 1f)
+        basePos + 0.5f * size * random.nextFloat() * sizeVariation * 2f - 1f
       }
     }
 
