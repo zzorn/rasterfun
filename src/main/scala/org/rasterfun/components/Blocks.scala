@@ -13,11 +13,12 @@ import org.rasterfun.util.{FastXorShift, SegmentCell, XorShiftRandom}
  */
 class Blocks extends IntensityComp {
 
-  val tileWidth =  p('tileDensityVertical, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
-  val tileHeight =  p('tileDensityHorizontal, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val tileWidth =  p('tileWidth, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val tileHeight =  p('tileHeight, 2f).editor(new SliderFactory(0f, 4f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
   val tileShift =  p('tileShift, 0f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
-  val widthVariation =  p('widthVariation, 0.1f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
-  val heightVariation =  p('heightVariation, 0.1f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val widthVariation =  p('widthVariation, 0.2f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val heightVariation =  p('heightVariation, 0.2f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
+  val shiftVariation =  p('shiftVariation, 0.2f).editor(new SliderFactory(0f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false)) onChange(updateSettings())
   val seed =  p('seed, 42)
 
   private val verCell = new SegmentCell()
@@ -38,8 +39,11 @@ class Blocks extends IntensityComp {
 
     val intraCellY = verCell.calculateCell(pos.y, seed())
 
-    val x: Float = pos.x + tileShift() * tileWidth() * verCell.cellId
-    val intraCellX = horCell.calculateCell(x, verCell.cellId ^ seed())
+    val shift = tileShift() * tileWidth() * verCell.cellId +
+            (if (shiftVariation() > 0) tileWidth() * shiftVariation() * randomMinusOneToOne(verCell.cellId)
+             else 0f)
+
+    val intraCellX = horCell.calculateCell(pos.x + shift, verCell.cellId ^ seed())
 
     // Distance from edges
     val vertDist = 1f - abs(intraCellX - 0.5f) * 2f
@@ -57,6 +61,14 @@ class Blocks extends IntensityComp {
     r.setSeed(r.nextInt())
     r.nextFloat() * 2f - 1f
 */
+  }
+
+  private def randomMinusOneToOne(s: Int): Float = {
+    r.setSeed(s)
+    r.nextFloat()
+    r.setSeed(r.nextLong() ^ seed())
+    r.nextFloat()
+    r.nextFloat() * 2f - 1f
   }
 
 }
