@@ -27,9 +27,14 @@ final case class SegmentCell(var size: Float = 1, var sizeVariation: Float = 0) 
       val basePos: Float = cellId * size
       if (sizeVariation == 0) basePos
       else {
+        // Make a passable quality random number... TODO: Optimize
         random.setSeed(cellId ^ seed2)
+        random.nextFloat()
+        random.setSeed(random.nextLong())
+        random.nextFloat()
+        random.nextFloat()
         //basePos + 0.5f * size * clamp((random.nextGaussian() * sizeVariation).toFloat, -1f, 1f)
-        basePos + 0.5f * size * random.nextFloat() * sizeVariation * 2f - 1f
+        basePos + 0.5f * size * sizeVariation * (random.nextFloat() * 2f - 1f)
       }
     }
 
