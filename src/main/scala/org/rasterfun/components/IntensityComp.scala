@@ -7,7 +7,7 @@ import simplex3d.math.float.functions._
 import sun.net.www.content.audio.basic
 import org.scalaprops.ui.editors.SliderFactory._
 import org.scalaprops.ui.editors.{ColoredSliderBackgroundPainter, SliderFactory}
-import org.rasterfun.{IntensityGradient,  Gradient}
+import org.rasterfun.util.gradient.{IntensityGradient, Gradient}
 
 /**
  * Provides some functionality common to all components that provide just an intensity channel.

@@ -1,4 +1,4 @@
-package org.rasterfun
+package org.rasterfun.util.gradient
 
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
@@ -6,6 +6,7 @@ import simplex3d.math.float.functions._
 /**
  * 
  */
+// TODO: Move to scalaprops or utility lib?
 trait Gradient {
 
   def apply(v: Float): Vec4
