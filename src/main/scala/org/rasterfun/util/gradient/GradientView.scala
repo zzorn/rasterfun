@@ -11,7 +11,7 @@ import sas.swing.GradientPanel
  */
 class GradientView() extends JPanel {
 
-  var alphaGridSize = 16
+  var alphaGridSize = 8
   var alphaGrey1 = 0.6f
   var alphaGrey2 = 0.4f
   var emptyColor = Color.GRAY
@@ -56,7 +56,7 @@ class GradientView() extends JPanel {
         val c2 = makeColor(relativePos, alphaGrey2)
 
         var y = 0
-        var gridSelect = ((x % alphaGridSize) % 2) == 0
+        var gridSelect = ((x / alphaGridSize) % 2) == 0
         while (y < h) {
           val y2 = min(h, y + alphaGridSize - 1)
 
