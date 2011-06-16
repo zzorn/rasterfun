@@ -14,6 +14,7 @@ import java.awt._
 // TODO: Interaction: click to add new midpoint,
 // click color tab to open color selector, drag color tab to move it,
 // drag color tab away to remove it.
+// TODO: Support for larger intervals than 0..1?  Useful e.g. for terrain or -1..1.
 class GradientEditor() extends Editor[Gradient] {
 
   var backgroundColor: Color = Color.GRAY
