@@ -1,45 +1,71 @@
 package org.rasterfun.util.gradient
 
+import java.util.ArrayList
+
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
+import java.awt.Color
 
 /**
- * 
+ * Gradient consisting of points with values.
+ * The parameter, if specified, should be a _sorted_ set of control points (use .sorted method to sort them before calling if necessary)
  */
-// TODO: Move to scalaprops or utility lib?
-trait Gradient {
+class Gradient(initialPoints: List[GradientPoint] = Nil) extends AbstractGradient {
 
-  def apply(v: Float): Vec4
+  val controlPoints: List[GradientPoint] = initialPoints.sortWith(_ < _)
 
-}
+  def defaultColor: Vec4 = Vec4(0,0,0,1)
 
-object BlackWhiteGradient extends Gradient {
   def apply(v: Float): Vec4 = {
-    val c = clamp(v, 0f, 1f)
-    Vec4(c, c, c, 1f)
-  }
-}
+    var cs = controlPoints
+    var prev: GradientPoint = null
+    var next: GradientPoint = if (cs != Nil) cs.head else null
 
-object IntensityGradient extends Gradient {
-  def apply(v: Float): Vec4 = {
-    // White for values in range 0..1
-    if (v >= 0) {
-      if (v <= 1) Vec4(v, v, v, 1f)
-      else {
-        // Orange for higher values
-        val c = 1f / (v*0.5f + 0.5f)
-        val c2 = 1f / (v*v)
-        Vec4(1f, c, c2, 1f)
-      }
+    while (cs != Nil && v > cs.head.value) {
+      cs = cs.tail
+      prev = next
+      next = if (cs != Nil) cs.head else null
     }
+
+    if (prev == null && next == null) defaultColor
+    else if (prev == null) next.color
+    else if (next == null) prev.color
     else {
-      // Blue for negative values in range -1..0
-      if (v >= -1) Vec4(0f, 0f, -v, 1f)
-      else {
-        // Cyan for lower values
-        val c = 1f + 1f / v
-        Vec4(0f, c, 1f, 1f)
-      }
+      val range: Float =  next.value - prev.value
+      val r = if (range == 0) 0.5f else (v - prev.value) / range
+      mix(prev.color, next.color, r)
     }
   }
+
+  /** Adds control point */
+  def +(c: GradientPoint): Gradient = {
+    var sortedTail = controlPoints
+    var sortedHead: List[GradientPoint] = Nil
+
+    while (sortedTail != Nil && sortedTail.head.value < c.value) {
+      sortedHead ::= sortedTail.head
+      sortedTail = sortedTail.tail
+    }
+
+    new Gradient(sortedHead.reverse ::: List(c) ::: sortedTail )
+  }
+  
+  /** Removes control point */
+  def -(c: GradientPoint): Gradient = {
+    new Gradient(controlPoints.filterNot(_ == c))
+  }
+
+}
+
+case class GradientPoint(value: Float, color: Vec4) extends Comparable[GradientPoint] {
+
+  def compareTo(o: GradientPoint): Int = {
+    if (value < o.value) -1
+    else if (value > o.value) 1
+    else 0
+  }
+
+  def < (o: GradientPoint): Boolean = value < o.value
+
+  def solidJavaColor: Color = new Color(color.r, color.g, color.b)
 }

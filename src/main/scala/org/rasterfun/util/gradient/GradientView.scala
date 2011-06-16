@@ -5,6 +5,7 @@ import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import java.awt.{Color, Graphics2D, Graphics}
 import sas.swing.GradientPanel
+import simplex3d.math.floatx.functions._
 
 /**
  * An UI component that shows a gradient.
@@ -31,9 +32,9 @@ class GradientView() extends JPanel {
   private def makeColor(relativePos: Float, greyLevel: Float): Color = {
     val g = gradient.apply(relativePos)
     new Color(
-      mix(greyLevel, g.r, g.a),
-      mix(greyLevel, g.g, g.a),
-      mix(greyLevel, g.b, g.a)
+      clamp(mix(greyLevel, g.r, g.a), 0f, 1f),
+      clamp(mix(greyLevel, g.g, g.a), 0f, 1f),
+      clamp(mix(greyLevel, g.b, g.a), 0f, 1f)
     )
   }
 
