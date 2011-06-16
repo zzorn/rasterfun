@@ -7,7 +7,7 @@ import simplex3d.math.float.functions._
 import sun.net.www.content.audio.basic
 import org.scalaprops.ui.editors.SliderFactory._
 import org.scalaprops.ui.editors.{ColoredSliderBackgroundPainter, SliderFactory}
-import org.rasterfun.util.gradient.{IntensityGradient, Gradient}
+import org.rasterfun.util.gradient.{GradientEditorFactory, IntensityGradient, Gradient}
 
 /**
  * Provides some functionality common to all components that provide just an intensity channel.
@@ -15,7 +15,7 @@ import org.rasterfun.util.gradient.{IntensityGradient, Gradient}
 // TODO: Add rotation also?
 trait IntensityComp extends Comp {
 
-  val gradient  = p[Gradient]('gradient, IntensityGradient)
+  val gradient  = p[Gradient]('gradient, IntensityGradient).editor(GradientEditorFactory)
 
   val amplitude = p('amplitude, 1f).editor(new SliderFactory(-3f, 3f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
   val offset     = p('offset, 0f).editor(new SliderFactory(-1f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
