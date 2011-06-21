@@ -55,6 +55,17 @@ class Gradient(initialPoints: List[GradientPoint] = Nil) extends AbstractGradien
     new Gradient(controlPoints.filterNot(_ == c))
   }
 
+  def getClosestPoint(pos: Float): GradientPoint = {
+    var closestPoint : GradientPoint = null
+
+    controlPoints.foreach{ c =>
+      if (closestPoint == null) closestPoint = c
+      else if (abs(c.value - pos) < abs(closestPoint.value - pos)) closestPoint = c
+    }
+
+    closestPoint
+  }
+
 }
 
 case class GradientPoint(value: Float, color: Vec4) extends Comparable[GradientPoint] {
@@ -68,4 +79,31 @@ case class GradientPoint(value: Float, color: Vec4) extends Comparable[GradientP
   def < (o: GradientPoint): Boolean = value < o.value
 
   def solidJavaColor: Color = new Color(color.r, color.g, color.b)
+
+  /**
+   * Returns a new instance with a new value.
+   */
+  def newValue(v: Float): GradientPoint = {
+    if (v == value) this
+    else GradientPoint(v, color)
+  }
+
+  /**
+   * Returns a new instance with a new color.
+   */
+  def newAdjustedHue(hueAdj: Float): GradientPoint = {
+    GradientPoint(value, color) // TODO: Adjust hue color
+  }
+  /**
+   * Returns a new instance with a new color.
+   */
+  def newAdjustedLum(hueAdj: Float): GradientPoint = {
+    GradientPoint(value, color) // TODO: Adjust lum color
+  }
+  /**
+   * Returns a new instance with a new color.
+   */
+  def newAdjustedSat(hueAdj: Float): GradientPoint = {
+    GradientPoint(value, color) // TODO: Adjust sat color
+  }
 }
