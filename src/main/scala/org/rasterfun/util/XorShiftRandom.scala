@@ -11,6 +11,8 @@ import java.util.Random
  * Implementation of the XorShift algorithm, see
  *   http://www.jstatsoft.org/v08/i14/paper
  *   http://en.wikipedia.org/wiki/Xorshift
+ *
+ * TODO: DOESN'T WORK, RESULT IS HIGHLY PERIODIC!
  */
 final class XorShiftRandom extends Random  {
 
@@ -40,17 +42,26 @@ final class XorShiftRandom extends Random  {
               seed3: Int = XorShiftConstants.DEFAULT_SEED_3,
               seed4: Int = XorShiftConstants.DEFAULT_SEED_4) {
 
+    // Call java random set seed to have it reset its have next gaussian field
+    super.setSeed(seed1)
+
+    val ssd1 = XorShiftConstants.DEFAULT_SEED_1 ^ seed1
+    val ssd2 = XorShiftConstants.DEFAULT_SEED_2 ^ seed2
+    val ssd3 = XorShiftConstants.DEFAULT_SEED_3 ^ seed3
+    val ssd4 = XorShiftConstants.DEFAULT_SEED_4 ^ seed4
+
     // Zero seeds can not be used, if any is zero use the default one instead.
-    s1 = if (seed1 != 0) seed1 else XorShiftConstants.DEFAULT_SEED_1
-    s2 = if (seed2 != 0) seed2 else XorShiftConstants.DEFAULT_SEED_2
-    s3 = if (seed3 != 0) seed3 else XorShiftConstants.DEFAULT_SEED_3
-    s4 = if (seed4 != 0) seed4 else XorShiftConstants.DEFAULT_SEED_4
+    s1 = if (ssd1 != 0) ssd1 else XorShiftConstants.DEFAULT_SEED_1
+    s2 = if (ssd2 != 0) ssd2 else XorShiftConstants.DEFAULT_SEED_2
+    s3 = if (ssd3 != 0) ssd3 else XorShiftConstants.DEFAULT_SEED_3
+    s4 = if (ssd4 != 0) ssd4 else XorShiftConstants.DEFAULT_SEED_4
 
     // Cycle in the seeds
     nextInt()
     nextInt()
     nextInt()
     nextInt()
+
   }
 
 

@@ -8,7 +8,6 @@ import simplex3d.math.float.functions._
 import java.util.Random
 import org.scalaprops.ui.editors.{NumberEditorFactory, SliderFactory}
 import org.rasterfun.util.GaborNoise
-import org.rasterfun.{Gradient, BlackWhiteGradient}
 
 /**
  * Simplex Noise
