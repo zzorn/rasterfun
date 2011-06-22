@@ -15,7 +15,7 @@ import org.rasterfun.util.gradient._
 // TODO: Add rotation also?
 trait IntensityComp extends Comp {
 
-  val gradient  = p[Gradient]('gradient, DefaultGradients.FancyTest).editor(GradientEditorFactory)
+  val gradient  = p[Gradient]('gradient, DefaultGradients.Intensity).editor(GradientEditorFactory)
 
   val amplitude = p('amplitude, 1f).editor(new SliderFactory(-3f, 3f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))
   val offset     = p('offset, 0f).editor(new SliderFactory(-1f, 1f,restrictNumberFieldMax = false,restrictNumberFieldMin = false))

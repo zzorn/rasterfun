@@ -105,12 +105,22 @@ class GradientEditor() extends Editor[Gradient] {
         if (dragActive && draggedMarker != null) {
           gradient -= draggedMarker
 
-          // Cancel the drag it is dragged to the left
           if (e.getX < 0) {
+            // Clamp
+            draggedMarker = draggedMarker.newValue(0)
+            gradient += draggedMarker
+          }
+          else if (e.getX > getWidth) {
+            // Clamp
+            draggedMarker = draggedMarker.newValue(1)
+            gradient += draggedMarker
+          }
+          else if (e.getY < 0) {
+          // Cancel the drag it is dragged up
             draggedMarker = originalMarker
             gradient += originalMarker
           }
-          else if (e.getX >= getWidth || e.getY > getHeight) {
+          else if (e.getY > getHeight) {
             // Hide the marker if it is dragged to the right or down
           } else {
             // Update drag marker
