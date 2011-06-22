@@ -2,6 +2,7 @@ package org.rasterfun.util
 
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
+import simplex3d.math.floatx.functions._
 
 /**
  * 
@@ -68,6 +69,14 @@ object ColorUtils {
     (max + min) / 2f
   }
 
+  def adjustColorHSL(color: Vec4, hueDelta: Float = 0f, satDelta: Float = 0f, lumDelta: Float = 0f, alphaDelta: Float = 0f): Vec4 = {
+    val hue = ColorUtils.hue(color) + hueDelta
+    val sat = clamp(ColorUtils.saturation(color) + satDelta, 0f, 1f)
+    val lum = clamp(ColorUtils.lightness(color) + lumDelta, 0f, 1f)
+    val alpha = clamp(color.a + alphaDelta, 0f, 1f)
+    ColorUtils.HSLtoRGB(hue, sat, lum, alpha)
+  }
+
 
   /**
    *      Convert a Hue Saturation Lightness color to Red Green Blue color space.
@@ -91,13 +100,12 @@ object ColorUtils {
       // Arbitrary color
 
       def hueToColor(p: Float, q: Float, t: Float): Float = {
-        var th = t
+        var th = t % 1f
         if (th < 0) th += 1
-        if (th > 1) th -= 1
         if (th < 1f / 6f) return p + (q - p) * 6f * th
         if (th < 1f / 2f) return q
         if (th < 2f / 3f) return p + (q - p) * (2f / 3f - th) * 6f
-        return p
+        p
       }
 
       val q = if (lightness < 0.5f) (lightness * (1f + saturation)) else (lightness + saturation - lightness * saturation)

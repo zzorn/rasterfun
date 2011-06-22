@@ -159,22 +159,27 @@ class GradientEditor() extends Editor[Gradient] {
       override def mouseWheelMoved(e: MouseWheelEvent) {
         // Change the color with the wheel and modifiers
 
-        val change = -e.getWheelRotation / 16f
+        val change = -e.getWheelRotation / 12f
 
         val marker: GradientPoint = getMarkerAtPos(e)
 
         if (marker != null && change != 0) {
 
           gradient -= marker
-          gradient += (if (isControlPressed(e)) {
-            marker.newAdjustedHue(change / 2f)
-          } else if (isShiftPressed(e)) {
-            marker.newAdjustedSat(change)
-          } else  {
-            marker.newAdjustedLum(change)
-          })
+          gradient += (
+            if (isControlPressed(e) && isShiftPressed(e)) {
+              marker.newAdjustedAlpha(change)
+            } else if (isControlPressed(e)) {
+              marker.newAdjustedHue(change / 2f)
+            } else if (isShiftPressed(e)) {
+              marker.newAdjustedSat(change)
+            } else  {
+              marker.newAdjustedLum(change)
+            }
+          )
         }
 
+        repaint()
       }
     }
 

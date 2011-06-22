@@ -5,6 +5,7 @@ import java.util.ArrayList
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import java.awt.Color
+import org.rasterfun.util.ColorUtils
 
 /**
  * Gradient consisting of points with values.
@@ -92,18 +93,27 @@ case class GradientPoint(value: Float, color: Vec4) extends Comparable[GradientP
    * Returns a new instance with a new color.
    */
   def newAdjustedHue(hueAdj: Float): GradientPoint = {
-    GradientPoint(value, color) // TODO: Adjust hue color
+    GradientPoint(value, ColorUtils.adjustColorHSL(color, hueDelta = hueAdj))
   }
+
   /**
    * Returns a new instance with a new color.
    */
-  def newAdjustedLum(hueAdj: Float): GradientPoint = {
-    GradientPoint(value, color) // TODO: Adjust lum color
+  def newAdjustedLum(lumAdj: Float): GradientPoint = {
+    GradientPoint(value, ColorUtils.adjustColorHSL(color, lumDelta = lumAdj))
   }
+
   /**
    * Returns a new instance with a new color.
    */
-  def newAdjustedSat(hueAdj: Float): GradientPoint = {
-    GradientPoint(value, color) // TODO: Adjust sat color
+  def newAdjustedSat(satAdj: Float): GradientPoint = {
+    GradientPoint(value, ColorUtils.adjustColorHSL(color, satDelta = satAdj))
+  }
+
+  /**
+   * Returns a new instance with a new color.
+   */
+  def newAdjustedAlpha(alphaAdj: Float): GradientPoint = {
+    GradientPoint(value, ColorUtils.adjustColorHSL(color, alphaDelta = alphaAdj))
   }
 }
