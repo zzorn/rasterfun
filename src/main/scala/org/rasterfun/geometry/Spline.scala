@@ -10,15 +10,15 @@ import simplex3d.math.float.functions._
  * and arbitrary brush strokes can be broken down into approximated quadratic splines.
  */
 case class Spline(start: inVec2, control: inVec2, end: inVec2) {
-
-  /**
+/*
+  / **
    * Returns the distance to closest tangent point on the spline (positive for one side, negative for the other),
    * and the position of the closest tangent point along the spine (0 for start, 1 for end).
    *
    * Returns true if there is a tangent point on the spine to the input pos, false if none
    * (the pos lies beyond the start or end of the spline - in this case the distance will be the distance to the start or endpoint,
    * and the position will be the start or endpoint).
-   */
+   * /
   def distanceAndPosition(pos: Vec2, distAndPos: outVec2): Boolean =
 	// returns { t:Number, pos:Point, dist:Number, nor:Point }
 	// (costs about 80 multiplications+additions)
@@ -88,5 +88,5 @@ case class Spline(start: inVec2, control: inVec2, end: inVec2) {
 	}
   }
 
-
+*/
 }
