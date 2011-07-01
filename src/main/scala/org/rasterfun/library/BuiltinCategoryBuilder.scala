@@ -24,8 +24,10 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new Displace())
     basic.addComponent(new Radial())
     basic.addComponent(new SolidIntensity())
+    basic.addComponent(new RgbToColor())
     basic.addComponent(new HslToColor())
     basic.addComponent(new Blocks())
+    basic.addComponent(new Light())
 
     val examples = cat('Examples)
     examples.addComponent(buildCoralExample())
