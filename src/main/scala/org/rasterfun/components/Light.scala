@@ -5,46 +5,35 @@ import java.awt.Color
 import org.scalaprops.Property
 import org.scalaprops.ui.editors.SliderFactory._
 import org.scalaprops.ui.editors.{ColoredSliderBackgroundPainter, SliderFactory}
-import simplex3d.math.float._
 import java.lang.Math
-import java.text.Normalizer
 import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
+import org.rasterfun.util.coloreditor.ColorEditorFactory
 
 /**
  * Directed light.
  */
 class Light extends Comp {
 
-  private def makeProp(name: Symbol, value: Float, color: Color): Property[Float] = {
+  private def makeProp(name: Symbol, value: Float, color: Color, max: Float): Property[Float] = {
     property(name, value)
-            .onValueChange{ (o: Float, n: Float) => updateColor()}
-            .editor(new SliderFactory(0f, 1f, backgroundPainter =
+            .editor(new SliderFactory(0f, max, backgroundPainter =
                 new ColoredSliderBackgroundPainter(Color.WHITE, color)))
   }
 
   val colorMap  = addInput('colorMap, new SolidColor())
   val normalMap = addInput('normalMap, new Noise())
 
-  val red    = makeProp('red,   1f, new Color(0.7f, 0.2f, 0.2f))
-  val green  = makeProp('green, 1f, new Color(0.2f, 0.7f, 0.2f))
-  val blue   = makeProp('blue,  1f, new Color(0.2f, 0.2f, 0.7f))
-  val brightness = makeProp('brightness, 1f, new Color(0.5f, 0.5f, 0.5f))
+  val lightColor = p('lightColor, Vec4(1, 1, 1, 1)).editor(new ColorEditorFactory(false))
+  val ambientColor = p('ambientColor, Vec4(1, 1, 1, 1)).editor(new ColorEditorFactory(false))
+
+  val brightness = makeProp('brightness, 1f, new Color(0.5f, 0.5f, 0.5f), 3f)
 
   val lightX= p('lightX, 0.5f)
   val lightY= p('lightY, 0.5f)
   val lightZ= p('lightZ, 0.5f)
 
-
-  private var _lightColor: Vec4 = Vec4(1,0,0,1)
-
-  updateColor()
-
-
-  private def updateColor() {
-    _lightColor = Vec4(red(), green(), blue(), 1f)
-  }
 
   def rgba(pos: inVec2): Vec4 = {
 
@@ -54,7 +43,7 @@ class Light extends Comp {
 
     val overlap = max(0f, dot(surfaceNormal.xyz, lightNormal))
 
-    baseColor * (_lightColor * overlap * brightness())
+    baseColor * (lightColor() * overlap * brightness())
   }
 
 

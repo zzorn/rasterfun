@@ -52,8 +52,12 @@ trait IntensityComp extends Comp {
    */
   protected def basicIntensity(pos: inVec2): Float
 
-  override def intensity(pos: inVec2): Float = {
-    var v = basicIntensity((pos + posOffset) * posScale)
+  def projectPos(pos: inVec2): Vec2 = {
+    ( pos + posOffset ) * posScale
+  }
+
+  def pureIntensity(pos: inVec2): Float = {
+    var v = basicIntensity(projectPos(pos))
 
     val minusOneToOne = centerOnZero()
     if (!minusOneToOne) {
@@ -81,6 +85,9 @@ trait IntensityComp extends Comp {
     v
   }
 
-  override def rgba(pos: inVec2): Vec4 = gradient()(intensity(pos))
+
+  override def intensity(pos: inVec2): Float = gradient().intensity(pureIntensity(pos))
+
+  override def rgba(pos: inVec2): Vec4 = gradient()(pureIntensity(pos))
 
 }

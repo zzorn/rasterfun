@@ -3,6 +3,7 @@ package org.rasterfun.util
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
 import simplex3d.math.floatx.functions._
+import java.awt.{Graphics, Color}
 
 /**
  * 
@@ -10,9 +11,42 @@ import simplex3d.math.floatx.functions._
 
 object ColorUtils {
 
-  val BLACK = Vec4(0f, 0f, 0f, 1f)
-  val WHITE = Vec4(1f, 1f, 1f, 1f)
-  val RED   = Vec4(1f, 0f, 0f, 1f)
+  def toJavaColor(vec: inVec4): Color = new Color(vec.r, vec.g, vec.b, vec.a)
+  def toSolidJavaColor(vec: inVec4): Color = new Color(vec.r, vec.g, vec.b, 1f)
+
+  def paintColorPreview(color: inVec4, g: Graphics, width: Int, height: Int, squareSize: Int = 16) {
+    if (color.a >= 1) {
+      g.setColor(toSolidJavaColor(color))
+      g.fillRect(0,0,width, height)
+    }
+    else {
+      val c1 = toSolidJavaColor(mix(DarkGrey,  color, color.a))
+      val c2 = toSolidJavaColor(mix(LightGrey, color, color.a))
+
+      var y = 0
+      while (y < height) {
+
+        var dark = (y % (squareSize * 2) < squareSize)
+        var x = 0
+        while (x < width) {
+          g.setColor((if (dark) c1 else c2))
+          g.fillRect(x, y, squareSize, squareSize)
+
+          dark = !dark
+          x += squareSize
+        }
+
+        y += squareSize
+      }
+    }
+  }
+
+
+  val DarkGrey  = Vec4(0.333f, 0.333f, 0.333f, 1f)
+  val LightGrey = Vec4(0.666f, 0.666f, 0.666f, 1f)
+  val Black = Vec4(0f, 0f, 0f, 1f)
+  val White = Vec4(1f, 1f, 1f, 1f)
+  val Red   = Vec4(1f, 0f, 0f, 1f)
 
 
   def hue(color: Vec4): Float = {

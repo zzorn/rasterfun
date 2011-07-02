@@ -26,6 +26,7 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new SolidIntensity())
     basic.addComponent(new RgbToColor())
     basic.addComponent(new HslToColor())
+    basic.addComponent(new HeightToNormalMap())
     basic.addComponent(new Blocks())
     basic.addComponent(new Light())
 

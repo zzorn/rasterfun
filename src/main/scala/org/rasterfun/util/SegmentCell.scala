@@ -17,6 +17,8 @@ final case class SegmentCell(var size: Float = 1, var sizeVariation: Float = 0) 
   var relativePosition: Float = 0.5f
   var cellId: Int = 0
 
+  def center: Float = 0.5f * (start + end)
+
   def calculateCell(pos: Float, seed: Int): Float = {
     random.setSeed(seed)
     random.nextLong()

@@ -38,6 +38,11 @@ class Gradient(initialPoints: List[GradientPoint] = Nil) extends AbstractGradien
     }
   }
 
+  def intensity(v: Float): Float = {
+    val c = apply(v)
+    (c.r + c.g + c.b) / 3f
+  }
+
   /** Adds control point */
   def +(c: GradientPoint): Gradient = {
     var sortedTail = controlPoints
