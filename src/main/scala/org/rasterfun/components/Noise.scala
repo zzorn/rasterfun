@@ -12,7 +12,7 @@ import org.rasterfun.util.GaborNoise
 /**
  * Simplex Noise
  */
-class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f, _seed: Int = new Random().nextInt(1000)) extends IntensityComp {
+class Noise(_scale: Float = 1f, _detail: Int = 4, _x: Float = 0f, _y: Float = 0f, _seed: Int = ) extends IntensityComp {
 
   private val maxDetail = 8
 

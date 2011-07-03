@@ -19,6 +19,7 @@ object BuiltinCategoryBuilder {
     val basic = cat('Basic)
     basic.addComponent(new Empty())
     basic.addComponent(new Blend())
+    basic.addComponent(new Combine())
     basic.addComponent(new SolidColor())
     basic.addComponent(new Noise())
     basic.addComponent(new Displace())
