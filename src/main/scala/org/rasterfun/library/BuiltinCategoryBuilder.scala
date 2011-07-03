@@ -20,6 +20,7 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new Empty())
     basic.addComponent(new Blend())
     basic.addComponent(new Combine())
+    basic.addComponent(new Operation())
     basic.addComponent(new SolidColor())
     basic.addComponent(new Noise())
     basic.addComponent(new HslAdjust())

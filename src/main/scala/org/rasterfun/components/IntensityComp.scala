@@ -86,7 +86,7 @@ trait IntensityComp extends Comp {
   }
 
 
-  override def intensity(pos: inVec2): Float = gradient().intensity(pureIntensity(pos))
+  override def intensity(pos: inVec2): Float = pureIntensity(pos)
 
   override def rgba(pos: inVec2): Vec4 = gradient()(pureIntensity(pos))
 

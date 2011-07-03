@@ -36,7 +36,7 @@ class LibraryView(library: Library) extends RichPanel("Library") {
   init()
 
   private def init() {
-    categoryBrowser.setPreferredSize(new Dimension(200, 200))
+    categoryBrowser.setPreferredSize(new Dimension(220, 200))
     categoryBrowser.setRootVisible(false)
     categoryBrowser.addTreeSelectionListener(new TreeSelectionListener{
       def valueChanged(e: TreeSelectionEvent) {
