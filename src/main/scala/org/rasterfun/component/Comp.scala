@@ -23,6 +23,7 @@ import org.scalaprops.ui.editors.NoEditorFactory
 // TODO: Better name.  Component and Node are both overloaded to annoyance though, something unique plz.
 // TODO: Add parent component reference, so that we can check for cycles
 // TODO: Also add link to group that the component is in?  Or it can be retrieved by following parent pointers
+// TODO: Have all components have a seed property, and initialize it with a random value when copying the component from a library
 trait Comp extends Bean {
 
   private var _inputNames: List[Symbol] = Nil
@@ -124,9 +125,11 @@ trait Comp extends Bean {
       case 'hue => ColorUtils.hue(rgba(pos))
       case 'saturation => ColorUtils.saturation(rgba(pos))
       case 'lightness => ColorUtils.lightness(rgba(pos))
-      case _ => 0f
+      case _ => nonStandardChannel(channel, pos)
     }
   }
+
+  def nonStandardChannel(channel: Symbol, pos: inVec2): Float = 0f
 
   /** Creates a copy of this component, with input references replaced with empty components. */
   def copyComponent: Comp = createCopyWithProperties(false)
