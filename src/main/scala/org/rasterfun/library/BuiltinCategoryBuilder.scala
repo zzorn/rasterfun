@@ -18,7 +18,6 @@ object BuiltinCategoryBuilder {
 
     val basic = cat('Basic)
     basic.addComponent(new Empty())
-    basic.addComponent(new Blend())
     basic.addComponent(new Combine())
     basic.addComponent(new Operation())
     basic.addComponent(new SolidColor())
@@ -35,12 +34,12 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new Light())
 
     val examples = cat('Examples)
-    examples.addComponent(buildCoralExample())
+//    examples.addComponent(buildCoralExample())
     
     basic
   }
 
-
+/*
   def buildCoralExample(): Comp = {
     val orangey = new Blend(new Noise(2, 3),
                           new SolidColor(1f, 0.5f),
@@ -62,5 +61,5 @@ object BuiltinCategoryBuilder {
     blend.name := "Mystery Coral"
     blend
   }
-
+*/
 }

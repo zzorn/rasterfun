@@ -1,9 +1,11 @@
 package org.rasterfun.components
 
 import org.rasterfun.component.Comp
-import org.scalaprops.ui.editors.SelectionEditorFactory
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
+import org.scalaprops.ui.editors.{SliderFactory, SelectionEditorFactory}
+import org.scalaprops.ui.editors.SliderFactory._
+import simplex3d.math.floatx.functions._
 
 /**
  * Combines two components, using addition, multiplication, etc.
@@ -12,13 +14,17 @@ class Combine extends Comp {
 
   val sourceA = addInput('a, new Noise(_seed = 43432))
   val sourceB = addInput('b, new Noise(_seed = 81324))
+  val select  = addInput('select, new SolidIntensity(1f))
+
+  val opacity = p('opacity, 1f).editor(new SliderFactory(0f, 1f))
+  val swapInputs = p('swapInputs, false)
 
   val operation = p[CombineOp]('operation, MulOp).editor(new SelectionEditorFactory[CombineOp](List(
+    SolidOp,
     AddOp,
     MulOp,
     SubOp,
     DivOp,
-    AverageOp,
     MaxOp,
     MinOp,
     ModOp,
@@ -27,12 +33,29 @@ class Combine extends Comp {
 
   override def channels = sourceA().channels union sourceB().channels
 
-  def rgba(pos: inVec2) = operation().opColor(sourceA().rgba(pos),
-                                              sourceB().rgba(pos))
-  override def intensity(pos: inVec2) = operation().op(sourceA().intensity(pos),
-                                                       sourceB().intensity(pos))
-  override def channel(channel: Symbol, pos: inVec2) = operation().op(sourceA().channel(channel, pos),
-                                                                      sourceB().channel(channel, pos))
+  private def combineColor(pos: inVec2, a: inVec4, b: inVec4): Vec4 = {
+    val t = opacity() * select().intensity(pos)
+    if (swapInputs()) mix(b, operation().opColor(b, a), t)
+    else              mix(a, operation().opColor(a, b), t)
+  }
+
+  private def combineFloat(pos: inVec2, a: Float, b: Float): Float = {
+    val t = opacity() * select().intensity(pos)
+    if (swapInputs()) mix(b, operation().op(b, a), t)
+    else              mix(a, operation().op(a, b), t)
+  }
+
+  def rgba(pos: inVec2) = combineColor(pos,
+                                       sourceA().rgba(pos),
+                                       sourceB().rgba(pos))
+
+  override def intensity(pos: inVec2) = combineFloat(pos,
+                                                     sourceA().intensity(pos),
+                                                     sourceB().intensity(pos))
+
+  override def channel(channel: Symbol, pos: inVec2) = combineFloat(pos,
+                                                                    sourceA().channel(channel, pos),
+                                                                    sourceB().channel(channel, pos))
 }
 
 
@@ -41,6 +64,11 @@ abstract class CombineOp(name: String) {
 
   def op(a: Float, b: Float): Float
   def opColor(a: inVec4, b: inVec4): Vec4
+}
+
+case object SolidOp extends CombineOp("Solid") {
+  def op(a: Float, b: Float) = b
+  def opColor(a: inVec4, b: inVec4) = b
 }
 
 case object AddOp extends CombineOp("Add") {
@@ -61,11 +89,6 @@ case object SubOp extends CombineOp("Subtract") {
 case object DivOp extends CombineOp("Divide") {
   def op(a: Float, b: Float) = a / b
   def opColor(a: inVec4, b: inVec4) = a / b
-}
-
-case object AverageOp extends CombineOp("Average") {
-  def op(a: Float, b: Float) = 0.5f * (a + b)
-  def opColor(a: inVec4, b: inVec4) = 0.5f * (a + b)
 }
 
 case object MaxOp extends CombineOp("Max") {
