@@ -22,6 +22,7 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new Operation())
     basic.addComponent(new SolidColor())
     basic.addComponent(new Noise())
+    basic.addComponent(new Select())
     basic.addComponent(new HslAdjust())
     basic.addComponent(new Displace())
     basic.addComponent(new Stripes())

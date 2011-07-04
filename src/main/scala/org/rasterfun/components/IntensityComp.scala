@@ -13,6 +13,7 @@ import org.rasterfun.util.gradient._
  * Provides some functionality common to all components that provide just an intensity channel.
  */
 // TODO: Add rotation also?
+// TODO: Move gradient to own component, to make intensity components a bit more straightforward?
 trait IntensityComp extends Comp {
 
   val gradient  = p[Gradient]('gradient, DefaultGradients.Intensity).editor(GradientEditorFactory)

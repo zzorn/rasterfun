@@ -28,10 +28,10 @@ class Light extends Comp {
   val lightColor = p('lightColor, Vec4(1, 1, 1, 1)).editor(new ColorEditorFactory(false))
   val ambientColor = p('ambientColor, Vec4(1, 1, 1, 1)).editor(new ColorEditorFactory(false))
 
-  val brightness = makeProp('brightness, 1f, new Color(0.5f, 0.5f, 0.5f), 3f)
+  val brightness = makeProp('brightness, 1f, new Color(0.6f, 0.5f, 0.4f), 3f)
 
-  val lightX= p('lightX, 0.5f)
-  val lightY= p('lightY, 0.5f)
+  val lightX= p('lightX, -0.5f)
+  val lightY= p('lightY, -0.5f)
   val lightZ= p('lightZ, 0.5f)
 
 

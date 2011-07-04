@@ -10,9 +10,9 @@ import java.awt.Color
 /**
  * Convert a hue, saturation, and lightness input into a color.
  */
-class HslToColor(_hue: Comp = new SolidIntensity(),
-                  _saturation: Comp = new SolidIntensity(),
-                  _lightness: Comp = new SolidIntensity()) extends Comp {
+class HslToColor(_hue: Comp        = new Noise(_amplitude = 0.1f, _seed= 2134),
+                 _saturation: Comp = new Noise(_amplitude = 0.2f, _offset = 0.5f, _seed= 8769),
+                 _lightness: Comp  = new Noise(_amplitude = 0.2f, _offset = 0.5f, _seed= 5632)) extends Comp {
 
   val hue         = addInput('hue, _hue)
   val saturation  = addInput('saturation, _saturation)
