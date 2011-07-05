@@ -20,7 +20,7 @@ trait Segment extends Comp {
 
 
   override def channels = super.channels union
-                          Set('along, 'sideways, 'strength, 'speed)
+                          Set('u, 'v, 'strength, 'speed)
 
   def along(pos: inVec2): Float
   def sideways(pos: inVec2): Float
@@ -37,8 +37,8 @@ trait Segment extends Comp {
 
   override def nonStandardChannel(channel: Symbol, pos: inVec2): Float = {
     channel match {
-      case 'along => along(pos)
-      case 'sideways => sideways(pos)
+      case 'u => along(pos)
+      case 'v => sideways(pos)
       case 'strength => strength(pos)
       case 'speed => speed(pos)
       case _ => 0f
