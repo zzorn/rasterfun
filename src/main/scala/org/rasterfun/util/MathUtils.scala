@@ -2,6 +2,7 @@ package org.rasterfun.util
 
 import simplex3d.math.float.functions._
 import simplex3d.math.float._
+import java.lang.Math
 
 /**
  * 
@@ -43,5 +44,10 @@ object MathUtils {
   def distanceToLineSegment(point:inVec2, a: inVec2, b: inVec2): Float = {
     // TODO: Negate distance if point is on left of line
     distance(closestPointOnLineSegment(point, a, b), point)
+  }
+
+  def directionOfVectorInTurns(v: inVec2): Float = {
+    if (v == Vec2.Zero) 0f
+    else atan(v.y, v.x) / Tau.toFloat
   }
 }

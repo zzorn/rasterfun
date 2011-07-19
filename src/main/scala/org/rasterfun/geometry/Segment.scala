@@ -20,12 +20,13 @@ trait Segment extends Comp {
 
 
   override def channels = super.channels union
-                          Set('u, 'v, 'strength, 'speed)
+                          Set('u, 'v, 'strength, 'speed, 'direction)
 
   def along(pos: inVec2): Float
   def sideways(pos: inVec2): Float
   def strength(pos: inVec2): Float
   def speed(pos: inVec2): Float
+  def direction(pos: inVec2): Float // In turns (0..1)
 
   def rgba(pos: inVec2) = Vec4(along(pos),
                                sideways(pos),
@@ -41,6 +42,7 @@ trait Segment extends Comp {
       case 'v => sideways(pos)
       case 'strength => strength(pos)
       case 'speed => speed(pos)
+      case 'direction => direction(pos)
       case _ => 0f
     }
   }
