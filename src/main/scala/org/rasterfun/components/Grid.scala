@@ -1,6 +1,5 @@
 package org.rasterfun.components
 
-import simplex3d.math._
 import simplex3d.math.float._
 import simplex3d.math.float.functions._
 import org.rasterfun.component.Comp
@@ -75,7 +74,7 @@ class Grid extends Comp {
     val topLinesCount = clamp(round(random.nextFloat() * topDensity).toInt, 0, maxLines)
 
     // Pick color & other data from closest line
-    var closestDistance: Float = Math.POS_INF_FLOAT
+    var closestDistance = Math.POS_INF_FLOAT
     lineType().calculatePixel(pos, lineStart, lineEnd, pixelData)
     if (pixelData.distance < closestDistance) {
       closestDistance = pixelData.distance
