@@ -2,7 +2,7 @@ package org.rasterfun.library
 
 import org.rasterfun.components._
 import org.rasterfun.component.Comp
-import org.rasterfun.geometry.StraightSegment
+import org.rasterfun.geometry.StraightLine
 
 /**
  * 

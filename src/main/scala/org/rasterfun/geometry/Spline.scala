@@ -11,7 +11,7 @@ import simplex3d.math.float.functions._
  *
  * Based on algorithm from http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html
  */
-case class Spline(start: inVec2, control: inVec2, end: inVec2) /*extends Segment*/ {
+case class Spline(start: inVec2, control: inVec2, end: inVec2) /*extends LineType*/ {
 
   /* *
    * Returns the distance to closest tangent point on the spline (positive for one side, negative for the other),
