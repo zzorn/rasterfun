@@ -2,7 +2,7 @@ package org.rasterfun.library
 
 import org.rasterfun.components._
 import org.rasterfun.component.Comp
-import org.rasterfun.geometry.StraightLine
+import org.rasterfun.geometry.{Segment, StraightLine}
 
 /**
  * 
@@ -34,8 +34,8 @@ object BuiltinCategoryBuilder {
     basic.addComponent(new HeightToNormalMap())
     basic.addComponent(new Blocks())
     basic.addComponent(new Light())
-    basic.addComponent(new StraightSegment())
-
+    basic.addComponent(new Segment())
+ 
     val examples = cat('Examples)
 //    examples.addComponent(buildCoralExample())
     

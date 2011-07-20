@@ -11,4 +11,13 @@ class LinePixelData(var strength: Float = 1f,
                          var direction: Float = 0f,
                          var distance: Float = 0f) {
 
+  def setFrom(source: LinePixelData) {
+    strength = source.strength
+    speed = source.speed
+    along = source.along
+    sideways = source.sideways
+    direction = source.direction
+    distance = source.distance
+  }
+
 }

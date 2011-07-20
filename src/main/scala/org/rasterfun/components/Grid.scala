@@ -34,6 +34,7 @@ class Grid extends Comp {
   private val lineStart = new PointData
   private val lineEnd   = new PointData
   private val pixelData: LinePixelData = new LinePixelData()
+  private val pd: LinePixelData = new LinePixelData()
 
   private def randVariation(a: Int, b: Int, variation: Float): Float = {
     random.setSeed(a)
@@ -51,7 +52,7 @@ class Grid extends Comp {
     random
   }
 
-  def rgba(pos: inVec2): Vec4 = {
+  def calculatePixel(pos: inVec2, pixelData: LinePixelData) {
     // Determine the grid this point is in
     val gridWidth = gridSize() * (0f + gridProportions())
     val gridHeight = gridSize() * (1f - gridProportions())
@@ -74,13 +75,21 @@ class Grid extends Comp {
     val topLinesCount = clamp(round(random.nextFloat() * topDensity).toInt, 0, maxLines)
 
     // Pick color & other data from closest line
+
+    // Loop through lines
+    // TODO: Calculate line start and end for each line
     var closestDistance = Math.POS_INF_FLOAT
-    lineType().calculatePixel(pos, lineStart, lineEnd, pixelData)
+    lineType().calculatePixel(pos, lineStart, lineEnd, pd)
     if (pixelData.distance < closestDistance) {
       closestDistance = pixelData.distance
+      pixelData.setFrom(pd)
     }
-
-    Vec4(0, 0, 0, 0)
   }
-  
+
+  def rgba(pos: inVec2) {
+    calculatePixel(pos, pixelData)
+
+    // TODO: Get color from texture
+    Vec4(pixelData.along, pixelData.sideways, 0, 1f)
+  }
 }

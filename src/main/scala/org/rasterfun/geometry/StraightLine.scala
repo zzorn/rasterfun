@@ -19,6 +19,8 @@ object StraightLine extends LineType {
 
     val along: Float = MathUtils.distanceAlongLine(pos, start.pos, end.pos - start.pos)
 
+    // TODO: Additional inlining and optimization?
+
     outData.along     = along
     outData.speed     = mix(start.strength, end.strength, along)
     outData.strength  = mix(start.speed,    end.speed, along)
