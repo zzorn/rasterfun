@@ -76,6 +76,8 @@ class Grid extends Comp {
 
     // Pick color & other data from closest line
 
+    // TODO: Cache the lines for most recent cell
+
     // Loop through lines
     // TODO: Calculate line start and end for each line
     var closestDistance = Math.POS_INF_FLOAT
