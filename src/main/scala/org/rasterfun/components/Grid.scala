@@ -88,7 +88,7 @@ class Grid extends Comp {
     }
   }
 
-  def rgba(pos: inVec2) {
+  def rgba(pos: inVec2): Vec4 = {
     calculatePixel(pos, pixelData)
 
     // TODO: Get color from texture

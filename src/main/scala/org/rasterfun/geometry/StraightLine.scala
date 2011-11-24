@@ -10,7 +10,7 @@ import org.rasterfun.util.MathUtils
  */
 object StraightLine extends LineType {
 
-  def name = "Straight line"
+  override def name = "Straight line"
 
   def calculatePixel(pos: inVec2,
                      start: PointData,
