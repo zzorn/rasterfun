@@ -16,6 +16,10 @@ public class PictureGeneratorTest {
     @Test
     public void testPictureGenerator() {
         SinglePictureGenerator pictureGenerator = new SinglePictureGenerator();
+        pictureGenerator.addChannel("red");
+        pictureGenerator.addChannel("green");
+        pictureGenerator.addChannel("blue");
+        pictureGenerator.addChannel("alpha");
 
         final float[] p = {0f};
         final PictureCalculation calculation = pictureGenerator.generatePicture(new ProgressListener() {
@@ -40,6 +44,7 @@ public class PictureGeneratorTest {
         // Wait for it to finish
         final Picture picture = calculation.getPictureAndWait();
         assertNotNull("A picture should have been created", picture);
+        assertEquals("Number of channels should be correct", 4, picture.getChannelCount());
 
         assertEquals("Progress should be complete", 1.0f, p[0], 0.0001);
     }

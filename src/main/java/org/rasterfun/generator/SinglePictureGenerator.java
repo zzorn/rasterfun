@@ -19,11 +19,10 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
     private final ArrayList<String> channels = new ArrayList<String>();
 
     public SinglePictureGenerator() {
-        // TODO: Where will channels be specified?
-        channels.add("red");
-        channels.add("green");
-        channels.add("blue");
-        channels.add("alpha");
+    }
+
+    public void addChannel(String channelName) {
+        channels.add(channelName);
     }
 
     @Override
