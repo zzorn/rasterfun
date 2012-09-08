@@ -3,6 +3,7 @@ package org.rasterfun;
 import org.junit.Test;
 import org.rasterfun.core.*;
 import org.rasterfun.parameters.ParametersImpl;
+import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 
 import java.util.Arrays;
@@ -41,7 +42,55 @@ public class PixelCalculatorTest {
     }
 
     @Test
-    public void testCancel() throws CalculatorCompilationException {
+    public void testErrorCalculation() throws CalculatorCompilationException {
+
+        // Lets make a division by zero halfway through
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        calculatorBuilder.addEvaluationLoopSource("int w = 1 / (50 - y); // Oops!\n");
+
+        // Create empty picture to draw on
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("roses", "violets"));
+
+        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+
+        final boolean[] errorReported = {false};
+        final float[] progressMade = {0};
+        calculation.addListener(new ProgressListener() {
+            @Override
+            public void onProgress(float progress) {
+                System.out.println("progress = " + progress);
+                progressMade[0] = progress;
+            }
+
+            @Override
+            public void onStatusChanged(String description) {
+                System.out.println("description = " + description);
+            }
+
+            @Override
+            public void onError(String description, Throwable cause) {
+                System.out.println("Error description = " + description);
+                errorReported[0] = true;
+            }
+        });
+
+        calculation.start();
+
+        // Wait for boom
+        final Picture finalPicture = calculation.getPictureAndWait();
+
+        delay(10);
+
+        System.out.println("calculation.getProblemDescription() = " + calculation.getProblemDescription());
+
+        assertNull("The picture should be null", finalPicture);
+        assertNotNull("Some error message should have been reported", calculation.getProblemDescription());
+        assertTrue("An error should have been reported", errorReported[0]);
+        assertTrue("Some progress should have been made, but not complete, but progress was " +progressMade[0], progressMade[0] > 0.05 && progressMade[0] < 0.95);
+    }
+
+    @Test
+    public void testStop() throws CalculatorCompilationException {
         // Create builder with sleep
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
         calculatorBuilder.addEvaluationLoopSource("        try {\n" +

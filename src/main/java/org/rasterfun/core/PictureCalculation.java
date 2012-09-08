@@ -22,9 +22,9 @@ public final class PictureCalculation implements ProgressListener {
     private Future<Picture> previewFuture = null;
     private Future<Picture> pictureFuture = null;
 
-    private AtomicReference<Double> progress = new AtomicReference<Double>(0.0);
-    private AtomicReference<String> problemDescription = new AtomicReference<String>(null);
-    private AtomicReference<String> currentStatus = new AtomicReference<String>(null);
+    private final AtomicReference<Double> progress = new AtomicReference<Double>(0.0);
+    private final AtomicReference<String> problemDescription = new AtomicReference<String>(null);
+    private final AtomicReference<String> currentStatus = new AtomicReference<String>(null);
     private boolean started = false;
 
     private CopyOnWriteArrayList<ProgressListener> listeners = new CopyOnWriteArrayList<ProgressListener>();
@@ -78,7 +78,6 @@ public final class PictureCalculation implements ProgressListener {
         try {
             return pictureFuture.get();
         } catch (Exception e) {
-            onError("Problem when waiting for image calculation to finish: " + e.getMessage(), e);
             return null;
         }
     }
@@ -173,7 +172,7 @@ public final class PictureCalculation implements ProgressListener {
 
     @Override
     public void onError(final String description, final Throwable cause) {
-        problemDescription.set(description);
+        if (description != null) problemDescription.set(description);
 
         // Cancel calculation
         pictureFuture.cancel(false);
