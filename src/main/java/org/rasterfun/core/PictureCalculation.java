@@ -28,26 +28,45 @@ public final class PictureCalculation implements ProgressListener {
     private boolean started = false;
 
     private CopyOnWriteArrayList<ProgressListener> listeners = new CopyOnWriteArrayList<ProgressListener>();
+    private PictureCalculationTask calculationTask;
 
+    /**
+     * @param parameters parameters to use for the calculated picture.
+     *                   They should not be changed while the picture is being calculated (use snapshot method to get a static copy to pass in).
+     * @param picture an empty picture to fill.
+     * @param calculatorBuilder the source for the calculator, used to generate the actual calculator.
+     */
     public PictureCalculation(Parameters parameters, PictureImpl picture, CalculatorBuilder calculatorBuilder) {
-        this.parameters = parameters;
+        // Take a static snapshot of the parameters, so that any changes done to them later are not visible to the calculation.
+        this.parameters = parameters.snapshot();
         this.calculatorBuilder = calculatorBuilder;
         this.picture = picture;
 
     }
 
+    /**
+     * Starts the calculation of the picture.
+     * Can only be called once, called by default when the PictureGenerator generatePicture(s) method is called,
+     * so there is normally no need for the API user to call this.
+     */
     public void start() {
         if (started) throw new IllegalStateException("Can not start calculation of picture '"+picture.getName()+"', it has already been started.");
         started = true;
 
-        PictureCalculationTask task = new PictureCalculationTask(picture, parameters, calculatorBuilder, this);
-        pictureFuture = RasterfunApplication.getExecutor().submit(task);
+        calculationTask = new PictureCalculationTask(picture, parameters, calculatorBuilder, this);
+        pictureFuture = RasterfunApplication.getExecutor().submit(calculationTask);
     }
 
+    /**
+     * @return future for a preview picture being calculated.
+     */
     public Future<Picture> getPreviewFuture() {
         return previewFuture;
     }
 
+    /**
+     * @return future for the picture being calculated.
+     */
     public Future<Picture> getPictureFuture() {
         return pictureFuture;
     }
@@ -64,9 +83,69 @@ public final class PictureCalculation implements ProgressListener {
         }
     }
 
+    /**
+     * @return the current progress of this calculation, goes from 0 to 1.
+     */
     public double getProgress() {
         return progress.get();
     }
+
+    /**
+     * @return the current (human-readable) status of this calculation.
+     */
+    public String getCurrentStatus() {
+        return currentStatus.get();
+    }
+
+    /**
+     * @return true if the calculation of the picture has finished, or the calculation has stopped for some other reason.
+     */
+    public boolean isDone() {
+        return pictureFuture.isDone();
+    }
+
+    /**
+     * @return true if there was some error during calculation.
+     */
+    public boolean isFailed() {
+        return problemDescription.get() != null;
+    }
+
+    /**
+     * Stops the calculation.
+     */
+    public void stop() {
+        if (calculationTask != null) {
+            calculationTask.stop();
+        }
+    }
+
+    /**
+     * @return description of any problem encountered, or null if no problems.
+     */
+    public String getProblemDescription() {
+        return problemDescription.get();
+    }
+
+    /**
+     * @param listener a listener that is notified about progress and status updates on this calculation.
+     *                 The listener is called from the calculation thread, so if the listener does any UI updates
+     *                 it should call SwingUtils.invokeLater or similar, and if it does state updates they should
+     *                 take into account concurrency concerns.
+     */
+    public void addListener(ProgressListener listener) {
+        listeners.add(listener);
+    }
+
+    /**
+     * @param listener listener to remove.
+     */
+    public void removeListener(ProgressListener listener) {
+        listeners.remove(listener);
+    }
+
+
+    // ProgressListener implementation:
 
     @Override
     public void onProgress(final float progress) {
@@ -92,25 +171,12 @@ public final class PictureCalculation implements ProgressListener {
         }
     }
 
-    public String getCurrentStatus() {
-        return currentStatus.get();
-    }
-
-    public boolean isReady() {
-        return pictureFuture.isDone();
-    }
-
-    public boolean isFailed() {
-        return problemDescription.get() != null || pictureFuture.isCancelled();
-    }
-
-    public String getProblemDescription() {
-        return problemDescription.get();
-    }
-
     @Override
     public void onError(final String description, final Throwable cause) {
         problemDescription.set(description);
+
+        // Cancel calculation
+        pictureFuture.cancel(false);
 
         // Notify listeners
         if (!listeners.isEmpty()) {
@@ -120,20 +186,4 @@ public final class PictureCalculation implements ProgressListener {
         }
     }
 
-    /**
-     * @param listener a listener that is notified about progress and status updates on this calculation.
-     *                 The listener is called from the calculation thread, so if the listener does any UI updates
-     *                 it should call SwingUtils.invokeLater or similar, and if it does state updates they should
-     *                 take into account concurrency concerns.
-     */
-    public void addListener(ProgressListener listener) {
-        listeners.add(listener);
-    }
-
-    /**
-     * @param listener listener to remove.
-     */
-    public void removeListener(ProgressListener listener) {
-        listeners.remove(listener);
-    }
 }

@@ -22,6 +22,18 @@ public interface Parameters {
     Parameters copy();
 
     /**
+     * @return an unmodifiable copy of the parameters as they look currently.
+     * When it is not needed any more, call release on it to avoid unnecessary memory usage in the Parameters class.
+     */
+    Parameters snapshot();
+
+    /**
+     * If this is a snapshot, calling release will free any reserved resources.
+     * The snapshot can not be used after that.
+     */
+    void release();
+
+    /**
      * Adds the specified parameter to these parameters.
      */
     void addParameter(Parameter parameter);

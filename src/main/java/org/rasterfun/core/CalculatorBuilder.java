@@ -40,8 +40,14 @@ public class CalculatorBuilder {
                              "\n" +
                              "public final class "+className+" implements PixelCalculator {\n" +
                              "  \n" +
+                             "  private boolean running = true;\n" +
+                             "  \n" +
                              "  public final String[] getChannelNames() {\n" +
                              "    return null;\n" +
+                             "  }\n" +
+                             "  \n" +
+                             "  public final void stop() {\n" +
+                             "    running = false;\n" +
                              "  }\n" +
                              "  \n" +
                              "  public final void calculatePixels(final Parameters parameters,\n" +
@@ -61,8 +67,8 @@ public class CalculatorBuilder {
                              "    if (progressReportInterval <= 0) progressReportInterval = 1;\n" +
                              "    int progressReportCountdown = progressReportInterval;\n" +
                              "    \n"+
-                             "    for (int y = startY; y < endY; y++) {\n" +
-                             "       for (int x = startX; x < endX; x++) {\n" +
+                             "    for (int y = startY; y < endY && running; y++) {\n" +
+                             "       for (int x = startX; x < endX && running; x++) {\n" +
                                        evaluationLoopSource.toString() +
                              "         \n" +
                              "       }\n" +
@@ -93,6 +99,16 @@ public class CalculatorBuilder {
 
     }
 
+    /**
+     * Directly adds some code that gets inserted inside the pixel calculation loop, after previously inserted code.
+     */
+    public void addEvaluationLoopSource(String additionalEvaluationLoopCode) {
+        evaluationLoopSource.append(additionalEvaluationLoopCode);
+    }
+
+    /**
+     * @return the generated source, or null if it has not yet been generated.
+     */
     public String getSource() {
         return source;
     }

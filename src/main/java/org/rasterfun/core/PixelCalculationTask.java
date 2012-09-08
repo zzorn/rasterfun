@@ -39,4 +39,8 @@ public class PixelCalculationTask implements Runnable {
                                    listener,
                                    calculatorIndex);
     }
+
+    public void stop() {
+        calculator.stop();
+    }
 }

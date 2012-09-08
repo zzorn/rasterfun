@@ -45,4 +45,8 @@ public interface PixelCalculator {
                          CalculationListener listener,
                          int calculatorIndex);
 
+    /**
+     * Stops the calculation after the next calculated pixel.
+     */
+    void stop();
 }

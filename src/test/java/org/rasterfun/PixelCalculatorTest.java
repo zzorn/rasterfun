@@ -2,6 +2,11 @@ package org.rasterfun;
 
 import org.junit.Test;
 import org.rasterfun.core.*;
+import org.rasterfun.parameters.ParametersImpl;
+import org.rasterfun.picture.PictureImpl;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -35,5 +40,49 @@ public class PixelCalculatorTest {
         assertTrue("Should have gotten some progress", p[0] > 0);
     }
 
+    @Test
+    public void testCancel() throws CalculatorCompilationException {
+        // Create builder with sleep
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        calculatorBuilder.addEvaluationLoopSource("        try {\n" +
+                                                  "            Thread.sleep(10);\n" +
+                                                  "        } \n" +
+                                                  "        catch (InterruptedException e) {\n" +
+                                                  "            \n" +
+                                                  "        }\n");
+
+
+        // Create empty picture to draw on
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("roses", "violets"));
+
+        // Create calculation task and start it
+        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+        calculation.start();
+
+        // Should be running
+        assertFalse("The calculation should not be done yet", calculation.isDone());
+
+        // Wait a bit for the calculation to start
+        delay(50);
+
+        // Stop calculation
+        calculation.stop();
+
+        // Wait a bit for the calculation to stop
+        delay(50);
+
+        // Should be stopped now
+        assertTrue("The calculation should have stopped now", calculation.isDone());
+    }
+
+
+    private void delay(long millis) {
+        try {
+            Thread.sleep(millis);
+        }
+        catch (InterruptedException e) {
+            // Ignore
+        }
+    }
 
 }
