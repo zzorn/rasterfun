@@ -42,10 +42,6 @@ public class CalculatorBuilder {
                              "  \n" +
                              "  private boolean running = true;\n" +
                              "  \n" +
-                             "  public final String[] getChannelNames() {\n" +
-                             "    return null;\n" +
-                             "  }\n" +
-                             "  \n" +
                              "  public final void stop() {\n" +
                              "    running = false;\n" +
                              "  }\n" +
@@ -53,6 +49,7 @@ public class CalculatorBuilder {
                              "  public final void calculatePixels(final Parameters parameters,\n" +
                              "                                    final int width,\n" +
                              "                                    final int height,\n" +
+                             "                                    final String[] channelNames,\n" +
                              "                                    final float[] pixelData,\n" +
                              "                                    final int startX,\n" +
                              "                                    final int startY,\n" +
@@ -61,16 +58,20 @@ public class CalculatorBuilder {
                              "                                    final CalculationListener listener,\n" +
                              "                                    final int calculatorIndex) {\n" +
                              "    \n"+
+                             "    final int channelCount = channelNames.length;\n"+
+                             "    \n"+
                                   initializerSource.toString() +
                              "    \n" +
                              "    int progressReportInterval = (endY - startY) / "+PROGRESS_REPORT_STEPS+";\n" +
                              "    if (progressReportInterval <= 0) progressReportInterval = 1;\n" +
                              "    int progressReportCountdown = progressReportInterval;\n" +
                              "    \n"+
-                             "    for (int y = startY; y < endY && running; y++) {\n" +
-                             "       for (int x = startX; x < endX && running; x++) {\n" +
+                             "    int pixelIndex = (startY * width + startX) * channelCount;\n"+
+                             "    for (int y = startY; (y < endY) && running; y++) {\n" +
+                             "       for (int x = startX; (x < endX) && running; x++) {\n" +
                                        evaluationLoopSource.toString() +
                              "         \n" +
+                             "         pixelIndex += channelCount;\n" +
                              "       }\n" +
                              "       \n" +
                              "       progressReportCountdown--;\n" +

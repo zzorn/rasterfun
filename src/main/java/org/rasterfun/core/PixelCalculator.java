@@ -13,11 +13,6 @@ import org.rasterfun.parameters.Parameters;
 public interface PixelCalculator {
 
     /**
-     * @return the channels produced by this pixel generator, in the order they are produced.
-     */
-    String[] getChannelNames();
-
-    /**
      * Generates all pixels for the given picture.
      * Pixels are stored in y major order, with the values for each channel directly following each other in a pixel.
      * E.g. a width 3, height 2 picture with 2 channels a and b, will have the following data layout (where a01 is the value for the
@@ -26,6 +21,7 @@ public interface PixelCalculator {
      * @param parameters picture generator and  effect parameter values to use when generating the pixels.
      * @param width width of the picture.
      * @param height height of the picture.
+     * @param channelNames the names of the channels in the picture, in the order they are stored.
      * @param pixelData an array with width * height * getChannels().length number of float entries.
      * @param startX the x column to start calculating at.
      * @param startY the y row to start calculating at.
@@ -37,6 +33,7 @@ public interface PixelCalculator {
     void calculatePixels(Parameters parameters,
                          int width,
                          int height,
+                         String[] channelNames,
                          float[] pixelData,
                          int startX,
                          int startY,

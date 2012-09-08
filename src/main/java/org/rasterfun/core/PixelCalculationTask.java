@@ -31,6 +31,7 @@ public class PixelCalculationTask implements Runnable {
         calculator.calculatePixels(parameters,
                                    picture.getWidth(),
                                    picture.getHeight(),
+                                   picture.getChannelNames(),
                                    picture.getData(),
                                    0,
                                    startY,

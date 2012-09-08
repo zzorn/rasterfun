@@ -7,7 +7,6 @@ import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -26,7 +25,7 @@ public class PixelCalculatorTest {
 
         final int[] p = {0};
         final int testCalculatorIndex = 3;
-        pixelCalculator.calculatePixels(null, 10, 10, new float[]{}, 0, 0, 10, 10, new CalculationListener() {
+        pixelCalculator.calculatePixels(null, 10, 10, new String[] {"red", "blue"},new float[]{}, 0, 0, 10, 10, new CalculationListener() {
 
             @Override
             public void onCalculationProgress(int calculationIndex, int completedLines) {
@@ -39,6 +38,35 @@ public class PixelCalculatorTest {
         }, testCalculatorIndex);
 
         assertTrue("Should have gotten some progress", p[0] > 0);
+    }
+
+    @Test
+    public void testPictureCalculation() throws CalculatorCompilationException {
+        // Create builder with some output
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        calculatorBuilder.addEvaluationLoopSource("        pixelData[pixelIndex]     = x;\n" +
+                                                  "        pixelData[pixelIndex + 1] = y;\n");
+
+        // Create empty picture to draw on
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("xs", "ys"));
+
+        // Create calculation task and start it
+        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+        calculation.start();
+
+        // Get result picture
+        final Picture result = calculation.getPictureAndWait();
+
+        // Check generated picture
+        assertEquals("Number of channels should be correct", 2, result.getChannelCount());
+        assertPixelCorrect(result, "xs",  0,  0,  0);
+        assertPixelCorrect(result, "xs",  1,  0,  1);
+        assertPixelCorrect(result, "ys",  1,  0,  0);
+        assertPixelCorrect(result, "xs",  1,  1,  1);
+        assertPixelCorrect(result, "xs",  4,  9,  4);
+        assertPixelCorrect(result, "ys",  4,  9,  9);
+        assertPixelCorrect(result, "xs", 99, 99, 99);
+        assertPixelCorrect(result, "ys", 99, 99, 99);
     }
 
     @Test
@@ -124,7 +152,6 @@ public class PixelCalculatorTest {
         assertTrue("The calculation should have stopped now", calculation.isDone());
     }
 
-
     private void delay(long millis) {
         try {
             Thread.sleep(millis);
@@ -132,6 +159,12 @@ public class PixelCalculatorTest {
         catch (InterruptedException e) {
             // Ignore
         }
+    }
+
+
+    private void assertPixelCorrect(Picture picture, String channel, int x, int y, float expected) {
+        assertEquals("We should get the correct pixel value at channel " + channel + ", location (x: "+x+", y: "+y+")",
+                     expected, picture.getPixel(channel, x, y), 0.0001);
     }
 
 }

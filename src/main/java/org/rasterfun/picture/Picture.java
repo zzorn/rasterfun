@@ -14,5 +14,29 @@ public interface Picture extends GeneratorElement {
 
     int getHeight();
 
-    List<String> getChannelNames();
+    String[] getChannelNames();
+
+    /**
+     * @return the index for the specified channel
+     *         Throws an exception if there was no such channel.
+     */
+    int getChannelIndex(String channelName);
+
+    /**
+     * @return the value at the specified channel and coordinate.
+     *         Does not perform any range checking.
+     *         Note that this is much slower than the getPixel version that takes a channelIndex as parameter.
+     */
+    float getPixel(String channel, int x, int y);
+
+    /**
+     * @return the value at the specified channel index and coordinate.
+     *         Does not perform any range checking.
+     */
+    float getPixel(int channelIndex, int x, int y);
+
+    /**
+     * @return number of channels in the picture.
+     */
+    int getChannelCount();
 }
