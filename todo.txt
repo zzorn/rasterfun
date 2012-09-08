@@ -1,5 +1,41 @@
 List of tweaks to do and bugs to fix for Rasterfun.
 
+NEW robust implementation
+=========================
+
+Implementation list:
+
+* Properties
+* Preview generation
+* Perlin noise effect
+* Preview user interface with panning and zooming, and toggle tiling
+  * If no tiling, show each picture separated from others in nice table formation (using table preview arranger?)
+  * If tiling, show pictures arranged with custom preview arranger, or random preview arranger if generator doesn't specify any
+* Generator editor ui and parameter property editor ui
+* Re-render pictures on parameter changes, show progressbar & stop button, stop previous render if properties changed while rendering
+* Undo & redo for property changes and other edits
+* Load & save of project
+* Export of image
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OLD Scala implementation
+========================
+
 * Float to Double cast error from ClassUtils in scalaprops when editing e.g. solid intensity numberfield.
 
 * Make noise seamless
