@@ -16,10 +16,6 @@ public class PictureGeneratorTest {
     @Test
     public void testPictureGenerator() {
         SinglePictureGenerator pictureGenerator = new SinglePictureGenerator();
-        pictureGenerator.addChannel("red");
-        pictureGenerator.addChannel("green");
-        pictureGenerator.addChannel("blue");
-        pictureGenerator.addChannel("alpha");
 
         final float[] p = {0f};
         final PictureCalculation calculation = pictureGenerator.generatePicture(new ProgressListener() {

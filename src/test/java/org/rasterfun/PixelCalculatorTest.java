@@ -48,7 +48,7 @@ public class PixelCalculatorTest {
                                                   "        pixelData[pixelIndex + 1] = y;\n");
 
         // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("xs", "ys"));
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"xs", "ys"});
 
         // Create calculation task and start it
         final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
@@ -77,7 +77,7 @@ public class PixelCalculatorTest {
         calculatorBuilder.addEvaluationLoopSource("int w = 1 / (50 - y); // Oops!\n");
 
         // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("roses", "violets"));
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"roses", "violets"});
 
         final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
 
@@ -130,7 +130,7 @@ public class PixelCalculatorTest {
 
 
         // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, Arrays.asList("roses", "violets"));
+        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"roses", "violets"});
 
         // Create calculation task and start it
         final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);

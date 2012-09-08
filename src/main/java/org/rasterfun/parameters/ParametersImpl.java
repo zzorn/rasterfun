@@ -18,6 +18,12 @@ public class ParametersImpl implements Parameters {
     }
 
     @Override
+    public String[] getStringArray(String name, String[] defaultValue) {
+        // TODO: Implement
+        return defaultValue;
+    }
+
+    @Override
     public Parameters copy() {
         // TODO: Implement
         return null;

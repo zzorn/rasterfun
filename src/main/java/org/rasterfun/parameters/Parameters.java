@@ -16,6 +16,11 @@ public interface Parameters {
     String getString(String name, String defaultValue);
 
     /**
+     * @return the value of the string array parameter with the specified name, or the default value if not found.
+     */
+    String[] getStringArray(String name, String[] defaultValue);
+
+    /**
      * @return a unique copy of these parameters.
      * Deep copies any contained GeneratorElements.
      */
@@ -37,4 +42,5 @@ public interface Parameters {
      * Adds the specified parameter to these parameters.
      */
     void addParameter(Parameter parameter);
+
 }

@@ -16,13 +16,7 @@ import java.util.List;
  */
 public class SinglePictureGenerator extends PictureGeneratorBase {
 
-    private final ArrayList<String> channels = new ArrayList<String>();
-
     public SinglePictureGenerator() {
-    }
-
-    public void addChannel(String channelName) {
-        channels.add(channelName);
     }
 
     @Override
@@ -75,6 +69,9 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
 
         // Get name
         final String name = parameters.getString("name", getName());
+
+        // Get channels
+        String[] channels = parameters.getStringArray("channels", new String[]{"red", "green", "blue", "alpha"});
 
         // Create picture
         return new PictureImpl(name, width, height, channels);

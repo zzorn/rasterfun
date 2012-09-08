@@ -20,11 +20,11 @@ public final class PictureImpl implements Picture {
 
     private final HashMap<String, Integer> channelNameToIndex = new HashMap<String, Integer>();
 
-    public PictureImpl(String name, int width, int height, List<String> channelNames) {
+    public PictureImpl(String name, int width, int height, String[] channelNames) {
         this.name = name;
         this.width = width;
         this.height = height;
-        this.channelNames = channelNames.toArray(new String[channelNames.size()]);
+        this.channelNames = Arrays.copyOf(channelNames, channelNames.length);
         this.channelCount = this.channelNames.length;
         this.data = new float[width * height * channelCount];
 
