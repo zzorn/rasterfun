@@ -1,15 +1,12 @@
 package org.rasterfun.library;
 
+import org.rasterfun.parameters.Copyable;
+
 /**
  * Something that can be stored in a library for future use, and copied to a picture generator.
  */
-public interface GeneratorElement {
+public interface GeneratorElement extends Copyable<GeneratorElement> {
 
     String getName();
-
-    /**
-     * @return a new unique copy of this element.
-     */
-    GeneratorElement copy();
 
 }

@@ -38,7 +38,7 @@ public final class PictureCalculation implements ProgressListener {
      */
     public PictureCalculation(Parameters parameters, PictureImpl picture, CalculatorBuilder calculatorBuilder) {
         // Take a static snapshot of the parameters, so that any changes done to them later are not visible to the calculation.
-        this.parameters = parameters.snapshot();
+        this.parameters = parameters.copy();
         this.calculatorBuilder = calculatorBuilder;
         this.picture = picture;
 

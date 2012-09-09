@@ -84,7 +84,6 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
 
             // Check if we were canceled
             if (!running.get()) {
-                parameters.release();
                 return null;
             }
 
@@ -105,9 +104,6 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
                 listener.onProgress(1.0f);
                 listener.onStatusChanged("Done generating picture '"+picture.getName()+"'.");
             }
-
-            // The parameters will no longer be needed, release any memory used to hold the parameters snapshot.
-            parameters.release();
 
             // Return the picture, now with computed pixels
             return picture;

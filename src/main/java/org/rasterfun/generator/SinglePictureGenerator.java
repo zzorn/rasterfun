@@ -64,14 +64,14 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
 
     private PictureImpl createNewBlankPicture(Parameters parameters) {
         // Get size
-        final int width = parameters.getInt("width", 128);
-        final int height = parameters.getInt("height", 128);
+        final int width = parameters.get("width", 128);
+        final int height = parameters.get("height", 128);
 
         // Get name
-        final String name = parameters.getString("name", getName());
+        final String name = parameters.get("name", getName());
 
         // Get channels
-        String[] channels = parameters.getStringArray("channels", new String[]{"red", "green", "blue", "alpha"});
+        String[] channels = parameters.get("channels", new String[]{"red", "green", "blue", "alpha"});
 
         // Create picture
         return new PictureImpl(name, width, height, channels);
