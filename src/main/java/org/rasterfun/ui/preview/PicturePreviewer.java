@@ -1,4 +1,4 @@
-package org.rasterfun.ui;
+package org.rasterfun.ui.preview;
 
 import javax.swing.*;
 

@@ -42,6 +42,8 @@ public interface Parameters extends Copyable<Parameters> {
      * @return a unique copy of these parameters.
      * Deep copies any contained values that implement Copyable,
      * just copies references to contained values that do not implement Copyable.
+     *
+     * Does not copy listeners.
      */
     Parameters copy();
 
@@ -66,5 +68,15 @@ public interface Parameters extends Copyable<Parameters> {
      * Existing properties with the same names are replaced.
      */
     void addParameterCopies(Parameters source);
+
+    /**
+     * @param listener listener that should be notified about changes to parameters in this Parameters instance.
+     */
+    void addListener(ParametersListener listener);
+
+    /**
+     * @param listener listener to remove.
+     */
+    void removeListener(ParametersListener listener);
 
 }

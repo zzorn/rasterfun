@@ -1,5 +1,7 @@
 package org.rasterfun.parameters;
 
+import org.rasterfun.utils.ParameterChecker;
+
 import java.util.*;
 
 /**
@@ -8,10 +10,23 @@ import java.util.*;
 public class ParametersImpl implements Parameters {
 
     private Map<String, Object> values = new LinkedHashMap<String, Object>();
+    private List<ParametersListener> listeners = null;
 
     @Override
     public <T> void set(String name, T value) {
-        values.put(name, value);
+        final Object oldValue = values.get(name);
+
+        // Only do change and notify listeners if value changed.
+        if (value != oldValue && (value == null || !value.equals(oldValue))) {
+            values.put(name, value);
+
+            // Notify listeners if we have any
+            if (listeners != null) {
+                for (ParametersListener listener : listeners) {
+                    listener.onParameterChanged(this, name, oldValue, value);
+                }
+            }
+        }
     }
 
     @Override
@@ -70,5 +85,19 @@ public class ParametersImpl implements Parameters {
         return parametersCopy;
     }
 
+    @Override
+    public void addListener(ParametersListener listener) {
+        ParameterChecker.checkNotNull(listener, "listener");
+        if (listeners == null) {
+            listeners = new ArrayList<ParametersListener>();
+        }
 
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(ParametersListener listener) {
+        ParameterChecker.checkNotNull(listener, "listener");
+        if (listeners != null) listeners.remove(listener);
+    }
 }

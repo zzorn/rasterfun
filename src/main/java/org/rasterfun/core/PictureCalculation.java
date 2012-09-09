@@ -1,9 +1,9 @@
 package org.rasterfun.core;
 
 import org.rasterfun.RasterfunApplication;
+import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.listeners.ProgressListenerDelegate;
 import org.rasterfun.core.tasks.CompileAndRenderTask;
-import org.rasterfun.core.tasks.PictureCalculationTask;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;

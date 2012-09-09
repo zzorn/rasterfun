@@ -1,6 +1,6 @@
 package org.rasterfun.effect;
 
-import org.rasterfun.core.CalculatorBuilder;
+import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.parameters.Parameters;
 

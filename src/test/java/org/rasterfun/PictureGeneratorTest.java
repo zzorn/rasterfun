@@ -1,10 +1,17 @@
 package org.rasterfun;
 
+import junit.framework.TestListener;
+import org.junit.Before;
 import org.junit.Test;
 import org.rasterfun.core.PictureCalculation;
 import org.rasterfun.core.listeners.ProgressListener;
+import org.rasterfun.generator.GeneratorListener;
+import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.generator.SinglePictureGenerator;
 import org.rasterfun.picture.Picture;
+import org.rasterfun.ui.preview.PicturePreviewer;
+
+import javax.swing.*;
 
 import static org.junit.Assert.*;
 
@@ -13,9 +20,20 @@ import static org.junit.Assert.*;
  */
 public class PictureGeneratorTest {
 
+    private SinglePictureGenerator pictureGenerator;
+    private TestListener testListener;
+
+    @Before
+    public void setUp() throws Exception {
+
+        pictureGenerator = new SinglePictureGenerator();
+
+        testListener = new TestListener();
+        pictureGenerator.addListener(testListener);
+    }
+
     @Test
     public void testPictureGenerator() {
-        SinglePictureGenerator pictureGenerator = new SinglePictureGenerator();
 
         final float[] p = {0f};
         final float[] previweProgress = {0f};
@@ -82,5 +100,82 @@ public class PictureGeneratorTest {
         assertTrue("Preview size should not be zero", calculation.getPreview().getWidth() > 0);
         assertEquals("Progress should be complete on the preview picture", 1.0f, previweProgress[0], 0.0001);
         assertTrue("onReady should have been called for the preview picture", previewReadyCalled[0]);
+    }
+
+    @Test
+    public void testPreviewUI() throws Exception {
+        final PicturePreviewer previewer = pictureGenerator.getPreviewer();
+
+        assertNotNull("A previewer should be returned", previewer);
+
+        final JComponent ui1 = previewer.getUiComponent();
+        assertNotNull("The previewer should create a UI", ui1);
+
+        final JComponent ui2 = previewer.getUiComponent();
+        assertTrue("The ui should be the same each time", ui1 == ui2);
+
+        final PicturePreviewer previewer2 = pictureGenerator.getPreviewer();
+        assertTrue("The previewer should be a new one each time", previewer != previewer2);
+    }
+
+    @Test
+    public void testListener() throws Exception {
+        assertListenerCallCount(0);
+
+        pictureGenerator.getParameters().set("foo", 2);
+        assertListenerCallCount(1);
+
+        pictureGenerator.getParameters().set("foo", 3);
+        assertListenerCallCount(2);
+
+        pictureGenerator.getParameters().set("bar", 2);
+        assertListenerCallCount(3);
+    }
+
+    @Test
+    public void testChangingToSameValueShouldNotTriggerListenerEvent() throws Exception {
+        pictureGenerator.getParameters().set("foo", 1);
+        assertListenerCallCount(1);
+
+        pictureGenerator.getParameters().set("foo", 1);
+        assertListenerCallCount(1);
+    }
+
+    @Test
+    public void testChangedListenerShouldBeCorrect() throws Exception {
+        pictureGenerator.getParameters().set("foo", 1);
+        assertEquals("The correct generator should be reported in the listener", pictureGenerator, testListener.getChangedGenerator());
+    }
+
+    private void assertListenerCallCount(int expected) {
+        assertEquals("Listener should have been notified about changes the correct number of times", expected, testListener.getChangeCount());
+    }
+
+
+    private final static class TestListener implements GeneratorListener {
+        private int changeCount = 0;
+        private PictureGenerator generator;
+
+        @Override
+        public void onChanged(PictureGenerator generator) {
+            this.generator = generator;
+            changeCount++;
+        }
+
+        public void reset() {
+            changeCount = 0;
+        }
+
+        public boolean wasCalled() {
+            return changeCount > 0;
+        }
+
+        public int getChangeCount() {
+            return changeCount;
+        }
+
+        public PictureGenerator getChangedGenerator() {
+            return generator;
+        }
     }
 }

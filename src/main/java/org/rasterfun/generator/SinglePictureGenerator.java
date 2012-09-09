@@ -1,6 +1,6 @@
 package org.rasterfun.generator;
 
-import org.rasterfun.core.CalculatorBuilder;
+import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.PictureCalculation;
 import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.Parameters;

@@ -2,6 +2,8 @@ package org.rasterfun;
 
 import org.junit.Test;
 import org.rasterfun.core.*;
+import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.CompilationException;
 import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.ParametersImpl;
@@ -16,7 +18,7 @@ import static org.junit.Assert.*;
 public class PixelCalculatorTest {
 
     @Test
-    public void testCalculateNoPixels() throws CalculatorCompilationException {
+    public void testCalculateNoPixels() throws CompilationException {
 
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
         final PixelCalculator pixelCalculator = calculatorBuilder.compilePixelCalculator();
@@ -41,7 +43,7 @@ public class PixelCalculatorTest {
     }
 
     @Test
-    public void testPictureCalculation() throws CalculatorCompilationException {
+    public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
         calculatorBuilder.addEvaluationLoopSource("        pixelData[pixelIndex]     = x;\n" +
@@ -78,7 +80,7 @@ public class PixelCalculatorTest {
     }
 
     @Test
-    public void testErrorCalculation() throws CalculatorCompilationException {
+    public void testErrorCalculation() throws CompilationException {
 
         // Lets make a division by zero halfway through
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
@@ -130,7 +132,7 @@ public class PixelCalculatorTest {
     }
 
     @Test
-    public void testStop() throws CalculatorCompilationException {
+    public void testStop() throws CompilationException {
         // Create builder with sleep
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
         calculatorBuilder.addEvaluationLoopSource("        try {\n" +

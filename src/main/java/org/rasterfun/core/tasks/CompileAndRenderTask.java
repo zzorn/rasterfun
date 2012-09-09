@@ -1,7 +1,7 @@
 package org.rasterfun.core.tasks;
 
 import org.rasterfun.RasterfunApplication;
-import org.rasterfun.core.CalculatorBuilder;
+import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.Parameters;

@@ -1,6 +1,7 @@
-package org.rasterfun.core;
+package org.rasterfun.core.compiler;
 
 import org.codehaus.janino.SimpleCompiler;
+import org.rasterfun.core.PixelCalculator;
 
 import java.io.StringReader;
 
@@ -25,7 +26,7 @@ public class CalculatorBuilder {
     /**
      * @return compiles the source provided and generates a picture calculator, or throws an error if it could not be done.
      */
-    public PixelCalculator compilePixelCalculator() throws CalculatorCompilationException {
+    public PixelCalculator compilePixelCalculator() throws CompilationException {
 
         final String className = "GeneratedPixelCalculator";
         final String packageName = "org.rasterfun.generated";
@@ -95,7 +96,7 @@ public class CalculatorBuilder {
             return (PixelCalculator) calculatorClass.newInstance();
 
         } catch (Exception e) {
-            throw new CalculatorCompilationException("Could not compile the pixel calculator '"+ fullCalculatorName +"':\n" + e + "\nSource:\n\n"+ source +"\n", e);
+            throw new CompilationException("Could not compile the pixel calculator '"+ fullCalculatorName +"':\n" + e + "\nSource:\n\n"+ source +"\n", e);
         }
 
     }

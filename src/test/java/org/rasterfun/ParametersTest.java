@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.parameters.ParametersImpl;
+import org.rasterfun.parameters.ParametersListener;
 
 import java.awt.*;
 import java.util.Collection;
@@ -20,10 +21,14 @@ import static org.junit.Assert.assertEquals;
 public class ParametersTest {
 
     private Parameters parameters;
+    private TestListener listener;
 
     @Before
     public void setUp() {
         parameters = new ParametersImpl();
+
+        listener = new TestListener();
+        parameters.addListener(listener);
     }
 
     @Test
@@ -188,6 +193,45 @@ public class ParametersTest {
         assertEquals("value should remain unchanged", 4, values.get("foo"));
     }
 
+    @Test
+    public void testListenToChanges() throws Exception {
+        listener.assertCalledCount(0);
+
+        parameters.set("bar", "zugzug");
+        listener.assertCalledCount(1);
+        listener.assertLastParameterChangeIs("bar", null, "zugzug");
+
+        parameters.set("bar", "zug!");
+        listener.assertCalledCount(2);
+        listener.assertLastParameterChangeIs("bar", "zugzug", "zug!");
+    }
+
+    @Test
+    public void testListenerShouldNotBeCalledIfValueIsSame() throws Exception {
+        parameters.set("foo", 1);
+        listener.assertCalledCount(1);
+
+        parameters.set("foo", 1);
+        listener.assertCalledCount(1);
+
+        parameters.set("bar", new TestElement("a", 42));
+        listener.assertCalledCount(2);
+
+        parameters.set("bar", new TestElement("a", 42));
+        listener.assertCalledCount(2);
+    }
+
+    @Test
+    public void testRemoveListener() throws Exception {
+        parameters.set("foo", 1);
+        listener.assertCalledCount(1);
+
+        parameters.removeListener(listener);
+
+        parameters.set("bar", 2);
+        listener.assertCalledCount(1);
+    }
+
     private <T> void assertParameterIs(String name, T expected) {
         assertParameterIs(parameters,  name, expected);
     }
@@ -254,4 +298,39 @@ public class ParametersTest {
         }
     }
 
+    private static class TestListener implements ParametersListener {
+        private Parameters parameters;
+        private String parameter;
+        private Object oldValue;
+        private Object newValue;
+        private int count = 0;
+
+        @Override
+        public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
+            this.parameters = parameters;
+            this.parameter = name;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+            count++;
+        }
+
+        public void assertCalledCount(int num) {
+            assertEquals("The listener should have been called the correct number of times", num, count);
+        }
+
+        public void assertLastParameterChangeIs(String expectedParameter,
+                                                Object expectedOldValue,
+                                                Object expectedNewValue) {
+            assertLastParameterChangeIs(parameters, expectedParameter, expectedOldValue, expectedNewValue);
+        }
+        public void assertLastParameterChangeIs(Parameters expectedParameters,
+                                                String expectedParameter,
+                                                Object expectedOldValue,
+                                                Object expectedNewValue) {
+            assertEquals("The last parameter listener call should have the correct parameters instance", expectedParameters, parameters);
+            assertEquals("The last parameter listener call should have the correct parameter name", expectedParameter, parameter);
+            assertEquals("The last parameter listener call should have the correct old value", expectedOldValue, oldValue);
+            assertEquals("The last parameter listener call should have the correct new value", expectedNewValue, newValue);
+        }
+    }
 }

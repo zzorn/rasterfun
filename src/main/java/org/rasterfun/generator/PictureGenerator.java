@@ -5,7 +5,7 @@ import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.ui.PictureEditor;
-import org.rasterfun.ui.PicturePreviewer;
+import org.rasterfun.ui.preview.PicturePreviewer;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface PictureGenerator extends GeneratorElement {
 
     /**
      * @return the parameters defined for this picture generator, with their current values.
-     * Edits to these parameters change the picture generator parameters, copy them first if you do not want that.
+     * Edits to these parameters affect the PictureGenerator, create a copy of them if you do not want that.
      */
     Parameters getParameters();
 
@@ -63,4 +63,13 @@ public interface PictureGenerator extends GeneratorElement {
      */
     List<Picture> generatePicturesAndWait(Parameters parameters);
 
+    /**
+     * @param listener a listener that should be notified when the generator changes.
+     */
+    void addListener(GeneratorListener listener);
+
+    /**
+     * @param listener listener to remove.
+     */
+    void removeListener(GeneratorListener listener);
 }
