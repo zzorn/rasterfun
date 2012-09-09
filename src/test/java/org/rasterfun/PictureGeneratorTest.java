@@ -1,10 +1,9 @@
 package org.rasterfun;
 
-import junit.framework.TestListener;
 import org.junit.Before;
 import org.junit.Test;
-import org.rasterfun.core.PictureCalculation;
-import org.rasterfun.core.listeners.ProgressListener;
+import org.rasterfun.core.PictureCalculations;
+import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.generator.SinglePictureGenerator;
@@ -12,6 +11,7 @@ import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.PicturePreviewer;
 
 import javax.swing.*;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -36,70 +36,59 @@ public class PictureGeneratorTest {
     public void testPictureGenerator() {
 
         final float[] p = {0f};
-        final float[] previweProgress = {0f};
         final boolean[] readyCalled = {false};
+        final boolean[] allReadyCalled = {false};
         final boolean[] previewReadyCalled = {false};
-        final PictureCalculation calculation = pictureGenerator.generatePicture(
-                new ProgressListener() {
+        final PictureCalculations calculation = pictureGenerator.generatePictures(
+                new PictureCalculationsListener() {
                     @Override
                     public void onProgress(float progress) {
-                        //System.out.println("progress = " + progress);
                         if (progress > p[0]) p[0] = progress;
                     }
 
                     @Override
-                    public void onStatusChanged(String description) {
-                        //System.out.println("description = " + description);
-                    }
-
-                    @Override
                     public void onError(String description, Throwable cause) {
                         fail("We should not get any errors, but got the error: " + description);
                     }
 
                     @Override
-                    public void onReady() {
+                    public void onPreviewReady(int pictureIndex, Picture preview) {
+                        previewReadyCalled[0] = true;
+                    }
+
+                    @Override
+                    public void onPictureReady(Picture picture, int pictureIndex) {
                         readyCalled[0] = true;
                     }
-                },
-                new ProgressListener() {
-                    @Override
-                    public void onProgress(float progress) {
-                        if (progress > previweProgress[0]) previweProgress[0] = progress;
-                    }
 
                     @Override
-                    public void onStatusChanged(String description) {
-                    }
-
-                    @Override
-                    public void onError(String description, Throwable cause) {
-                        fail("We should not get any errors, but got the error: " + description);
-                    }
-
-                    @Override
-                    public void onReady() {
-                        previewReadyCalled[0] = true;
+                    public void onReady(List<Picture> pictures) {
+                        allReadyCalled[0] = true;
                     }
                 });
         assertNotNull("A calculation should have been created", calculation);
 
         // Wait for it to finish
-        final Picture picture = calculation.getPictureAndWait();
+        final List<Picture> pictures = calculation.getPicturesAndWait();
+
+        assertEquals("A picture should have been created", 1, pictures.size());
+        assertEquals("Picture should also be available from the calculation", 1, calculation.getPictures().size());
+        assertEquals("A preview picture should have been created", 1, calculation.getPreviews().size());
+
+        final Picture picture = pictures.get(0);
+        final Picture preview = calculation.getPreviews().get(0);
 
         // Test picture
-        assertNotNull("A picture should have been created", picture);
         assertEquals("Number of channels should be correct", 4, picture.getChannelCount());
         assertEquals("Progress should be complete", 1.0f, p[0], 0.0001);
-        assertTrue("onReady should have been called", readyCalled[0]);
+        assertTrue("ready should have been called for the picture", readyCalled[0]);
+        assertTrue("all ready should have been called", allReadyCalled[0]);
 
         // Test preview picture
-        assertNotNull("A preview picture should have been created", calculation.getPreview());
-        assertEquals("Number of channels should be correct", 4, calculation.getPreview().getChannelCount());
-        assertTrue("Preview size should be smaller than main picture size", calculation.getPreview().getWidth() < picture.getWidth());
-        assertTrue("Preview size should not be zero", calculation.getPreview().getWidth() > 0);
-        assertEquals("Progress should be complete on the preview picture", 1.0f, previweProgress[0], 0.0001);
-        assertTrue("onReady should have been called for the preview picture", previewReadyCalled[0]);
+        assertEquals("Number of channels should be correct", 4, preview.getChannelCount());
+        assertTrue("Preview size should be smaller than main picture size", preview.getWidth() < picture.getWidth());
+        assertTrue("Preview size should not be zero", preview.getWidth() > 0);
+        assertTrue("preview ready should have been called", previewReadyCalled[0]);
     }
 
     @Test
@@ -157,7 +146,7 @@ public class PictureGeneratorTest {
         private PictureGenerator generator;
 
         @Override
-        public void onChanged(PictureGenerator generator) {
+        public void onGeneratorChanged(PictureGenerator generator) {
             this.generator = generator;
             changeCount++;
         }

@@ -1,17 +1,16 @@
 package org.rasterfun.core.tasks;
 
 import org.rasterfun.RasterfunApplication;
-import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.core.PixelCalculator;
-import org.rasterfun.core.listeners.ProgressListener;
-import org.rasterfun.parameters.Parameters;
+import org.rasterfun.core.listeners.CalculationListener;
+import org.rasterfun.core.listeners.PictureCalculationListener;
 import org.rasterfun.picture.Picture;
-import org.rasterfun.picture.PictureImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,22 +20,26 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class PictureCalculationTask implements Callable<Picture>, CalculationListener {
 
-    private final PictureImpl picture;
+    private final Picture picture;
+    private final int     pictureIndex;
     private final PixelCalculator pixelCalculator;
-    private final Parameters parameters;
-    private final ProgressListener  listener;
+    private final PictureCalculationListener listener;
+    private final boolean isPreviewCalculation;
     private final int taskCount;
     private final AtomicIntegerArray taskProgress;
     private final AtomicReference<List<PixelCalculationTask>> calculationTasks = new AtomicReference<List<PixelCalculationTask>>(null);
+    private final AtomicInteger calculatedScanLines = new AtomicInteger(0);
 
-    public PictureCalculationTask(PictureImpl picture, Parameters parameters, PixelCalculator pixelCalculator, ProgressListener listener) {
+    public PictureCalculationTask(Picture picture, int pictureIndex, PixelCalculator pixelCalculator, PictureCalculationListener listener, boolean previewCalculation) {
         this.picture = picture;
-        this.parameters = parameters;
+        this.pictureIndex = pictureIndex;
         this.pixelCalculator = pixelCalculator;
         this.listener = listener;
+        isPreviewCalculation = previewCalculation;
 
-        // Count number of (virtual) processor cores we have
-        this.taskCount = Runtime.getRuntime().availableProcessors();
+        // Count number of (virtual) processor cores we have, split it in that many threads,
+        // except if we are calculating a preview image, no need to create many threads for that.
+        this.taskCount = isPreviewCalculation ? 1 : Runtime.getRuntime().availableProcessors();
 
         // Initialize progress counters
         taskProgress = new AtomicIntegerArray(taskCount);
@@ -46,7 +49,7 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
     public Picture call() throws Exception {
         try {
             // Split into many threads to take advantage of multiple cores.
-            if (listener != null) listener.onStatusChanged("Generating image data for '"+picture.getName()+"'");
+            if (listener != null && !isPreviewCalculation) listener.onStatusChanged(picture, pictureIndex, "Generating image data for '"+picture.getName()+"'");
             int pixelsPerTask = picture.getHeight() / taskCount;
             int y = 0;
             List<PixelCalculationTask> tasks = new ArrayList<PixelCalculationTask>();
@@ -63,7 +66,6 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
 
                 // Create the calculation task, forward any progress reports to ourselves, so we can calculate a total progress.
                 final PixelCalculationTask task = new PixelCalculationTask(picture,
-                                                                           parameters,
                                                                            startY,
                                                                            endY,
                                                                            pixelCalculator,
@@ -90,9 +92,13 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
 
             // Update status for listener
             if (listener != null) {
-                listener.onProgress(1.0f);
-                listener.onStatusChanged("Done generating picture '"+picture.getName()+"'.");
-                listener.onReady();
+                if (isPreviewCalculation) {
+                    listener.onPreviewReady(pictureIndex, picture);
+                }
+                else {
+                    listener.onStatusChanged(picture, pictureIndex, "Done generating picture '"+picture.getName()+"'.");
+                    listener.onReady(picture, pictureIndex);
+                }
             }
 
             // Return the picture, now with computed pixels
@@ -100,7 +106,7 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
 
         } catch (Exception e) {
             // Notify listener if present
-            if (listener != null)listener.onError(e.getMessage(), e);
+            if (listener != null)listener.onError(picture, pictureIndex, e.getMessage(), e);
 
             // Throw the error along to abort this calculation.
             throw e;
@@ -109,19 +115,14 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
 
     @Override
     public void onCalculationProgress(int calculationIndex, int completedLines) {
-        if (listener != null) {
-            // Keep track of progress of each task
-            taskProgress.set(calculationIndex, completedLines);
+        if (listener != null && !isPreviewCalculation) {
+            final int totalCompletedLines = calculatedScanLines.addAndGet(completedLines);
 
             // Calculate total progress
-            int sum = 0;
-            for (int i = 0; i < taskCount; i++) {
-                sum += taskProgress.get(i);
-            }
-            float progress = (float)sum / picture.getHeight();
+            float progress = (float)totalCompletedLines / picture.getHeight();
 
             // Notify listener
-            listener.onProgress(progress);
+            listener.onProgress(picture, pictureIndex, progress, completedLines);
         }
     }
 

@@ -1,14 +1,19 @@
 package org.rasterfun;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.rasterfun.core.*;
+import org.rasterfun.core.PictureCalculations;
+import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.compiler.CompilationException;
 import org.rasterfun.core.listeners.CalculationListener;
-import org.rasterfun.core.listeners.ProgressListener;
+import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
+import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.parameters.Parameters;
 import org.rasterfun.parameters.ParametersImpl;
 import org.rasterfun.picture.Picture;
-import org.rasterfun.picture.PictureImpl;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -17,17 +22,28 @@ import static org.junit.Assert.*;
  */
 public class PixelCalculatorTest {
 
+    private Parameters parameters;
+
+    @Before
+    public void setUp() throws Exception {
+        parameters = new ParametersImpl();
+        parameters.set(PictureGenerator.NAME, "TestPic");
+        parameters.set(PictureGenerator.WIDTH, 100);
+        parameters.set(PictureGenerator.HEIGHT, 100);
+        parameters.set(PictureGenerator.CHANNELS, new String[]{"roses", "violets"});
+    }
+
     @Test
     public void testCalculateNoPixels() throws CompilationException {
 
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
         final PixelCalculator pixelCalculator = calculatorBuilder.compilePixelCalculator();
 
         //System.out.println("Source:\n" + calculatorBuilder.getSource());
 
         final int[] p = {0};
         final int testCalculatorIndex = 3;
-        pixelCalculator.calculatePixels(null, 10, 10, new String[] {"red", "blue"},new float[]{}, 0, 0, 10, 10, new CalculationListener() {
+        pixelCalculator.calculatePixels(10, 10, new String[] {"red", "blue"},new float[]{}, 0, 0, 10, 10, new CalculationListener() {
 
             @Override
             public void onCalculationProgress(int calculationIndex, int completedLines) {
@@ -45,19 +61,19 @@ public class PixelCalculatorTest {
     @Test
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        parameters.set(PictureGenerator.CHANNELS, new String[]{"xs", "ys"});
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
         calculatorBuilder.addEvaluationLoopSource("        pixelData[pixelIndex]     = x;\n" +
                                                   "        pixelData[pixelIndex + 1] = y;\n");
 
-        // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"xs", "ys"});
-
         // Create calculation task and start it
-        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
         calculation.start();
 
         // Get result picture
-        final Picture result = calculation.getPictureAndWait();
+        final List<Picture> results = calculation.getPicturesAndWait();
+        assertEquals("We should get one picture", 1, results.size());
+        Picture result = results.get(0);
 
         // Check generated picture
         assertEquals("Number of channels should be correct", 2, result.getChannelCount());
@@ -71,7 +87,8 @@ public class PixelCalculatorTest {
         assertPixelCorrect(result, "ys", 99, 99, 99);
 
         // Check generated preview
-        final Picture preview = calculation.getPreview();
+        assertEquals("We should get one preview", 1, calculation.getPreviews().size());
+        final Picture preview = calculation.getPreviews().get(0);
         assertEquals("Number of channels should be correct in preview", 2, preview.getChannelCount());
         assertPixelCorrect(preview, "xs",  0,  0,  0);
         assertPixelCorrect(preview, "xs",  1,  0,  1);
@@ -83,27 +100,19 @@ public class PixelCalculatorTest {
     public void testErrorCalculation() throws CompilationException {
 
         // Lets make a division by zero halfway through
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
         calculatorBuilder.addEvaluationLoopSource("int w = 1 / (50 - y); // Oops!\n");
 
-        // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"roses", "violets"});
-
-        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
 
         final boolean[] errorReported = {false};
         final float[] progressMade = {0};
         final boolean[] readyCalled = {false};
-        calculation.getPictureListeners().addListener(new ProgressListener() {
+        calculation.addListener(new PictureCalculationsListenerAdapter() {
             @Override
             public void onProgress(float progress) {
                 //System.out.println("progress = " + progress);
                 progressMade[0] = progress;
-            }
-
-            @Override
-            public void onStatusChanged(String description) {
-                //System.out.println("description = " + description);
             }
 
             @Override
@@ -113,7 +122,7 @@ public class PixelCalculatorTest {
             }
 
             @Override
-            public void onReady() {
+            public void onReady(List<Picture> pictures) {
                 readyCalled[0] = true;
             }
         });
@@ -121,11 +130,11 @@ public class PixelCalculatorTest {
         calculation.start();
 
         // Wait for boom
-        final Picture finalPicture = calculation.getPictureAndWait();
+        final List<Picture> finalPictures = calculation.getPicturesAndWait();
 
         delay(10);
 
-        assertNull("The picture should be null", finalPicture);
+        assertNull("The pictures list should be null", finalPictures);
         assertTrue("An error should have been reported", errorReported[0]);
         assertTrue("Some progress should have been made, but not complete, but progress was " + progressMade[0], progressMade[0] > 0.05 && progressMade[0] < 0.95);
         assertFalse("onReady should not have been called", readyCalled[0]);
@@ -134,7 +143,7 @@ public class PixelCalculatorTest {
     @Test
     public void testStop() throws CompilationException {
         // Create builder with sleep
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder();
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
         calculatorBuilder.addEvaluationLoopSource("        try {\n" +
                                                   "            Thread.sleep(10);\n" +
                                                   "        } \n" +
@@ -143,11 +152,8 @@ public class PixelCalculatorTest {
                                                   "        }\n");
 
 
-        // Create empty picture to draw on
-        final PictureImpl picture = new PictureImpl("TestPic", 100, 100, new String[]{"roses", "violets"});
-
         // Create calculation task and start it
-        final PictureCalculation calculation = new PictureCalculation(new ParametersImpl(), picture, calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
         calculation.start();
 
         // Should be running

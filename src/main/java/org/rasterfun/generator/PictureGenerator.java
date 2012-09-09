@@ -1,9 +1,10 @@
 package org.rasterfun.generator;
 
-import org.rasterfun.core.PictureCalculation;
+import org.rasterfun.core.PictureCalculations;
+import org.rasterfun.core.listeners.PictureCalculationsListener;
+import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
-import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.ui.PictureEditor;
 import org.rasterfun.ui.preview.PicturePreviewer;
 
@@ -13,6 +14,12 @@ import java.util.List;
  * Something that generates pictures based on provided parameters.
  */
 public interface PictureGenerator extends GeneratorElement {
+
+    // Common property names
+    static final String NAME     = "name";
+    static final String CHANNELS = "channels";
+    static final String WIDTH    = "width";
+    static final String HEIGHT   = "height";
 
     /**
      * @return the parameters defined for this picture generator, with their current values.
@@ -35,33 +42,38 @@ public interface PictureGenerator extends GeneratorElement {
 
     /**
      * Starts calculating the pictures produced by this generator, using the default values for the parameters.
-     * @return a list of picture calculations, that can be queried for the progress of the calculation, a preview picture and the final picture.
+     *
+     * @return an object representing the ongoing calculation, that can be queried for a preview picture and the final picture.
+     *         Also has a method to wait for the calculation to complete and return the calculated pictures.
      */
-    List<PictureCalculation> generatePictures();
+    PictureCalculations generatePictures();
 
     /**
      * Starts calculating the pictures produced by this generator.
-     * @param parameters parameters to be used to calculate the pictures.  Should match the parameters defined by this picture generator.
-     * @return a list of picture calculations, that can be queried for the progress of the calculation, a preview picture and the final picture.
+     *
+     *
+     * @param listener a listener that is notified about the progress of the calculation.
+     * @return an object representing the ongoing calculation, that can be queried for a preview picture and the final picture.
+     *         Also has a method to wait for the calculation to complete and return the calculated pictures.
      */
-    List<PictureCalculation> generatePictures(Parameters parameters);
+    PictureCalculations generatePictures(PictureCalculationsListener listener);
 
     /**
-     * Generates the pictures produced by this generator, using its current parameter values.
-     * Blocks until the pictures are generated.
+     * Starts calculating the pictures produced by this generator.
      *
-     * @return a list of the generated pictures.
-     */
-    List<Picture> generatePicturesAndWait();
-
-    /**
-     * Generates the pictures produced by this generator.
-     * Blocks until the pictures are generated.
      *
-     * @param parameters parameters to be used to calculate the pictures.  Should match the parameters defined by this picture generator.
-     * @return a list of the generated pictures.
+     * @param listener a listener that is notified about the progress of the calculation.
+     * @param picturesToReuse a list of pictures to reuse when calculating the pictures.  Should be the same size and
+     *                        channel number to be useful.  Normally you would pass in pictures that were returned by
+     *                        an earlier call to generatePictures when you are regenerating a view.
+     *                        If null, new pictures will be allocated instead.
+     * @param previewsToReuse same as picturesToReuse, except for preview pictures.
+     * @return an object representing the ongoing calculation, that can be queried for a preview picture and the final picture.
+     *         Also has a method to wait for the calculation to complete and return the calculated pictures.
      */
-    List<Picture> generatePicturesAndWait(Parameters parameters);
+    PictureCalculations generatePictures(PictureCalculationsListener listener,
+                                         List<Picture> picturesToReuse,
+                                         List<Picture> previewsToReuse);
 
     /**
      * @param listener a listener that should be notified when the generator changes.

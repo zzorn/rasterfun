@@ -2,6 +2,8 @@ package org.rasterfun.core.compiler;
 
 import org.codehaus.janino.SimpleCompiler;
 import org.rasterfun.core.PixelCalculator;
+import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.parameters.Parameters;
 
 import java.io.StringReader;
 
@@ -12,13 +14,21 @@ import java.io.StringReader;
 public class CalculatorBuilder {
 
     public static final int PROGRESS_REPORT_STEPS = Math.max(2, 50 / Runtime.getRuntime().availableProcessors());
+    public static final String[] DEFAULT_CHANNELS = new String[]{"red", "green", "blue", "alpha"};
 
-    private SimpleCompiler janinoCompiler = new SimpleCompiler();
-    private StringBuilder initializerSource = new StringBuilder();
-    private StringBuilder evaluationLoopSource = new StringBuilder();
+    private static final int DEFAULT_SIZE = 128;
+    private static final String DEFAULT_NAME = "Picture";
+
+    private final Parameters parameters;
+
+    private final SimpleCompiler janinoCompiler = new SimpleCompiler();
+    private final StringBuilder initializerSource = new StringBuilder();
+    private final StringBuilder evaluationLoopSource = new StringBuilder();
     private String source;
 
-    public CalculatorBuilder() {
+    public CalculatorBuilder(Parameters parameters) {
+        // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
+        this.parameters = parameters.copy();
     }
 
     // Helper methods for adding variables, contexts, etc.
@@ -47,8 +57,11 @@ public class CalculatorBuilder {
                              "    running = false;\n" +
                              "  }\n" +
                              "  \n" +
-                             "  public final void calculatePixels(final Parameters parameters,\n" +
-                             "                                    final int width,\n" +
+                             "  public void setParameters(Object[] parameters) {\n" +
+                             "    \n" + // TODO: Handle parameter assignment here
+                             "  }\n" +
+                             "  \n" +
+                             "  public final void calculatePixels(final int width,\n" +
                              "                                    final int height,\n" +
                              "                                    final String[] channelNames,\n" +
                              "                                    final float[] pixelData,\n" +
@@ -64,8 +77,7 @@ public class CalculatorBuilder {
                                   initializerSource.toString() +
                              "    \n" +
                              "    int progressReportInterval = (endY - startY) / "+PROGRESS_REPORT_STEPS+";\n" +
-                             "    if (progressReportInterval <= 0) progressReportInterval = 1;\n" +
-                             "    int progressReportCountdown = progressReportInterval;\n" +
+                             "    int completedScanLines = 0;\n" +
                              "    \n"+
                              "    int pixelIndex = (startY * width + startX) * channelCount;\n"+
                              "    for (int y = startY; (y < endY) && running; y++) {\n" +
@@ -75,10 +87,10 @@ public class CalculatorBuilder {
                              "         pixelIndex += channelCount;\n" +
                              "       }\n" +
                              "       \n" +
-                             "       progressReportCountdown--;\n" +
-                             "       if (progressReportCountdown <= 0) {\n" +
-                             "         progressReportCountdown = progressReportInterval;\n" +
-                             "         listener.onCalculationProgress(calculatorIndex, y - startY);\n" +
+                             "       completedScanLines++;\n" +
+                             "       if (completedScanLines >= progressReportInterval || y == endY - 1) {\n" +
+                             "         listener.onCalculationProgress(calculatorIndex, completedScanLines);\n" +
+                             "         completedScanLines = 0;\n" +
                              "       }\n" +
                              "    }\n"+
                              "  }\n" +
@@ -92,8 +104,14 @@ public class CalculatorBuilder {
             // Get compiled class
             Class calculatorClass = janinoCompiler.getClassLoader().loadClass(fullCalculatorName);
 
-            // Create and return a new instance of it
-            return (PixelCalculator) calculatorClass.newInstance();
+            // Create a new instance of it
+            final PixelCalculator pixelCalculator = (PixelCalculator) calculatorClass.newInstance();
+
+            // Initialize it with the parameters
+            // TODO: Pass in any non-literal parameters that could not be compiled into the code
+            pixelCalculator.setParameters(new Object[0]);
+
+            return pixelCalculator;
 
         } catch (Exception e) {
             throw new CompilationException("Could not compile the pixel calculator '"+ fullCalculatorName +"':\n" + e + "\nSource:\n\n"+ source +"\n", e);
@@ -109,9 +127,55 @@ public class CalculatorBuilder {
     }
 
     /**
+     * @return the parameters used when generating the picture.
+     */
+    public Parameters getParameters() {
+        return parameters;
+    }
+
+    /**
      * @return the generated source, or null if it has not yet been generated.
      */
     public String getSource() {
         return source;
+    }
+
+    /**
+     * @return the name for this generated picture.
+     */
+    public String getName() {
+        return parameters.get(PictureGenerator.NAME, DEFAULT_NAME);
+    }
+
+    /**
+     * @return default width of the generated picture.
+     *         The final width is determined by the data array size passed to the PixelCalculator
+     *         (this allows us to generate smaller preview pictures easily).
+     */
+    public int getWidth() {
+        return parameters.get(PictureGenerator.WIDTH, DEFAULT_SIZE);
+    }
+
+    /**
+     * @return default height of the generated picture.
+     *         The final height is determined by the data array size passed to the PixelCalculator
+     *         (this allows us to generate smaller preview pictures easily).
+     */
+    public int getHeight() {
+        return parameters.get(PictureGenerator.HEIGHT, DEFAULT_SIZE);
+    }
+
+    /**
+     * @return number of channels in the generated picture.
+     */
+    public int getChannelCount() {
+        return getChannels().length;
+    }
+
+    /**
+     * @return names of the channels in the generated picture.
+     */
+    public String[] getChannels() {
+        return parameters.get(PictureGenerator.CHANNELS, DEFAULT_CHANNELS);
     }
 }

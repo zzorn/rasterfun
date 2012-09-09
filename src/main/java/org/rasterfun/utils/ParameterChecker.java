@@ -201,6 +201,18 @@ public final class ParameterChecker
     }
 
 
+    public static void checkIntegerEquals( final int parameter,
+                                           String parameterName,
+                                           int requiredValue,
+                                           String otherName)
+    {
+        if ( parameter != requiredValue)
+        {
+            throwIllegalArgumentException( parameterName, parameter, "be equal to " + otherName + " which is " + requiredValue);
+        }
+    }
+
+
     public static void checkNotAlreadyContained( final Object element,
                                                  final Collection collection,
                                                  final String listName )

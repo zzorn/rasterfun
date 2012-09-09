@@ -1,7 +1,6 @@
 package org.rasterfun.core;
 
 import org.rasterfun.core.listeners.CalculationListener;
-import org.rasterfun.parameters.Parameters;
 
 /**
  * Calculates pixel values for a picture.
@@ -14,12 +13,17 @@ import org.rasterfun.parameters.Parameters;
 public interface PixelCalculator {
 
     /**
+     * @param parameters any non-literal parameters that could not be compiled directly into the code.
+     *                   The code should be generated so that it knows what parameter is at which index.
+     */
+    void setParameters(Object[] parameters);
+
+    /**
      * Generates all pixels for the given picture.
      * Pixels are stored in y major order, with the values for each channel directly following each other in a pixel.
      * E.g. a width 3, height 2 picture with 2 channels a and b, will have the following data layout (where a01 is the value for the
      * 'a' channel at the location x: 0, y: 1): a00,b00, a10,b10, a20,b20,   a01,b01, a11,b11, a21,b21.
      *
-     * @param parameters picture generator and  effect parameter values to use when generating the pixels.
      * @param width width of the picture.
      * @param height height of the picture.
      * @param channelNames the names of the channels in the picture, in the order they are stored.
@@ -31,8 +35,7 @@ public interface PixelCalculator {
      * @param listener a listener should be notified about the progress of this calculation.
      * @param calculatorIndex index of this calculator, used when reporting to the listener.
      */
-    void calculatePixels(Parameters parameters,
-                         int width,
+    void calculatePixels(int width,
                          int height,
                          String[] channelNames,
                          float[] pixelData,

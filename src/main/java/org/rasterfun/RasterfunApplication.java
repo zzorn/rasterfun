@@ -1,13 +1,16 @@
 package org.rasterfun;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  */
 public class RasterfunApplication {
 
-    private static final int MAXIMUM_THREAD_POOL_SIZE = 64;
+    private static final int MAXIMUM_THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 8;
 
     private static final ExecutorService executor = new ThreadPoolExecutor(
             0, // Initial thread count

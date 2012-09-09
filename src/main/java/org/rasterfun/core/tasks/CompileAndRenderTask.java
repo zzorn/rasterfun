@@ -1,12 +1,10 @@
 package org.rasterfun.core.tasks;
 
 import org.rasterfun.RasterfunApplication;
-import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.PixelCalculator;
-import org.rasterfun.core.listeners.ProgressListener;
-import org.rasterfun.parameters.Parameters;
+import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.listeners.PictureCalculationListener;
 import org.rasterfun.picture.Picture;
-import org.rasterfun.picture.PictureImpl;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -19,24 +17,22 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CompileAndRenderTask implements Callable<Picture> {
 
     private final CalculatorBuilder builder;
-    private final Parameters parameters;
-    private final PictureImpl picture;
-    private final PictureImpl preview;
-    private final ProgressListener pictureListener;
-    private final ProgressListener previewListener;
+    private final int pictureIndex;
+    private final Picture picture;
+    private final Picture preview;
+    private final PictureCalculationListener listener;
     private final AtomicReference<PictureCalculationTask> previewTask = new AtomicReference<PictureCalculationTask>();
     private final AtomicReference<PictureCalculationTask> pictureTask = new AtomicReference<PictureCalculationTask>();
 
     private final AtomicBoolean running = new AtomicBoolean(true);
 
 
-    public CompileAndRenderTask(CalculatorBuilder builder, Parameters parameters, PictureImpl picture, PictureImpl preview, ProgressListener pictureListener, ProgressListener previewListener) {
+    public CompileAndRenderTask(CalculatorBuilder builder, int pictureIndex, Picture picture, Picture preview, PictureCalculationListener listener) {
         this.builder = builder;
-        this.parameters = parameters;
+        this.pictureIndex = pictureIndex;
         this.picture = picture;
         this.preview = preview;
-        this.pictureListener = pictureListener;
-        this.previewListener = previewListener;
+        this.listener = listener;
     }
 
     @Override
@@ -45,9 +41,9 @@ public class CompileAndRenderTask implements Callable<Picture> {
         if (!running.get()) return null;
 
         // Compile pixel calculator
-        if (pictureListener != null) {
-            pictureListener.onProgress(0.0f);
-            pictureListener.onStatusChanged("Compiling generator for '"+picture.getName()+"'");
+        if (listener != null) {
+            listener.onProgress(picture, pictureIndex, 0.0f, 0);
+            listener.onStatusChanged(picture, pictureIndex, "Compiling generator for '"+picture.getName()+"'");
         }
         final PixelCalculator pixelCalculator = builder.compilePixelCalculator();
 
@@ -57,12 +53,12 @@ public class CompileAndRenderTask implements Callable<Picture> {
         // Create task to calculate the preview image
         Future<Picture> previewFuture = null;
         if (preview != null) {
-            previewTask.set(new PictureCalculationTask(preview, parameters, pixelCalculator, previewListener));
+            previewTask.set(new PictureCalculationTask(preview, pictureIndex, pixelCalculator, listener, true));
             previewFuture = RasterfunApplication.getExecutor().submit(previewTask.get());
         }
 
         // Create task to calculate the main picture
-        pictureTask.set(new PictureCalculationTask(picture, parameters, pixelCalculator, pictureListener));
+        pictureTask.set(new PictureCalculationTask(picture, pictureIndex, pixelCalculator, listener, false));
         final Future<Picture> pictureFuture = RasterfunApplication.getExecutor().submit(pictureTask.get());
 
         // Wait until main picture is done

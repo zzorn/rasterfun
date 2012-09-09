@@ -1,6 +1,8 @@
 package org.rasterfun.generator;
 
-import org.rasterfun.core.PictureCalculation;
+import org.rasterfun.core.PictureCalculations;
+import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.parameters.ParametersImpl;
@@ -9,12 +11,12 @@ import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.PictureEditor;
 import org.rasterfun.ui.preview.PicturePreviewer;
 import org.rasterfun.ui.preview.PicturePreviewerImpl;
-import org.rasterfun.utils.ParameterChecker;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.rasterfun.utils.ParameterChecker.*;
+import static org.rasterfun.utils.ParameterChecker.checkNonEmptyString;
+import static org.rasterfun.utils.ParameterChecker.checkNotNull;
 
 /**
  * Common functionality for PictureGenerators.
@@ -25,21 +27,19 @@ public abstract class PictureGeneratorBase implements PictureGenerator {
     private String name = getClass().getSimpleName();
     private List<GeneratorListener> listeners = null;
 
-    private final ParametersListener parameterListener = new ParametersListener() {
-        @Override
-        public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
-            // Notify out listeners when our parameters are changed.
-            if (listeners != null) {
-                for (GeneratorListener listener : listeners) {
-                    listener.onChanged(PictureGeneratorBase.this);
-                }
-            }
-        }
-    };
-
     protected PictureGeneratorBase() {
         // Listen to our own parameters
-        parameters.addListener(parameterListener);
+        parameters.addListener(new ParametersListener() {
+                @Override
+                public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
+                    // Notify out listeners when our parameters are changed.
+                    if (listeners != null) {
+                        for (GeneratorListener listener : listeners) {
+                            listener.onGeneratorChanged(PictureGeneratorBase.this);
+                        }
+                    }
+                }
+            });
     }
 
     @Override
@@ -49,7 +49,7 @@ public abstract class PictureGeneratorBase implements PictureGenerator {
 
     @Override
     public PicturePreviewer getPreviewer() {
-        return new PicturePreviewerImpl();
+        return new PicturePreviewerImpl(this);
     }
 
     @Override
@@ -59,14 +59,35 @@ public abstract class PictureGeneratorBase implements PictureGenerator {
     }
 
     @Override
-    public final List<PictureCalculation> generatePictures() {
-        return generatePictures(getParameters());
+    public final PictureCalculations generatePictures() {
+        return generatePictures(null);
     }
 
     @Override
-    public List<Picture> generatePicturesAndWait() {
-        return generatePicturesAndWait(getParameters());
+    public final PictureCalculations generatePictures(PictureCalculationsListener listener) {
+        return generatePictures(listener, null, null);
     }
+
+    @Override
+    public final PictureCalculations generatePictures(PictureCalculationsListener listener,
+                                                      List<Picture> picturesToReuse,
+                                                      List<Picture> previewsToReuse) {
+        // Compose the source
+        final List<CalculatorBuilder> builders = createPictureSources();
+
+        // Create calculation task and start it
+        final PictureCalculations calculation = new PictureCalculations(builders, picturesToReuse, previewsToReuse);
+        if (listener != null) calculation.addListener(listener);
+        calculation.start();
+
+        // Return reference to ongoing calculation
+        return calculation;
+    }
+
+    /**
+     * @return the CalculatorBuilder with the source to generate each picture that this generator produces.
+     */
+    protected abstract List<CalculatorBuilder> createPictureSources();
 
     @Override
     public void addListener(GeneratorListener listener) {

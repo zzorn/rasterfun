@@ -1,10 +1,10 @@
 package org.rasterfun.picture;
 
 import org.rasterfun.library.GeneratorElement;
+import org.rasterfun.utils.ParameterChecker;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  *
@@ -21,6 +21,12 @@ public final class PictureImpl implements Picture {
     private final HashMap<String, Integer> channelNameToIndex = new HashMap<String, Integer>();
 
     public PictureImpl(String name, int width, int height, String[] channelNames) {
+        ParameterChecker.checkNonEmptyString(name, "name");
+        ParameterChecker.checkNotNull(channelNames, "channelNames");
+        ParameterChecker.checkPositiveNonZeroInteger(width, "width");
+        ParameterChecker.checkPositiveNonZeroInteger(height, "height");
+        ParameterChecker.checkPositiveNonZeroInteger(channelNames.length, "channelNames.length");
+
         this.name = name;
         this.width = width;
         this.height = height;
@@ -28,10 +34,7 @@ public final class PictureImpl implements Picture {
         this.channelCount = this.channelNames.length;
         this.data = new float[width * height * channelCount];
 
-        // Initialize lookup map
-        for (int i = 0; i < this.channelNames.length; i++) {
-            channelNameToIndex.put(this.channelNames[i], i);
-        }
+        createChannelNamesLookup();
     }
 
     @Override
@@ -63,7 +66,17 @@ public final class PictureImpl implements Picture {
     }
 
     public void setName(String name) {
+        ParameterChecker.checkNonEmptyString(name, "name");
         this.name = name;
+    }
+
+    @Override
+    public void setChannelNames(String[] channelNames) {
+        ParameterChecker.checkNotNull(channelNames, "channelNames");
+        if (channelNames.length != this.channelNames.length) throw new IllegalArgumentException("New channel names must have same size as the existing ones.");
+
+        System.arraycopy(channelNames, 0, this.channelNames, 0, this.channelNames.length);
+        createChannelNamesLookup();
     }
 
     public float[] getData() {
@@ -90,4 +103,12 @@ public final class PictureImpl implements Picture {
     public int getChannelCount() {
         return channelCount;
     }
+
+    private void createChannelNamesLookup() {
+        channelNameToIndex.clear();
+        for (int i = 0; i < this.channelNames.length; i++) {
+            channelNameToIndex.put(this.channelNames[i], i);
+        }
+    }
+
 }
