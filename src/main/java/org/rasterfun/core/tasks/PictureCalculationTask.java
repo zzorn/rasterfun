@@ -1,6 +1,10 @@
-package org.rasterfun.core;
+package org.rasterfun.core.tasks;
 
 import org.rasterfun.RasterfunApplication;
+import org.rasterfun.core.listeners.CalculationListener;
+import org.rasterfun.core.CalculatorBuilder;
+import org.rasterfun.core.PixelCalculator;
+import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
@@ -20,18 +24,17 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PictureCalculationTask implements Callable<Picture>, CalculationListener {
 
     private final PictureImpl picture;
+    private final PixelCalculator pixelCalculator;
     private final Parameters parameters;
-    private final CalculatorBuilder builder;
-    private final ProgressListener listener;
+    private final ProgressListener  listener;
     private final int taskCount;
     private final AtomicIntegerArray taskProgress;
     private final AtomicReference<List<PixelCalculationTask>> calculationTasks = new AtomicReference<List<PixelCalculationTask>>(null);
-    private final AtomicBoolean running = new AtomicBoolean(true);
 
-    public PictureCalculationTask(PictureImpl picture, Parameters parameters, CalculatorBuilder builder, ProgressListener listener) {
+    public PictureCalculationTask(PictureImpl picture, Parameters parameters, PixelCalculator pixelCalculator, ProgressListener listener) {
         this.picture = picture;
         this.parameters = parameters;
-        this.builder = builder;
+        this.pixelCalculator = pixelCalculator;
         this.listener = listener;
 
         // Count number of (virtual) processor cores we have
@@ -44,13 +47,6 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
     @Override
     public Picture call() throws Exception {
         try {
-            // Compile the calculator
-            if (listener != null) {
-                listener.onProgress(0.0f);
-                listener.onStatusChanged("Compiling generator for '"+picture.getName()+"'");
-            }
-            final PixelCalculator pixelCalculator = builder.compilePixelCalculator();
-
             // Split into many threads to take advantage of multiple cores.
             if (listener != null) listener.onStatusChanged("Generating image data for '"+picture.getName()+"'");
             int pixelsPerTask = picture.getHeight() / taskCount;
@@ -82,11 +78,6 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
             }
             calculationTasks.set(tasks);
 
-            // Check if we were canceled
-            if (!running.get()) {
-                return null;
-            }
-
             // Start the tasks
             List<Future<?>> futures = new ArrayList<Future<?>>();
             for (PixelCalculationTask task : tasks) {
@@ -103,6 +94,7 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
             if (listener != null) {
                 listener.onProgress(1.0f);
                 listener.onStatusChanged("Done generating picture '"+picture.getName()+"'.");
+                listener.onReady();
             }
 
             // Return the picture, now with computed pixels
@@ -140,11 +132,8 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
      * Stops the calculation of all subtasks.
      */
     public void stop() {
-        boolean wasRunning = running.getAndSet(false);
-        if (wasRunning) {
-            for (PixelCalculationTask task : calculationTasks.get()) {
-                task.stop();
-            }
+        for (PixelCalculationTask task : calculationTasks.get()) {
+            task.stop();
         }
     }
 }

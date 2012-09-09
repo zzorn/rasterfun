@@ -2,12 +2,11 @@ package org.rasterfun.generator;
 
 import org.rasterfun.core.CalculatorBuilder;
 import org.rasterfun.core.PictureCalculation;
-import org.rasterfun.core.ProgressListener;
+import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
 
     @Override
     public List<PictureCalculation> generatePictures(Parameters parameters) {
-        return Collections.singletonList(generatePicture(parameters, null));
+        return Collections.singletonList(generatePicture(parameters, null, null));
     }
 
     public Picture generatePictureAndWait() {
@@ -34,18 +33,22 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
     }
 
     public Picture generatePictureAndWait(Parameters parameters) {
-        return generatePicture(parameters, null).getPictureAndWait();
+        return generatePicture(parameters, null, null).getPictureAndWait();
     }
 
     public PictureCalculation generatePicture() {
-        return generatePicture(getParameters(), null);
+        return generatePicture(getParameters(), null, null);
     }
 
     public PictureCalculation generatePicture(ProgressListener listener) {
-        return generatePicture(getParameters(), listener);
+        return generatePicture(getParameters(), listener, null);
     }
 
-    public PictureCalculation generatePicture(Parameters parameters, ProgressListener listener) {
+    public PictureCalculation generatePicture(ProgressListener listener, ProgressListener previewListener) {
+        return generatePicture(getParameters(), listener, previewListener);
+    }
+
+    public PictureCalculation generatePicture(Parameters parameters, ProgressListener listener, ProgressListener previewListener) {
 
         // Create empty picture to draw on
         final PictureImpl picture = createNewBlankPicture(parameters);
@@ -55,7 +58,8 @@ public class SinglePictureGenerator extends PictureGeneratorBase {
 
         // Create calculation task and start it
         final PictureCalculation calculation = new PictureCalculation(parameters, picture, calculatorBuilder);
-        if (listener != null) calculation.addListener(listener);
+        if (listener != null) calculation.getPictureListeners().addListener(listener);
+        if (previewListener != null) calculation.getPreviewListeners().addListener(previewListener);
         calculation.start();
 
         // Return reference to ongoing calculation

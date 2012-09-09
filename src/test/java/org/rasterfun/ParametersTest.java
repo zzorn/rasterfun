@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Test parameter classes.
+ * Test parameter class.
  */
 public class ParametersTest {
 

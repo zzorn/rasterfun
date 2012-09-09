@@ -1,7 +1,7 @@
-package org.rasterfun.core;
+package org.rasterfun.core.listeners;
 
 /**
- * Something that can be notified on calculation progress.
+ * Listener that can be notified on calculation progress.
  */
 public interface ProgressListener {
 
@@ -20,5 +20,10 @@ public interface ProgressListener {
      * @param description a description of the reason the task could not finish.
      */
     void onError(String description, Throwable cause);
+
+    /**
+     * Called when the task finished
+     */
+    void onReady();
 
 }

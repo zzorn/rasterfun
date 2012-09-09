@@ -1,4 +1,4 @@
-package org.rasterfun.core;
+package org.rasterfun.core.listeners;
 
 /**
  * A listener that is notified about a calculation progress.

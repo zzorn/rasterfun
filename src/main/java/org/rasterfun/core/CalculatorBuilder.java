@@ -35,7 +35,7 @@ public class CalculatorBuilder {
                              "package " + packageName + ";\n" +
                              "\n" +
                              "import org.rasterfun.core.PixelCalculator;\n" +
-                             "import org.rasterfun.core.CalculationListener;\n" +
+                             "import org.rasterfun.core.listeners.CalculationListener;\n" +
                              "import org.rasterfun.parameters.Parameters;\n" +
                              "\n" +
                              "public final class "+className+" implements PixelCalculator {\n" +

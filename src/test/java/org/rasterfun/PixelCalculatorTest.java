@@ -2,16 +2,16 @@ package org.rasterfun;
 
 import org.junit.Test;
 import org.rasterfun.core.*;
+import org.rasterfun.core.listeners.CalculationListener;
+import org.rasterfun.core.listeners.ProgressListener;
 import org.rasterfun.parameters.ParametersImpl;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 
 /**
- * Tests core aspect of the pixel calculator.
+ * Tests core aspect of the pixel calculator, and the PictureCalculation.
  */
 public class PixelCalculatorTest {
 
@@ -67,6 +67,14 @@ public class PixelCalculatorTest {
         assertPixelCorrect(result, "ys",  4,  9,  9);
         assertPixelCorrect(result, "xs", 99, 99, 99);
         assertPixelCorrect(result, "ys", 99, 99, 99);
+
+        // Check generated preview
+        final Picture preview = calculation.getPreview();
+        assertEquals("Number of channels should be correct in preview", 2, preview.getChannelCount());
+        assertPixelCorrect(preview, "xs",  0,  0,  0);
+        assertPixelCorrect(preview, "xs",  1,  0,  1);
+        assertPixelCorrect(preview, "ys",  1,  0,  0);
+        assertPixelCorrect(preview, "xs",  1,  1,  1);
     }
 
     @Test
@@ -83,22 +91,28 @@ public class PixelCalculatorTest {
 
         final boolean[] errorReported = {false};
         final float[] progressMade = {0};
-        calculation.addListener(new ProgressListener() {
+        final boolean[] readyCalled = {false};
+        calculation.getPictureListeners().addListener(new ProgressListener() {
             @Override
             public void onProgress(float progress) {
-                System.out.println("progress = " + progress);
+                //System.out.println("progress = " + progress);
                 progressMade[0] = progress;
             }
 
             @Override
             public void onStatusChanged(String description) {
-                System.out.println("description = " + description);
+                //System.out.println("description = " + description);
             }
 
             @Override
             public void onError(String description, Throwable cause) {
-                System.out.println("Error description = " + description);
+                //System.out.println("Error description = " + description);
                 errorReported[0] = true;
+            }
+
+            @Override
+            public void onReady() {
+                readyCalled[0] = true;
             }
         });
 
@@ -109,12 +123,10 @@ public class PixelCalculatorTest {
 
         delay(10);
 
-        System.out.println("calculation.getProblemDescription() = " + calculation.getProblemDescription());
-
         assertNull("The picture should be null", finalPicture);
-        assertNotNull("Some error message should have been reported", calculation.getProblemDescription());
         assertTrue("An error should have been reported", errorReported[0]);
-        assertTrue("Some progress should have been made, but not complete, but progress was " +progressMade[0], progressMade[0] > 0.05 && progressMade[0] < 0.95);
+        assertTrue("Some progress should have been made, but not complete, but progress was " + progressMade[0], progressMade[0] > 0.05 && progressMade[0] < 0.95);
+        assertFalse("onReady should not have been called", readyCalled[0]);
     }
 
     @Test

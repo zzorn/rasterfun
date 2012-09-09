@@ -1,47 +1,84 @@
 package org.rasterfun.core;
 
 import org.rasterfun.RasterfunApplication;
+import org.rasterfun.core.listeners.ProgressListenerDelegate;
+import org.rasterfun.core.tasks.CompileAndRenderTask;
+import org.rasterfun.core.tasks.PictureCalculationTask;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Represents an ongoing or completed calculation of a single picture.
  * May provide a smaller preview picture of the final picture.
  */
-public final class PictureCalculation implements ProgressListener {
+public final class PictureCalculation {
 
-    private final PictureImpl picture;
     private final Parameters parameters;
+    private final PictureImpl picture;
     private final CalculatorBuilder calculatorBuilder;
+    private final boolean generatePreview;
+    private final double previewImageScaleFactor;
+    private final int minPreviewImageSize;
 
-    private Future<Picture> previewFuture = null;
-    private Future<Picture> pictureFuture = null;
+    private PictureImpl previewPicture = null;
 
-    private final AtomicReference<Double> progress = new AtomicReference<Double>(0.0);
-    private final AtomicReference<String> problemDescription = new AtomicReference<String>(null);
-    private final AtomicReference<String> currentStatus = new AtomicReference<String>(null);
     private boolean started = false;
 
-    private CopyOnWriteArrayList<ProgressListener> listeners = new CopyOnWriteArrayList<ProgressListener>();
-    private PictureCalculationTask calculationTask;
+    private CompileAndRenderTask calculationTask;
+
+    private Future<Picture> pictureFuture = null;
+
+    private ProgressListenerDelegate previewListeners = new ProgressListenerDelegate();
+    private ProgressListenerDelegate pictureListeners = new ProgressListenerDelegate();
 
     /**
+     * Creates a calculation to generate the specified picture, and a preview picture for it.
+     *
      * @param parameters parameters to use for the calculated picture.
      *                   They should not be changed while the picture is being calculated (use snapshot method to get a static copy to pass in).
      * @param picture an empty picture to fill.
      * @param calculatorBuilder the source for the calculator, used to generate the actual calculator.
      */
     public PictureCalculation(Parameters parameters, PictureImpl picture, CalculatorBuilder calculatorBuilder) {
+        this(parameters, picture, calculatorBuilder, true);
+    }
+
+    /**
+     * Creates a calculation to generate the specified picture, and a preview picture as well if specified.
+     *
+     * @param parameters parameters to use for the calculated picture.
+     *                   They should not be changed while the picture is being calculated (use snapshot method to get a static copy to pass in).
+     * @param picture an empty picture to fill.
+     * @param calculatorBuilder the source for the calculator, used to generate the actual calculator.
+     * @param generatePreview if true, a smaller preview image will be rendered, if it would not be too small.
+     */
+    public PictureCalculation(Parameters parameters, PictureImpl picture, CalculatorBuilder calculatorBuilder, boolean generatePreview) {
+        this(parameters, picture, calculatorBuilder, generatePreview, 0.1, 8);
+    }
+
+    /**
+     * Creates a calculation to generate the specified picture, and a preview picture as well if specified.
+     *
+     * @param parameters parameters to use for the calculated picture.
+     *                   They should not be changed while the picture is being calculated (use snapshot method to get a static copy to pass in).
+     * @param picture an empty picture to fill.
+     * @param calculatorBuilder the source for the calculator, used to generate the actual calculator.
+     * @param generatePreview if true, a smaller preview image will be rendered.
+     * @param previewImageScaleFactor if a preview should be generated, this tells the scaling to use for it.
+     *                                E.g. 0.1 will generate a preview picture that has 1/10 the width and height of the original.
+     * @param minPreviewImageSize if the preview picture would have a width or height smaller than this, it will not be generated.
+     */
+    public PictureCalculation(Parameters parameters, PictureImpl picture, CalculatorBuilder calculatorBuilder, boolean generatePreview, double previewImageScaleFactor, int minPreviewImageSize) {
         // Take a static snapshot of the parameters, so that any changes done to them later are not visible to the calculation.
         this.parameters = parameters.copy();
         this.calculatorBuilder = calculatorBuilder;
         this.picture = picture;
-
+        this.generatePreview = generatePreview;
+        this.previewImageScaleFactor = previewImageScaleFactor;
+        this.minPreviewImageSize = minPreviewImageSize;
     }
 
     /**
@@ -53,15 +90,24 @@ public final class PictureCalculation implements ProgressListener {
         if (started) throw new IllegalStateException("Can not start calculation of picture '"+picture.getName()+"', it has already been started.");
         started = true;
 
-        calculationTask = new PictureCalculationTask(picture, parameters, calculatorBuilder, this);
-        pictureFuture = RasterfunApplication.getExecutor().submit(calculationTask);
-    }
+        // Create empty preview picture if we should generate one
+        if (generatePreview) {
+            // Calculate preview image size
+            int previewWidth  = (int)(previewImageScaleFactor * picture.getWidth());
+            int previewHeight = (int)(previewImageScaleFactor * picture.getHeight());
 
-    /**
-     * @return future for a preview picture being calculated.
-     */
-    public Future<Picture> getPreviewFuture() {
-        return previewFuture;
+            // Only generate it if it is big enough
+            if (previewHeight > minPreviewImageSize &&
+                previewWidth  > minPreviewImageSize) {
+
+                // Initialize empty preview picture
+                previewPicture = new PictureImpl(picture.getName(), previewWidth, previewHeight, picture.getChannelNames());
+            }
+        }
+
+        // Create task to calculate the picture (and the preview picture if we have one)
+        calculationTask = new CompileAndRenderTask(calculatorBuilder, parameters, picture, previewPicture, pictureListeners, previewListeners);
+        pictureFuture = RasterfunApplication.getExecutor().submit(calculationTask);
     }
 
     /**
@@ -69,6 +115,26 @@ public final class PictureCalculation implements ProgressListener {
      */
     public Future<Picture> getPictureFuture() {
         return pictureFuture;
+    }
+
+    /**
+     * @return a preview picture being calculated, or null if there is no preview.
+     *
+     * Before the calculation is completed, this is updated from separate calculation threads,
+     * so the data may not be valid.
+     */
+    public Picture getPreview() {
+        return previewPicture;
+    }
+
+    /**
+     * @return the picture being calculated.
+     *
+     * Before the calculation is completed, this is updated from separate calculation threads,
+     * so the data may not be valid.
+     */
+    public Picture getPicture() {
+        return picture;
     }
 
     /**
@@ -83,31 +149,10 @@ public final class PictureCalculation implements ProgressListener {
     }
 
     /**
-     * @return the current progress of this calculation, goes from 0 to 1.
-     */
-    public double getProgress() {
-        return progress.get();
-    }
-
-    /**
-     * @return the current (human-readable) status of this calculation.
-     */
-    public String getCurrentStatus() {
-        return currentStatus.get();
-    }
-
-    /**
      * @return true if the calculation of the picture has finished, or the calculation has stopped for some other reason.
      */
     public boolean isDone() {
         return pictureFuture.isDone();
-    }
-
-    /**
-     * @return true if there was some error during calculation.
-     */
-    public boolean isFailed() {
-        return problemDescription.get() != null;
     }
 
     /**
@@ -120,69 +165,28 @@ public final class PictureCalculation implements ProgressListener {
     }
 
     /**
-     * @return description of any problem encountered, or null if no problems.
+     * @return a collection of listeners for the preview picture calculation.
+     * You can add your own with addListener.
+     *
+     * Note the listener is called from the calculation thread, so if the listener does any UI updates
+     * it should call SwingUtils.invokeLater or similar, and if it does state updates they should
+     * take into account concurrency concerns.
+     *
      */
-    public String getProblemDescription() {
-        return problemDescription.get();
+    public ProgressListenerDelegate getPreviewListeners() {
+        return previewListeners;
     }
 
     /**
-     * @param listener a listener that is notified about progress and status updates on this calculation.
-     *                 The listener is called from the calculation thread, so if the listener does any UI updates
-     *                 it should call SwingUtils.invokeLater or similar, and if it does state updates they should
-     *                 take into account concurrency concerns.
+     * @return a collection of listeners for the picture calculation.
+     * You can add your own with addListener.
+     *
+     * Note the listener is called from the calculation thread, so if the listener does any UI updates
+     * it should call SwingUtils.invokeLater or similar, and if it does state updates they should
+     * take into account concurrency concerns.
+     *
      */
-    public void addListener(ProgressListener listener) {
-        listeners.add(listener);
+    public ProgressListenerDelegate getPictureListeners() {
+        return pictureListeners;
     }
-
-    /**
-     * @param listener listener to remove.
-     */
-    public void removeListener(ProgressListener listener) {
-        listeners.remove(listener);
-    }
-
-
-    // ProgressListener implementation:
-
-    @Override
-    public void onProgress(final float progress) {
-        this.progress.set((double)progress);
-
-        // Notify listeners
-        if (!listeners.isEmpty()) {
-            for (ProgressListener listener : listeners) {
-                listener.onProgress(progress);
-            }
-        }
-    }
-
-    @Override
-    public void onStatusChanged(final String description) {
-        this.currentStatus.set(description);
-
-        // Notify listeners
-        if (!listeners.isEmpty()) {
-            for (ProgressListener listener : listeners) {
-                listener.onStatusChanged(description);
-            }
-        }
-    }
-
-    @Override
-    public void onError(final String description, final Throwable cause) {
-        if (description != null) problemDescription.set(description);
-
-        // Cancel calculation
-        pictureFuture.cancel(false);
-
-        // Notify listeners
-        if (!listeners.isEmpty()) {
-            for (ProgressListener listener : listeners) {
-                listener.onError(description, cause);
-            }
-        }
-    }
-
 }

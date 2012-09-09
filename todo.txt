@@ -6,11 +6,11 @@ NEW robust implementation
 Implementation list:
 
 * Parameters [DONE]
-* Preview generation
-* Perlin noise effect
+* Preview generation [DONE]
 * Preview user interface with panning and zooming, and toggle tiling
   * If no tiling, show each picture separated from others in nice table formation (using table preview arranger?)
   * If tiling, show pictures arranged with custom preview arranger, or random preview arranger if generator doesn't specify any
+* Perlin noise effect
 * Generator editor ui and parameter property editor ui
 * Re-render pictures on parameter changes, show progressbar & stop button, stop previous render if properties changed while rendering
 * Undo & redo for property changes and other edits

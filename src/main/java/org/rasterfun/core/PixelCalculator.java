@@ -1,5 +1,6 @@
 package org.rasterfun.core;
 
+import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.parameters.Parameters;
 
 /**

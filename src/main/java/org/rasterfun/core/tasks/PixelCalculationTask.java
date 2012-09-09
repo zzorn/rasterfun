@@ -1,5 +1,7 @@
-package org.rasterfun.core;
+package org.rasterfun.core.tasks;
 
+import org.rasterfun.core.listeners.CalculationListener;
+import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.picture.PictureImpl;
 
@@ -12,7 +14,7 @@ public class PixelCalculationTask implements Runnable {
     private final Parameters parameters;
     private final int startY;
     private final int endY;
-    private final PixelCalculator calculator;
+    private final PixelCalculator     calculator;
     private final CalculationListener listener;
     private final int calculatorIndex;
 
