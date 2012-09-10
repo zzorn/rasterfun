@@ -132,11 +132,12 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         }
 
         @Override
-        public void onError(final int calculationIndex, String description, Throwable cause) {
+        public void onError(final int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
             if (calculationIndex == ongoingCalculationIndex) {
                 progressBar.setValue(0);
-                setStatusBarMessage(description);
-                statusBar.setToolTipText(description);
+                setStatusBarMessage(shortDescription);
+                statusBar.setToolTipText(longDescription);
+                // TODO: Multi-line tooltips, or some other error popup
 
                 // Log the stack trace to standard out for debugging
                 cause.printStackTrace();

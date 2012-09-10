@@ -5,11 +5,29 @@ package org.rasterfun.core.compiler;
  */
 public class CompilationException extends Exception {
 
-    public CompilationException(String message) {
-        super(message);
+    private final String generatorName;
+    private final String source;
+    private final String longExplanation;
+
+    public CompilationException(Throwable cause, String generatorName,
+                                String source,
+                                String message,
+                                String longExplanation) {
+        super(message, cause);
+        this.generatorName = generatorName;
+        this.source = source;
+        this.longExplanation = longExplanation;
     }
 
-    public CompilationException(String message, Throwable cause) {
-        super(message, cause);
+    public String getGeneratorName() {
+        return generatorName;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getLongExplanation() {
+        return longExplanation;
     }
 }

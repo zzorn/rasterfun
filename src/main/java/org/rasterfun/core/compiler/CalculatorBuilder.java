@@ -1,10 +1,12 @@
 package org.rasterfun.core.compiler;
 
+import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.SimpleCompiler;
 import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.parameters.Parameters;
 
+import java.io.IOException;
 import java.io.StringReader;
 
 /**
@@ -26,9 +28,12 @@ public class CalculatorBuilder {
     private final StringBuilder evaluationLoopSource = new StringBuilder();
     private String source;
 
+    private final String generatorName;
+
     public CalculatorBuilder(Parameters parameters) {
         // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
         this.parameters = parameters.copy();
+        generatorName = parameters.get(PictureGenerator.NAME, null);
     }
 
     // Helper methods for adding variables, contexts, etc.
@@ -81,7 +86,7 @@ public class CalculatorBuilder {
                              "    \n"+
                              "    int pixelIndex = (startY * width + startX) * channelCount;\n"+
                              "    for (int y = startY; (y < endY) && running; y++) {\n" +
-                             "       try {Thread.sleep(10);} catch (Exception e) {}\n" +
+//                             "       try {Thread.sleep(1);} catch (Exception e) {}\n" +
                              "       for (int x = startX; (x < endX) && running; x++) {\n" +
                              "         pixelData[pixelIndex] = ((float)x / endX) * (y % 2);\n" +
                                        evaluationLoopSource.toString() +
@@ -90,8 +95,8 @@ public class CalculatorBuilder {
                              "       }\n" +
                              "       \n" +
                              "       completedScanLines++;\n" +
-                             "       if (completedScanLines >= progressReportInterval || y == endY - 1) {\n" +
-                             "         listener.onCalculationProgress(calculatorIndex, completedScanLines);\n" +
+                             "       if ((completedScanLines >= progressReportInterval || y == endY - 1) && listener != null) {\n" +
+                             "         listener.onCalculationProgress(calculatorIndex, width * completedScanLines);\n" +
                              "         completedScanLines = 0;\n" +
                              "       }\n" +
                              "    }\n"+
@@ -115,8 +120,39 @@ public class CalculatorBuilder {
 
             return pixelCalculator;
 
-        } catch (Exception e) {
-            throw new CompilationException("Could not compile the pixel calculator '"+ fullCalculatorName +"':\n" + e + "\nSource:\n\n"+ source +"\n", e);
+        } catch (CompileException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not compile the renderer because incorrect source code was generated",
+                                           "There was a compile error in the generated renderer source code.\n" +
+                                           "The compile error is: \n" + e.getMessage() + "\n\n" +
+                                           "And the complete source of the renderer is:\n\n" + source
+            );
+        } catch (ClassNotFoundException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not compile the renderer because a requested class was not found",
+                                           "There was an attempt to access a non-existing or unavailable class \n" +
+                                           "in the generated renderer source code.  The class that was not found was:\n" +
+                                           e.getMessage() + "\nThe exception was " + e
+            );
+        } catch (InstantiationException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not could not instantiate the compiled renderer",
+                                           "Could not create an instance of the compiled renderer.  \n" +
+                                           "The reason was '" +e.getMessage() + "'."
+            );
+        } catch (IllegalAccessException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not access the compiled renderer",
+                                           "There was a problem in accessing the compiled renderer. \n" +
+                                           "The problematic access was '"+e.getMessage() + "'"
+            );
+        } catch (IOException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not read the renderer source or other resource",
+                                           "There was a problem accessing the renderer source, \n" +
+                                           "or some other resources needed by the renderer.\n" +
+                                           "The problematic resource was '" +e.getMessage()+"'"
+            );
         }
 
     }

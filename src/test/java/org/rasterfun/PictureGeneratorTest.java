@@ -6,7 +6,7 @@ import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.PictureGenerator;
-import org.rasterfun.generator.SinglePictureGenerator;
+import org.rasterfun.generator.SimplePictureGenerator;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.PicturePreviewer;
 
@@ -20,13 +20,13 @@ import static org.junit.Assert.*;
  */
 public class PictureGeneratorTest {
 
-    private SinglePictureGenerator pictureGenerator;
+    private SimplePictureGenerator pictureGenerator;
     private TestListener testListener;
 
     @Before
     public void setUp() throws Exception {
 
-        pictureGenerator = new SinglePictureGenerator();
+        pictureGenerator = new SimplePictureGenerator();
 
         testListener = new TestListener();
         pictureGenerator.addListener(testListener);
@@ -47,8 +47,8 @@ public class PictureGeneratorTest {
                     }
 
                     @Override
-                    public void onError(int calculationIndex, String description, Throwable cause) {
-                        fail("We should not get any errors, but got the error: " + description);
+                    public void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
+                        fail("We should not get any errors, but got the error: " + longDescription);
                     }
 
                     @Override
@@ -134,6 +134,26 @@ public class PictureGeneratorTest {
     public void testChangedListenerShouldBeCorrect() throws Exception {
         pictureGenerator.getParameters().set("foo", 1);
         assertEquals("The correct generator should be reported in the listener", pictureGenerator, testListener.getChangedGenerator());
+    }
+
+    @Test
+    public void testGenerateManyPictures() throws Exception {
+        pictureGenerator.getParameters().set(SimplePictureGenerator.NUMBER, 3);
+        pictureGenerator.getParameters().set(SimplePictureGenerator.WIDTH, 100);
+        pictureGenerator.getParameters().set(SimplePictureGenerator.HEIGHT, 100);
+        pictureGenerator.getParameters().set(SimplePictureGenerator.CHANNELS, new String[]{"red, blue"});
+
+        final PictureCalculations calculations = pictureGenerator.generatePictures();
+        final List<Picture> pictures = calculations.getPicturesAndWait();
+
+        assertEquals("We should ge the expected number of pictures", 3, pictures.size());
+
+        for (Picture picture : pictures) {
+            assertEquals("Width should be as expected", 100, picture.getWidth());
+            assertArrayEquals("Picture should have expected channels",
+                              new String[]{"red, blue"},
+                              picture.getChannelNames());
+        }
     }
 
     private void assertListenerCallCount(int expected) {

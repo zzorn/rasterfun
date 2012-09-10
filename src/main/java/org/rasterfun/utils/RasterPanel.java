@@ -16,6 +16,8 @@ public class RasterPanel extends JPanel {
 
     public RasterPanel() {
         this(null);
+
+        setOpaque(true);
     }
 
     /**

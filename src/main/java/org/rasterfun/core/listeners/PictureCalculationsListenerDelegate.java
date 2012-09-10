@@ -28,9 +28,9 @@ public class PictureCalculationsListenerDelegate implements PictureCalculationsL
             listener.onPictureReady(calculationIndex, pictureIndex, picture);
         }
     }
-    public void onError(int calculationIndex, String description, Throwable cause) {
+    public void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
         for (PictureCalculationsListener listener : listeners) {
-            listener.onError(calculationIndex, description, cause);
+            listener.onError(calculationIndex, shortDescription, longDescription, cause);
         }
     }
     public void onReady(int calculationIndex, List<Picture> pictures) {

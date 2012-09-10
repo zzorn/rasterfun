@@ -10,6 +10,7 @@ import org.rasterfun.core.listeners.CalculationListener;
  * simultaneously from multiple threads to different areas on the image data, so do not store any
  * changing temporary data in fields, just local variables.
  */
+// TODO: Rename to renderer or somesuch
 public interface PixelCalculator {
 
     /**

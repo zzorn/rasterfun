@@ -2,9 +2,11 @@ package org.rasterfun.core;
 
 import org.rasterfun.RasterfunApplication;
 import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerDelegate;
-import org.rasterfun.core.tasks.CalculatePicturesTask;
+import org.rasterfun.core.tasks.CompileTask;
+import org.rasterfun.core.tasks.RenderTask;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
 import org.rasterfun.utils.ParameterChecker;
@@ -12,7 +14,10 @@ import org.rasterfun.utils.ParameterChecker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
  * Represents the calculation of one or more pictures.  Reports total progress over all pictures.
@@ -30,10 +35,77 @@ public class PictureCalculations {
     private final int minPreviewImageSize;
 
     private boolean started = false;
-    private CalculatePicturesTask calculationTask;
-    private Future<List<Picture>> picturesFuture = null;
 
     private final PictureCalculationsListenerDelegate listeners = new PictureCalculationsListenerDelegate();
+
+    private final List<Future<Picture>> rendererFutures = new ArrayList<Future<Picture>>();
+    private final List<RenderTask> renderTasks = new ArrayList<RenderTask>();
+
+    private int calculationIndex;
+    private int totalPixels;
+    private int totalPictures;
+    private int slicesPerPreview;
+    private int slicesPerPicture;
+    private AtomicInteger totalCompletedPixels = new AtomicInteger(0);
+    private AtomicInteger totalCompletedPictures = new AtomicInteger(0);
+    private AtomicIntegerArray pictureSlicesCompleted;
+    private AtomicIntegerArray previewSlicesCompleted;
+
+
+    private final CalculationListener renderListener = new CalculationListener() {
+        @Override
+        public void onCalculationProgress(int calculationIndex, int completedPixels) {
+            final int totalCompleted = totalCompletedPixels.addAndGet(completedPixels);
+            float progress = (float) totalCompleted / totalPixels;
+            listeners.onProgress(calculationIndex, progress);
+        }
+
+        @Override
+        public void onPictureSliceReady(int calculationIndex, int pictureIndex, Picture picture, boolean isPreview) {
+
+            if (isPreview) {
+                final int previewSlicesReady = previewSlicesCompleted.incrementAndGet(pictureIndex);
+
+                // For increased sanity points..
+                assert previewSlicesReady <= slicesPerPreview :
+                        "We should not have more slices ready than what there can be in a preview picture.  " +
+                        "slicesPerPreview: " + slicesPerPreview + ", " +
+                        "previewSlicesReady:" + previewSlicesReady;
+
+                if (previewSlicesReady == slicesPerPreview) {
+                    // The picture is complete, notify listeners
+                    listeners.onPreviewReady(calculationIndex, pictureIndex, picture);
+                }
+            }
+            else {
+                final int pictureSlicesReady = pictureSlicesCompleted.incrementAndGet(pictureIndex);
+
+                // For increased sanity points..
+                assert pictureSlicesReady <= slicesPerPicture :
+                        "We should not have more slices ready than what there can be in a picture.  " +
+                        "slicesPerPicture: " + slicesPerPicture + ", " +
+                        "pictureSlicesReady:" + pictureSlicesReady;
+
+                if (pictureSlicesReady == slicesPerPicture) {
+                    // The picture is complete, notify listeners
+                    listeners.onPictureReady(calculationIndex, pictureIndex, picture);
+
+                    // Check if everything is complete
+                    final int currentlyCompletedPictures = totalCompletedPictures.incrementAndGet();
+                    if (currentlyCompletedPictures == totalPictures) {
+                        // Yep, notify
+                        listeners.onReady(calculationIndex, pictures);
+                    }
+                }
+            }
+
+        }
+
+        @Override
+        public void onError(int calculationIndex, String shortSummary, String longDescription, Throwable cause) {
+            listeners.onError(calculationIndex, shortSummary, longDescription, cause);
+        }
+    };
 
 
     /**
@@ -132,48 +204,153 @@ public class PictureCalculations {
         if (started) throw new IllegalStateException("Can not start calculation, it has already been started.");
         started = true;
 
+        this.calculationIndex = calculationIndex;
+
+        totalPictures = calculatorBuilders.size();
+
         // Create or reuse the needed pictures and preview pictures
-        int pictureIndex = 0;
-        for (CalculatorBuilder builder : calculatorBuilders) {
-            final String   name     = builder.getName();
-            final int      width    = builder.getWidth();
-            final int      height   = builder.getHeight();
-            final String[] channels = builder.getChannels();
+        try {
+            int pictureIndex = 0;
+            for (CalculatorBuilder builder : calculatorBuilders) {
+                final String   name     = builder.getName();
+                final int      width    = builder.getWidth();
+                final int      height   = builder.getHeight();
+                final String[] channels = builder.getChannels();
 
-            // Check the passed in images, if any are missing or the wrong size then we re-create them
-            Picture picture = getPictureAtOrNull(pictures, pictureIndex);
-            picture = reuseOrRecreate(picture, name, width, height, channels);
-            pictures.set(pictureIndex, picture);
+                // Check the passed in images, if any are missing or the wrong size then we re-create them
+                Picture picture = getPictureAtOrNull(pictures, pictureIndex);
+                picture = reuseOrRecreate(picture, name, width, height, channels);
+                pictures.set(pictureIndex, picture);
 
-            // Calculate preview size
-            int previewWidth  = (int)(previewImageScaleFactor * picture.getWidth());
-            int previewHeight = (int)(previewImageScaleFactor * picture.getHeight());
+                // Calculate preview size
+                int previewWidth  = (int)(previewImageScaleFactor * picture.getWidth());
+                int previewHeight = (int)(previewImageScaleFactor * picture.getHeight());
 
-            // Create or reuse preview if we should generate one
-            Picture preview = null;
-            if (shouldGeneratePreview(previewWidth, previewHeight)) {
-                preview = getPictureAtOrNull(previews, pictureIndex);
-                preview = reuseOrRecreate(preview, name + " Preview", previewWidth, previewHeight, channels);
+                // Create or reuse preview if we should generate one
+                Picture preview = null;
+                if (shouldGeneratePreview(previewWidth, previewHeight)) {
+                    preview = getPictureAtOrNull(previews, pictureIndex);
+                    preview = reuseOrRecreate(preview, name + " Preview", previewWidth, previewHeight, channels);
+                }
+                previews.set(pictureIndex, preview);
+
+                pictureIndex++;
             }
-            previews.set(pictureIndex, preview);
+        } catch (OutOfMemoryError outOfMemoryError) {
+            // Abort this calculation
+            pictures.clear();
+            previews.clear();
 
-            pictureIndex++;
+            // Notify user
+            listeners.onError(calculationIndex,
+                              "Not enough memory for pictures",
+                              "The computer does not have enough memory to hold \n" +
+                              "all the pictures produced by this picture generator.  \n" +
+                              "Try reducing the number of generated images or their size",
+                              outOfMemoryError);
+
+            // Clear any preview images
+            for (int i = 0; i < totalPictures; i++) {
+                listeners.onPreviewReady(calculationIndex, i, null);
+                listeners.onPictureReady(calculationIndex, i, null);
+            }
+
+            // Force a garbage run
+            System.gc();
+
+            return;
         }
 
         // Discard unused pictures
         discardDownToLength(pictures, calculatorBuilders.size());
         discardDownToLength(previews, calculatorBuilders.size());
 
-        // Create task to calculate the pictures, and start it
-        calculationTask = new CalculatePicturesTask(calculationIndex, calculatorBuilders, pictures, previews, listeners);
-        picturesFuture = RasterfunApplication.getExecutor().submit(calculationTask);
+        // Calculate total pixels to calculate, so that we can estimate progress
+        for (Picture picture : pictures) {
+            if (picture != null) totalPixels += picture.getWidth() * picture.getHeight();
+        }
+
+        // Calculate number of slices to divide the previews and pictures in for processing
+        slicesPerPreview = 1; // Just do one task per preview for now
+        slicesPerPicture = 1 + Runtime.getRuntime().availableProcessors() / totalPictures;
+        pictureSlicesCompleted = new AtomicIntegerArray(pictures.size());
+        previewSlicesCompleted = new AtomicIntegerArray(previews.size());
+
+        // Start compiling all the image calculators
+        List<Future<PixelCalculator>> pixelCalculatorFutures = new ArrayList<Future<PixelCalculator>>();
+        for (CalculatorBuilder calculatorBuilder : calculatorBuilders) {
+            pixelCalculatorFutures.add(RasterfunApplication.getExecutor().submit(new CompileTask(calculationIndex,
+                                                                                                 calculatorBuilder,
+                                                                                                 renderListener)));
+        }
+
+        // Start calculating preview pictures
+        createPictureRenderingTasks(calculationIndex,
+                                    pixelCalculatorFutures,
+                                    previews,
+                                    true,
+                                    slicesPerPreview);
+
+        // Start calculating actual pictures
+        createPictureRenderingTasks(calculationIndex,
+                                    pixelCalculatorFutures,
+                                    pictures,
+                                    false,
+                                    slicesPerPicture);
+    }
+
+    private void createPictureRenderingTasks(int calculationIndex,
+                                             List<Future<PixelCalculator>> pixelCalculatorFutures,
+                                             final List<Picture> pictures,
+                                             final boolean forPreviews,
+                                             final int slicesPerPicture) {
+
+        final ExecutorService executor = RasterfunApplication.getExecutor();
+
+        int pictureIndex = 0;
+        for (Picture picture: pictures) {
+            if (picture != null) {
+                int rowsPerSlice = picture.getHeight() / slicesPerPicture;
+                int y = 0;
+                for (int i = 0; i < slicesPerPicture; i++) {
+
+                    // Calculate which pixels to calculate
+                    int startY = y;
+
+                    // Advance a fixed step, for last step make sure we get all pixels
+                    if (i < slicesPerPicture - 1) y += rowsPerSlice;
+                    else y = picture.getHeight();
+
+                    int endY = y;
+
+                    // Create render task to render the slice
+                    final RenderTask renderTask = new RenderTask(calculationIndex,
+                                                                 pictureIndex,
+                                                                 forPreviews,
+                                                                 startY,
+                                                                 endY,
+                                                                 picture,
+                                                                 pixelCalculatorFutures.get(pictureIndex),
+                                                                 renderListener);
+
+                    // Keep track of the task instance so that we can stop it if needed.
+                    renderTasks.add(renderTask);
+
+                    // Keep track of the future so that we can wait for all tasks to complete if we want.
+                    rendererFutures.add(executor.submit(renderTask));
+                }
+            }
+
+            pictureIndex++;
+        }
     }
 
     /**
-     * @return future for the pictures being calculated.
+     * @return the calculation index specified for this set of picture calculations.
+     *         It is specified when calling start, and reported in the listeners, to help distinguish calculation runs.
      */
-    public Future<List<Picture>> getPicturesFuture() {
-        return picturesFuture;
+    public int getCalculationIndex() {
+        return calculationIndex;
     }
 
     /**
@@ -202,10 +379,16 @@ public class PictureCalculations {
      */
     public List<Picture> getPicturesAndWait() {
         try {
-            return picturesFuture.get();
+            // Ensure all calculation tasks are ready
+            for (Future<Picture> rendererFuture : rendererFutures) {
+                if (rendererFuture != null) rendererFuture.get();
+            }
+
+            // Return the pictures
+            return pictures;
+
         } catch (Exception e) {
-            // The error has already been reported
-            return null;
+            throw new IllegalStateException("Unexpected error when waiting for pictures to finish rendering: " + e.getMessage(), e);
         }
     }
 
@@ -218,18 +401,11 @@ public class PictureCalculations {
     }
 
     /**
-     * @return true if the calculation of the pictures has finished, or the calculation has stopped for some other reason.
-     */
-    public boolean isDone() {
-        return picturesFuture.isDone();
-    }
-
-    /**
      * Stops the calculations.
      */
     public void stop() {
-        if (calculationTask != null) {
-            calculationTask.stop();
+        for (RenderTask renderTask : renderTasks) {
+            renderTask.stop();
         }
     }
 
@@ -278,7 +454,7 @@ public class PictureCalculations {
 
     private Picture getPictureAtOrNull(List<Picture> list, int pictureIndex) {
         Picture picture = null;
-        if (list.size() < pictureIndex) {
+        if (pictureIndex < list.size()) {
             picture = list.get(pictureIndex);
         }
         else {
@@ -297,4 +473,13 @@ public class PictureCalculations {
         }
     }
 
+    /**
+     * @return true if this calculation is completed.
+     */
+    public boolean isDone() {
+        for (Future<Picture> rendererFuture : rendererFutures) {
+            if (!rendererFuture.isDone()) return false;
+        }
+        return true;
+    }
 }

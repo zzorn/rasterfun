@@ -47,11 +47,11 @@ public class PictureCalculationsListenerSwingThreadAdapter implements PictureCal
     }
 
     @Override
-    public void onError(final int calculationIndex, final String description, final Throwable cause) {
+    public void onError(final int calculationIndex, final String shortDescription, final String longDescription, final Throwable cause) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                delegate.onError(calculationIndex, description, cause);
+                delegate.onError(calculationIndex, shortDescription, longDescription, cause);
             }
         });
     }

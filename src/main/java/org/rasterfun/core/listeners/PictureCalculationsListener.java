@@ -35,9 +35,10 @@ public interface PictureCalculationsListener {
      * Called if the task could not finish for some reason.
      * @param calculationIndex id for the calculation run that is reporting,
      *                         useful to tell apart several calculations started after each other.
-     * @param description a description of the reason the task could not finish.
+     * @param shortDescription a one-line, user readable description of the reason the task could not finish.
+     * @param longDescription a longer description of the error.
      */
-    void onError(int calculationIndex, String description, Throwable cause);
+    void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause);
 
     /**
      * Called when all pictures are calculated.

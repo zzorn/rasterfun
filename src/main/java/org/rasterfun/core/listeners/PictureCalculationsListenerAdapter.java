@@ -22,7 +22,7 @@ public abstract class PictureCalculationsListenerAdapter implements PictureCalcu
     }
 
     @Override
-    public void onError(int calculationIndex, String description, Throwable cause) {
+    public void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
     }
 
     @Override

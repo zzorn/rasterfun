@@ -94,7 +94,7 @@ public class PixelCalculatorTest {
             }
 
             @Override
-            public void onError(int calculationIndex, String description, Throwable cause) {
+            public void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
                 calcIndexes[3] = calculationIndex;
             }
 
@@ -137,7 +137,7 @@ public class PixelCalculatorTest {
             }
 
             @Override
-            public void onError(int calculationIndex, String description, Throwable cause) {
+            public void onError(int calculationIndex, String shortDescription, String longDescription, Throwable cause) {
                 //System.out.println("Error description = " + description);
                 errorReported[0] = true;
             }
@@ -151,11 +151,10 @@ public class PixelCalculatorTest {
         calculation.start();
 
         // Wait for boom
-        final List<Picture> finalPictures = calculation.getPicturesAndWait();
+        calculation.getPicturesAndWait();
 
         delay(10);
 
-        assertNull("The pictures list should be null", finalPictures);
         assertTrue("An error should have been reported", errorReported[0]);
         assertTrue("Some progress should have been made, but not complete, but progress was " + progressMade[0], progressMade[0] > 0.05 && progressMade[0] < 0.95);
         assertFalse("onReady should not have been called", readyCalled[0]);
