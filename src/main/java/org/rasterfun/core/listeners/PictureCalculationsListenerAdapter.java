@@ -10,22 +10,22 @@ import java.util.List;
 public abstract class PictureCalculationsListenerAdapter implements PictureCalculationsListener {
 
     @Override
-    public void onProgress(float progress) {
+    public void onProgress(int calculationIndex, float progress) {
     }
 
     @Override
-    public void onPreviewReady(int pictureIndex, Picture preview) {
+    public void onPreviewReady(int calculationIndex, int pictureIndex, Picture preview) {
     }
 
     @Override
-    public void onPictureReady(Picture picture, int pictureIndex) {
+    public void onPictureReady(int calculationIndex, int pictureIndex, Picture picture) {
     }
 
     @Override
-    public void onError(String description, Throwable cause) {
+    public void onError(int calculationIndex, String description, Throwable cause) {
     }
 
     @Override
-    public void onReady(List<Picture> pictures) {
+    public void onReady(int calculationIndex, List<Picture> pictures) {
     }
 }

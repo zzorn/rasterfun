@@ -34,12 +34,12 @@ public interface Arranger extends FastImageRenderer {
     /**
      * Called when a preview is available for the specified picture index.
      */
-    void setPreview(int pictureIndex, Picture preview);
+    void setPreview(int calculationIndex, int pictureIndex, Picture preview);
 
     /**
      * Called the final picture is available for the specified picture index.
      */
-    void setPicture(int pictureIndex, Picture picture);
+    void setPicture(int calculationIndex, int pictureIndex, Picture picture);
 
     Color getBackgroundColor();
 

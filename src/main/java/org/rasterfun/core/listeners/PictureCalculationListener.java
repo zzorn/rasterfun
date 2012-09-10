@@ -32,6 +32,6 @@ public interface PictureCalculationListener {
     /**
      * Called when the task finished
      */
-    void onReady(Picture picture, int pictureIndex);
+    void onReady(int pictureIndex, Picture picture);
 
 }

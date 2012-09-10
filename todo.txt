@@ -20,7 +20,10 @@ Implementation list:
 * Implement tiling arranger, shows pictures arranged randomly or according to specified tiling boundaries.
 * Add ability to toggle arranger in the preview
 
-
+* Clearer error reporting:
+  * Human readable messages
+  * Multiline tooltip / send error report button
+  * Error icon for statusbar
 
 
 

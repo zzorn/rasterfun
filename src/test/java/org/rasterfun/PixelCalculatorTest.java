@@ -3,10 +3,9 @@ package org.rasterfun;
 import org.junit.Before;
 import org.junit.Test;
 import org.rasterfun.core.PictureCalculations;
-import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.compiler.CompilationException;
-import org.rasterfun.core.listeners.CalculationListener;
+import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.parameters.Parameters;
@@ -22,6 +21,7 @@ import static org.junit.Assert.*;
  */
 public class PixelCalculatorTest {
 
+    public static final int TEST_CALCULATION_INDEX = 123;
     private Parameters parameters;
 
     @Before
@@ -34,31 +34,6 @@ public class PixelCalculatorTest {
     }
 
     @Test
-    public void testCalculateNoPixels() throws CompilationException {
-
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        final PixelCalculator pixelCalculator = calculatorBuilder.compilePixelCalculator();
-
-        //System.out.println("Source:\n" + calculatorBuilder.getSource());
-
-        final int[] p = {0};
-        final int testCalculatorIndex = 3;
-        pixelCalculator.calculatePixels(10, 10, new String[] {"red", "blue"},new float[]{}, 0, 0, 10, 10, new CalculationListener() {
-
-            @Override
-            public void onCalculationProgress(int calculationIndex, int completedLines) {
-
-                assertEquals("Calculator index should be passed back correctly", testCalculatorIndex, calculationIndex);
-
-                //System.out.println("completedLines = " + completedLines);
-                p[0] = completedLines;
-            }
-        }, testCalculatorIndex);
-
-        assertTrue("Should have gotten some progress", p[0] > 0);
-    }
-
-    @Test
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
         parameters.set(PictureGenerator.CHANNELS, new String[]{"xs", "ys"});
@@ -68,7 +43,7 @@ public class PixelCalculatorTest {
 
         // Create calculation task and start it
         final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
-        calculation.start();
+        calculation.start(TEST_CALCULATION_INDEX);
 
         // Get result picture
         final List<Picture> results = calculation.getPicturesAndWait();
@@ -97,6 +72,52 @@ public class PixelCalculatorTest {
     }
 
     @Test
+    public void testCalculationIndex() throws Exception {
+        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
+        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
+
+        final int[] calcIndexes = {-1, -1, -1, -1, -1};
+        calculation.addListener(new PictureCalculationsListener() {
+            @Override
+            public void onProgress(int calculationIndex, float progress) {
+                calcIndexes[0] = calculationIndex;
+            }
+
+            @Override
+            public void onPreviewReady(int calculationIndex, int pictureIndex, Picture preview) {
+                calcIndexes[1] = calculationIndex;
+            }
+
+            @Override
+            public void onPictureReady(int calculationIndex, int pictureIndex, Picture picture) {
+                calcIndexes[2] = calculationIndex;
+            }
+
+            @Override
+            public void onError(int calculationIndex, String description, Throwable cause) {
+                calcIndexes[3] = calculationIndex;
+            }
+
+            @Override
+            public void onReady(int calculationIndex, List<Picture> pictures) {
+                calcIndexes[4] = calculationIndex;
+            }
+        });
+
+        calculation.start(TEST_CALCULATION_INDEX);
+
+        // Wait to finish
+        calculation.getPicturesAndWait();
+
+        delay(10);
+
+        assertEquals("In progress reports, the correct calculation index should have been used", TEST_CALCULATION_INDEX, calcIndexes[0]);
+        assertEquals("In preview reports, the correct calculation index should have been used", TEST_CALCULATION_INDEX, calcIndexes[1]);
+        assertEquals("In picture reports, the correct calculation index should have been used", TEST_CALCULATION_INDEX, calcIndexes[2]);
+        assertEquals("In ready reports, the correct calculation index should have been used", TEST_CALCULATION_INDEX, calcIndexes[4]);
+    }
+
+    @Test
     public void testErrorCalculation() throws CompilationException {
 
         // Lets make a division by zero halfway through
@@ -110,19 +131,19 @@ public class PixelCalculatorTest {
         final boolean[] readyCalled = {false};
         calculation.addListener(new PictureCalculationsListenerAdapter() {
             @Override
-            public void onProgress(float progress) {
+            public void onProgress(int calculationIndex, float progress) {
                 //System.out.println("progress = " + progress);
                 progressMade[0] = progress;
             }
 
             @Override
-            public void onError(String description, Throwable cause) {
+            public void onError(int calculationIndex, String description, Throwable cause) {
                 //System.out.println("Error description = " + description);
                 errorReported[0] = true;
             }
 
             @Override
-            public void onReady(List<Picture> pictures) {
+            public void onReady(int calculationIndex, List<Picture> pictures) {
                 readyCalled[0] = true;
             }
         });

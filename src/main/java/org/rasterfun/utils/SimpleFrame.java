@@ -9,7 +9,7 @@ import java.awt.*;
 public class SimpleFrame extends JFrame {
 
     private static final int DEFAULT_WIDTH = 800;
-    private static final int DEFAULT_HEIGHT = 600;
+    private static final int DEFAULT_HEIGHT = 60;
 
     public SimpleFrame() {
         this("", null);

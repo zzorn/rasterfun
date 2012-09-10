@@ -53,7 +53,7 @@ public class RgbPictureDrawer extends PictureDrawerBase {
 
                     // TODO: Remove, debug thing
                     a = 128;
-                    r = 244;
+                    //r = 244;
 
                     // Clamp Alpha
                     if (a < 0) a = 0; else if (a > 255) a = 255;

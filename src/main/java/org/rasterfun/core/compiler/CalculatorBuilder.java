@@ -81,7 +81,9 @@ public class CalculatorBuilder {
                              "    \n"+
                              "    int pixelIndex = (startY * width + startX) * channelCount;\n"+
                              "    for (int y = startY; (y < endY) && running; y++) {\n" +
+                             "       try {Thread.sleep(10);} catch (Exception e) {}\n" +
                              "       for (int x = startX; (x < endX) && running; x++) {\n" +
+                             "         pixelData[pixelIndex] = ((float)x / endX) * (y % 2);\n" +
                                        evaluationLoopSource.toString() +
                              "         \n" +
                              "         pixelIndex += channelCount;\n" +

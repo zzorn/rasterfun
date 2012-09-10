@@ -22,6 +22,7 @@ import static org.rasterfun.utils.ParameterChecker.checkNotNull;
  */
 public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCalculationListener {
 
+    private final int calculationIndex;
     private final List<CalculatorBuilder> builders;
     private final List<Picture> pictures;
     private final List<Picture> previews;
@@ -32,7 +33,8 @@ public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCa
 
     private final AtomicReference<List<CompileAndRenderTask>> pictureTasks = new AtomicReference<List<CompileAndRenderTask>>();
 
-    public CalculatePicturesTask(List<CalculatorBuilder> builders,
+    public CalculatePicturesTask(int calculationIndex,
+                                 List<CalculatorBuilder> builders,
                                  List<Picture> pictures,
                                  List<Picture> previews,
                                  PictureCalculationsListener listener) {
@@ -42,6 +44,7 @@ public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCa
         checkIntegerEquals(pictures.size(), "number of pictures", builders.size(), "number of builders");
         checkIntegerEquals(previews.size(), "number of previews", builders.size(), "number of builders");
 
+        this.calculationIndex = calculationIndex;
         this.builders = builders;
         this.pictures = pictures;
         this.previews = previews;
@@ -55,33 +58,37 @@ public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCa
 
     @Override
     public List<Picture> call() throws Exception {
+        try {
+            // Start calculation tasks for all pictures
+            List<CompileAndRenderTask> tasks = new ArrayList<CompileAndRenderTask>();
+            List<Future<Picture>> futures = new ArrayList<Future<Picture>>();
+            int pictureIndex = 0;
+            for (CalculatorBuilder builder : builders) {
+                final Picture picture = pictures.get(pictureIndex);
+                final Picture preview = previews.get(pictureIndex);
 
-        // Start calculation tasks for all pictures
-        List<CompileAndRenderTask> tasks = new ArrayList<CompileAndRenderTask>();
-        List<Future<Picture>> futures = new ArrayList<Future<Picture>>();
-        int pictureIndex = 0;
-        for (CalculatorBuilder builder : builders) {
-            final Picture picture = pictures.get(pictureIndex);
-            final Picture preview = previews.get(pictureIndex);
+                final CompileAndRenderTask task = new CompileAndRenderTask(builder, pictureIndex, picture, preview, this);
+                futures.add(RasterfunApplication.getExecutor().submit(task));
+                tasks.add(task);
+            }
 
-            final CompileAndRenderTask task = new CompileAndRenderTask(builder, pictureIndex, picture, preview, this);
-            futures.add(RasterfunApplication.getExecutor().submit(task));
-            tasks.add(task);
+            // Store the tasks so that we can stop them if needed
+            pictureTasks.set(tasks);
+
+            // Wait for all tasks to finish
+            for (Future<Picture> future : futures) {
+                future.get();
+            }
+
+            // Tell listener we are ready
+            if (listener != null) listener.onReady(calculationIndex, pictures);
+
+            // Return the calculated pictures
+            return pictures;
+        } catch (Exception e) {
+            if (listener != null) listener.onError(calculationIndex, e.getMessage() + ": " + e, e);
+            throw e;
         }
-
-        // Store the tasks so that we can stop them if needed
-        pictureTasks.set(tasks);
-
-        // Wait for all tasks to finish
-        for (Future<Picture> future : futures) {
-            future.get();
-        }
-
-        // Tell listener we are ready
-        if (listener != null) listener.onReady(pictures);
-
-        // Return the calculated pictures
-        return pictures;
     }
 
     public void stop() {
@@ -98,7 +105,7 @@ public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCa
         if (listener != null) {
             final int calculatedSoFar = calculatedScanLines.addAndGet(scanLinesCalculated);
             float totalProgress = (float)calculatedSoFar / totalScanLines;
-            listener.onProgress(totalProgress);
+            listener.onProgress(calculationIndex, totalProgress);
         }
     }
 
@@ -109,16 +116,16 @@ public class CalculatePicturesTask implements Callable<List<Picture>>, PictureCa
 
     @Override
     public void onError(Picture picture, int pictureIndex, String description, Throwable cause) {
-        if (listener != null) listener.onError(description, cause);
+        if (listener != null) listener.onError(calculationIndex, description, cause);
     }
 
     @Override
     public void onPreviewReady(int pictureIndex, Picture preview) {
-        if (listener != null) listener.onPreviewReady(pictureIndex, preview);
+        if (listener != null) listener.onPreviewReady(calculationIndex, pictureIndex, preview);
     }
 
     @Override
-    public void onReady(Picture picture, int pictureIndex) {
-        if (listener != null) listener.onPictureReady(picture, pictureIndex);
+    public void onReady(int pictureIndex, Picture picture) {
+        if (listener != null) listener.onPictureReady(calculationIndex, pictureIndex, picture);
     }
 }

@@ -39,7 +39,8 @@ public class PicturePreviewerImpl implements PicturePreviewer {
     private JProgressBar progressBar;
     private JLabel statusBar;
     private JComboBox zoomCombo;
-    private JButton zoom100Button;
+
+    private int ongoingCalculationIndex = 0;
 
     // Listens to and handles mouse gestures
     private final MouseAdapter mouseListener = new MouseAdapter() {
@@ -104,38 +105,53 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             new PictureCalculationsListenerSwingThreadAdapter(
                     new PictureCalculationsListenerAdapter() {
         @Override
-        public void onProgress(final float progress) {
-            progressBar.setValue((int) (progress * 100));
+        public void onProgress(final int calculationIndex, final float progress) {
+            if (calculationIndex == ongoingCalculationIndex) {
+                int oldProgress = progressBar.getValue();
+                int newProgress = (int) (progress * 100);
+                if (newProgress > oldProgress) {
+                    progressBar.setValue(newProgress);
+                }
+            }
         }
 
         @Override
-        public void onPreviewReady(int pictureIndex, Picture preview) {
-            arranger.setPreview(pictureIndex, preview);
-            reRender();
+        public void onPreviewReady(final int calculationIndex, int pictureIndex, Picture preview) {
+            if (calculationIndex == ongoingCalculationIndex) {
+                arranger.setPreview(calculationIndex, pictureIndex, preview);
+                reRender();
+            }
         }
 
         @Override
-        public void onPictureReady(Picture picture, int pictureIndex) {
-            arranger.setPicture(pictureIndex, picture);
-            reRender();
+        public void onPictureReady(final int calculationIndex, int pictureIndex, Picture picture) {
+            if (calculationIndex == ongoingCalculationIndex) {
+                arranger.setPicture(calculationIndex, pictureIndex, picture);
+                reRender();
+            }
         }
 
         @Override
-        public void onError(String description, Throwable cause) {
-            progressBar.setValue(0);
-            setStatusBarMessage(description);
-            statusBar.setToolTipText(description);
+        public void onError(final int calculationIndex, String description, Throwable cause) {
+            if (calculationIndex == ongoingCalculationIndex) {
+                progressBar.setValue(0);
+                setStatusBarMessage(description);
+                statusBar.setToolTipText(description);
 
-            // Log the stack trace to standard out for debugging
-            cause.printStackTrace();
+                // Log the stack trace to standard out for debugging
+                cause.printStackTrace();
 
-            reRender();
+                reRender();
+            }
         }
 
         @Override
-        public void onReady(List<Picture> pictures) {
-            setStatusBarMessage("Done.");
-            reRender();
+        public void onReady(final int calculationIndex, List<Picture> pictures) {
+            if (calculationIndex == ongoingCalculationIndex) {
+                progressBar.setValue(100);
+                setStatusBarMessage("Done.");
+                reRender();
+            }
         }
     });
 
@@ -171,21 +187,26 @@ public class PicturePreviewerImpl implements PicturePreviewer {
 
     private void buildUi() {
         // Create UI components
-        previewPanel  = new RasterPanel(arranger);
-        progressBar   = new JProgressBar();
-        statusBar     = new JLabel("");
-        zoomCombo     = createZoomCombo();
-        zoom100Button = createZoom100Button();
+        previewPanel = new RasterPanel(arranger);
+        JLabel zoomLabel = new JLabel("Zoom");
+        zoomCombo = createZoomCombo();
+        statusBar = new JLabel("");
+        JButton resetViewButton = createResetViewButton();
+        progressBar = new JProgressBar();
+        JButton regeneratePictureButton = createRegeneratePictureButton();
 
         // Arrange components
         JPanel bottomLeft = new JPanel(new FlowLayout());
-        bottomLeft.add(new JLabel("Zoom"));
+        bottomLeft.add(zoomLabel);
         bottomLeft.add(zoomCombo);
-        bottomLeft.add(zoom100Button);
+        bottomLeft.add(resetViewButton);
+        JPanel bottomRight = new JPanel(new FlowLayout());
+        bottomRight.add(progressBar);
+        bottomRight.add(regeneratePictureButton);
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(bottomLeft, BorderLayout.WEST);
         bottomPanel.add(statusBar, BorderLayout.CENTER);
-        bottomPanel.add(progressBar, BorderLayout.EAST);
+        bottomPanel.add(bottomRight, BorderLayout.EAST);
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(previewPanel, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
@@ -205,7 +226,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         reGenerate();
     }
 
-    private JButton createZoom100Button() {
+    private JButton createResetViewButton() {
         JButton button = new JButton("1:1");
         button.setMargin(new Insets(2, 1, 1, 1));
         button.setToolTipText("Set zoom to 100% and center view");
@@ -216,6 +237,22 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             public void actionPerformed(ActionEvent e) {
                 arranger.setZoomLevel(Arranger.DEFAULT_ZOOM_LEVEL);
                 arranger.center();
+            }
+        });
+
+        return button;
+    }
+
+    private JButton createRegeneratePictureButton() {
+        JButton button = new JButton("Regenerate");
+        button.setMargin(new Insets(2, 1, 1, 1));
+        button.setToolTipText("Regenerate picture");
+        button.setFocusable(false);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reGenerate();
             }
         });
 
@@ -256,11 +293,11 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         calculations = generator.generatePicturesWithoutStarting(pictures, previews);
         calculations.addListener(calculationsListener);
 
-        // Clear preview
+        // (Re)layout if needed
         arranger.setContentInfo(calculations.getCalculatorBuilders());
 
         // Start calculating
-        calculations.start();
+        calculations.start(++ongoingCalculationIndex);
 
         // Draw current view
         reRender();

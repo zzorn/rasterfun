@@ -97,7 +97,7 @@ public class PictureCalculationTask implements Callable<Picture>, CalculationLis
                 }
                 else {
                     listener.onStatusChanged(picture, pictureIndex, "Done generating picture '"+picture.getName()+"'.");
-                    listener.onReady(picture, pictureIndex);
+                    listener.onReady(pictureIndex, picture);
                 }
             }
 

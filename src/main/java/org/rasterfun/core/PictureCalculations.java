@@ -3,6 +3,7 @@ package org.rasterfun.core;
 import org.rasterfun.RasterfunApplication;
 import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
+import org.rasterfun.core.listeners.PictureCalculationsListenerDelegate;
 import org.rasterfun.core.tasks.CalculatePicturesTask;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureImpl;
@@ -11,7 +12,6 @@ import org.rasterfun.utils.ParameterChecker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 /**
@@ -33,35 +33,7 @@ public class PictureCalculations {
     private CalculatePicturesTask calculationTask;
     private Future<List<Picture>> picturesFuture = null;
 
-    private final PictureCalculationsListener delegatingListener = new PictureCalculationsListener() {
-        public void onProgress(float progress) {
-            for (PictureCalculationsListener listener : listeners) {
-                listener.onProgress(progress);
-            }
-        }
-        public void onPreviewReady(int pictureIndex, Picture preview) {
-            for (PictureCalculationsListener listener : listeners) {
-                listener.onPreviewReady(pictureIndex, preview);
-            }
-        }
-        public void onPictureReady(Picture picture, int pictureIndex) {
-            for (PictureCalculationsListener listener : listeners) {
-                listener.onPictureReady(picture, pictureIndex);
-            }
-        }
-        public void onError(String description, Throwable cause) {
-            for (PictureCalculationsListener listener : listeners) {
-                listener.onError(description, cause);
-            }
-        }
-        public void onReady(List<Picture> pictures) {
-            for (PictureCalculationsListener listener : listeners) {
-                listener.onReady(pictures);
-            }
-        }
-    }; 
-
-    private CopyOnWriteArrayList<PictureCalculationsListener> listeners = new CopyOnWriteArrayList<PictureCalculationsListener>();
+    private final PictureCalculationsListenerDelegate listeners = new PictureCalculationsListenerDelegate();
 
 
     /**
@@ -144,6 +116,19 @@ public class PictureCalculations {
      * so there is normally no need for the API user to call this.
      */
     public void start() {
+        start(0);
+    }
+
+    /**
+     * Starts the calculation of the picture.
+     * Can only be called once, called by default when the PictureGenerator generatePicture(s) method is called,
+     * so there is normally no need for the API user to call this.
+     *
+     * @param calculationIndex an index passed along to the calculations, and used in notification messages to listeners,
+     *                         to make it easier to tell different calculations apart,
+     *                         if the same listener is used to listen to them.
+     */
+    public void start(int calculationIndex) {
         if (started) throw new IllegalStateException("Can not start calculation, it has already been started.");
         started = true;
 
@@ -180,7 +165,7 @@ public class PictureCalculations {
         discardDownToLength(previews, calculatorBuilders.size());
 
         // Create task to calculate the pictures, and start it
-        calculationTask = new CalculatePicturesTask(calculatorBuilders, pictures, previews, delegatingListener);
+        calculationTask = new CalculatePicturesTask(calculationIndex, calculatorBuilders, pictures, previews, listeners);
         picturesFuture = RasterfunApplication.getExecutor().submit(calculationTask);
     }
 
@@ -257,14 +242,14 @@ public class PictureCalculations {
      *
      */
     public void addListener(PictureCalculationsListener listener) {
-        listeners.add(listener);
+        listeners.addListener(listener);
     }
 
     /**
      * @param listener listener to remove
      */
     public void removeListener(PictureCalculationsListener listener) {
-        listeners.remove(listener);
+        listeners.removeListener(listener);
     }
 
 

@@ -40,6 +40,7 @@ public abstract class ArrangerBase implements Arranger {
 
     private List<Picture> pictures = new ArrayList<Picture>();
     private List<Picture> previews = new ArrayList<Picture>();
+    private List<Integer> pictureCalculationIndexes = new ArrayList<Integer>();
 
     private PictureDrawer drawer = new RgbPictureDrawer();
     private List<ZoomLevel> zoomLevels;
@@ -55,19 +56,52 @@ public abstract class ArrangerBase implements Arranger {
 
     @Override
     public final void setContentInfo(List<CalculatorBuilder> builders) {
+        // Check if we need to recalculate the layout
+        boolean differencesFound = builderListsDifferEnoughForReLayout(this.builders, builders);
+
         this.builders = builders;
 
-        pictures.clear();
-        previews.clear();
+        onContentChanged(builders);
 
-        for (int i = 0; i < builders.size(); i++) {
-            pictures.add(null);
-            previews.add(null);
+        if (differencesFound) {
+            pictures.clear();
+            previews.clear();
+            pictureCalculationIndexes.clear();
+
+            for (int i = 0; i < builders.size(); i++) {
+                pictures.add(null);
+                previews.add(null);
+                pictureCalculationIndexes.add(0);
+            }
+
+            clearScreen();
+            layoutAndNotify();
+        }
+    }
+
+    private boolean builderListsDifferEnoughForReLayout(List<CalculatorBuilder> oldBuilders, List<CalculatorBuilder> newBuilders) {
+        if (newBuilders == null || oldBuilders == null || oldBuilders.size() != newBuilders.size()) {
+            // Different number, or either null, need to relayout always.
+            return true;
+        } else {
+            int i = 0;
+            for (CalculatorBuilder newBuilder : newBuilders) {
+                CalculatorBuilder oldBuidler = oldBuilders.get(i++);
+
+                // Check for differences
+                if (builderDifferEnoughToForceReLayout(oldBuidler, newBuilder)) {
+                    return true;
+                }
+            }
         }
 
-        clearScreen();
-        onContentChanged(builders);
-        layoutAndNotify();
+        // No significant differences from layout perspective found, old layout stands.
+        return false;
+    }
+
+    protected boolean builderDifferEnoughToForceReLayout(CalculatorBuilder oldBuidler, CalculatorBuilder newBuilder) {
+        return oldBuidler.getWidth()  != newBuilder.getWidth() ||
+               oldBuidler.getHeight() != newBuilder.getHeight();
     }
 
     @Override
@@ -130,13 +164,20 @@ public abstract class ArrangerBase implements Arranger {
     }
 
     @Override
-    public final void setPreview(int pictureIndex, Picture preview) {
+    public final void setPreview(int calculationIndex, int pictureIndex, Picture preview) {
         previews.set(pictureIndex, preview);
+
+        // If the preview calculation index is larger than the calculation index for the corresponding
+        // picture, wipe the picture.
+        if (calculationIndex > pictureCalculationIndexes.get(pictureIndex)) {
+            pictures.set(pictureIndex, null);
+        }
     }
 
     @Override
-    public final void setPicture(int pictureIndex, Picture picture) {
+    public final void setPicture(int calculationIndex, int pictureIndex, Picture picture) {
         pictures.set(pictureIndex, picture);
+        pictureCalculationIndexes.set(pictureIndex, calculationIndex);
     }
 
     @Override

@@ -42,27 +42,27 @@ public class PictureGeneratorTest {
         final PictureCalculations calculation = pictureGenerator.generatePictures(
                 new PictureCalculationsListener() {
                     @Override
-                    public void onProgress(float progress) {
+                    public void onProgress(int calculationIndex, float progress) {
                         if (progress > p[0]) p[0] = progress;
                     }
 
                     @Override
-                    public void onError(String description, Throwable cause) {
+                    public void onError(int calculationIndex, String description, Throwable cause) {
                         fail("We should not get any errors, but got the error: " + description);
                     }
 
                     @Override
-                    public void onPreviewReady(int pictureIndex, Picture preview) {
+                    public void onPreviewReady(int calculationIndex, int pictureIndex, Picture preview) {
                         previewReadyCalled[0] = true;
                     }
 
                     @Override
-                    public void onPictureReady(Picture picture, int pictureIndex) {
+                    public void onPictureReady(int calculationIndex, int pictureIndex, Picture picture) {
                         readyCalled[0] = true;
                     }
 
                     @Override
-                    public void onReady(List<Picture> pictures) {
+                    public void onReady(int calculationIndex, List<Picture> pictures) {
                         allReadyCalled[0] = true;
                     }
                 });
