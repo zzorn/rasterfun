@@ -21,12 +21,11 @@ Implementation list:
 * Add ability to toggle arranger in the preview
 
 * Clearer error reporting:
-  * Human readable messages
+  * Human readable messages [DONE]
   * Multiline tooltip / send error report button
   * Error icon for statusbar
 
-* Do not relayout on resizes, except for the first resize,
-  and while the user has not yet done any zooming or panning. [DONE]
+* Do not relayout on resizes, except for the first resize, and while the user has not yet done any zooming or panning. [DONE]
   * Add a button to fit into view, this would then deselect the user interaction flag. [DONE]
 
 
