@@ -191,7 +191,8 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         JLabel zoomLabel = new JLabel("Zoom");
         zoomCombo = createZoomCombo();
         statusBar = new JLabel("");
-        JButton resetViewButton = createResetViewButton();
+        JButton resetViewButton = createResetToOriginalSizeButton();
+        JButton fitInViewButton = createFitInViewButton();
         progressBar = new JProgressBar();
         JButton regeneratePictureButton = createRegeneratePictureButton();
 
@@ -200,6 +201,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         bottomLeft.add(zoomLabel);
         bottomLeft.add(zoomCombo);
         bottomLeft.add(resetViewButton);
+        bottomLeft.add(fitInViewButton);
         JPanel bottomRight = new JPanel(new FlowLayout());
         bottomRight.add(progressBar);
         bottomRight.add(regeneratePictureButton);
@@ -226,9 +228,9 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         reGenerate();
     }
 
-    private JButton createResetViewButton() {
+    private JButton createResetToOriginalSizeButton() {
         JButton button = new JButton("1:1");
-        button.setMargin(new Insets(2, 1, 1, 1));
+        button.setMargin(new Insets(2, 0, 1, 0));
         button.setToolTipText("Set zoom to 100% and center view");
         button.setFocusable(false);
 
@@ -237,6 +239,22 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             public void actionPerformed(ActionEvent e) {
                 arranger.setZoomLevel(Arranger.DEFAULT_ZOOM_LEVEL);
                 arranger.center();
+            }
+        });
+
+        return button;
+    }
+
+    private JButton createFitInViewButton() {
+        JButton button = new JButton("[  ]");
+        button.setMargin(new Insets(2, 1, 1, 1));
+        button.setToolTipText("Fit in view");
+        button.setFocusable(false);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                arranger.reLayout();
             }
         });
 

@@ -17,6 +17,7 @@ import static org.rasterfun.utils.MathTools.clamp;
 /**
  *
  */
+// TODO: This class is getting long, some functionality could maybe be refactored into a separate class?
 public abstract class ArrangerBase implements Arranger {
 
     private static final int MAX_ZOOM_LEVEL = 10;
@@ -37,6 +38,9 @@ public abstract class ArrangerBase implements Arranger {
 
     private int viewWidth = 0;
     private int viewHeight = 0;
+
+    private boolean firstResizeHandled = false;
+    private boolean userZoomedOrPanned = false;
 
     private List<Picture> pictures = new ArrayList<Picture>();
     private List<Picture> previews = new ArrayList<Picture>();
@@ -125,6 +129,7 @@ public abstract class ArrangerBase implements Arranger {
             final double dy = screenDY * (1 - scaleChange);
             pan(dx, dy);
 
+            userZoomedOrPanned = true;
             notifyZoomChanged();
         }
     }
@@ -143,8 +148,18 @@ public abstract class ArrangerBase implements Arranger {
                               centerY != oldCenterY;
 
         if (centerMoved) {
+            userZoomedOrPanned = true;
             notifyCenterChanged();
         }
+    }
+
+    @Override
+    public void reLayout() {
+        // Reset flag telling to leave user view settings alone
+        userZoomedOrPanned = false;
+
+        // Do relayout
+        layoutAndNotify();
     }
 
     @Override
@@ -159,6 +174,7 @@ public abstract class ArrangerBase implements Arranger {
 
         if (centerX != oldCenterX ||
             centerY != oldCenterY) {
+            userZoomedOrPanned = true;
             notifyCenterChanged();
         }
     }
@@ -223,7 +239,13 @@ public abstract class ArrangerBase implements Arranger {
         viewWidth = width;
         viewHeight = height;
         onViewSizeChanged(width, height);
-        layoutAndNotify();
+
+        // Only relayout if this is the first resize, or the user has not yet manually changed the view.
+        if (!firstResizeHandled || !userZoomedOrPanned) {
+            layoutAndNotify();
+        }
+        
+        firstResizeHandled = true;
     }
 
     protected void onViewSizeChanged(int width, int height) {}
@@ -271,6 +293,9 @@ public abstract class ArrangerBase implements Arranger {
     }
 
     private void layoutAndNotify() {
+        // This is not a user initiated view change, so preserve the flag for whether the user has done any view changes yet
+        boolean oldUserZoomedOrPanned = userZoomedOrPanned;
+
         // Tell derived class to layout itself
         calculateLayout();
 
@@ -279,6 +304,8 @@ public abstract class ArrangerBase implements Arranger {
         for (ArrangerListener listener : listeners) {
             listener.onLayoutUpdated(zoomLevel, getCenterX(), getCenterY());
         }
+
+        userZoomedOrPanned = oldUserZoomedOrPanned;
     }
 
     @Override
@@ -287,6 +314,7 @@ public abstract class ArrangerBase implements Arranger {
         if (step != scaleStep) {
             scaleStep = step;
             scale = scaleForScaleStep(scaleStep);
+            userZoomedOrPanned = true;
             notifyZoomChanged();
         }
     }

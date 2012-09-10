@@ -32,6 +32,13 @@ public interface Arranger extends FastImageRenderer {
     void pan(double deltaX, double deltaY);
 
     /**
+     * Does a relayout and fits the layout in the visible view.
+     * The view will also keep getting relayouted whenever the view is resized,
+     * until the user manually changes the view.
+     */
+    void reLayout();
+
+    /**
      * Called when a preview is available for the specified picture index.
      */
     void setPreview(int calculationIndex, int pictureIndex, Picture preview);
