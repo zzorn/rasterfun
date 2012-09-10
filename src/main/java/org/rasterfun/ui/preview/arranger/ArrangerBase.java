@@ -17,12 +17,11 @@ import static org.rasterfun.utils.MathTools.clamp;
 /**
  *
  */
-public abstract class PictureArrangerBase implements PictureArranger {
+public abstract class ArrangerBase implements Arranger {
 
     private static final int MAX_ZOOM_LEVEL = 10;
     private static final int MIN_ZOOM_LEVEL = -10;
     private static final double ZOOM_SCALE_PER_STEP =  2;
-    private static final double ZOOM_SCALE2_PER_STEP =  1.5;
 
     private List<CalculatorBuilder> builders = null;
 
@@ -47,7 +46,7 @@ public abstract class PictureArrangerBase implements PictureArranger {
 
     private List<ArrangerListener> listeners = new ArrayList<ArrangerListener>();
 
-    protected PictureArrangerBase() {
+    protected ArrangerBase() {
         zoomLevels = new ArrayList<ZoomLevel>();
         for (int i = MIN_ZOOM_LEVEL; i <= MAX_ZOOM_LEVEL; i++) {
             zoomLevels.add(new ZoomLevel(i, scaleForScaleStep(i)));
@@ -68,11 +67,11 @@ public abstract class PictureArrangerBase implements PictureArranger {
 
         clearScreen();
         onContentChanged(builders);
-        calculateLayout();
+        layoutAndNotify();
     }
 
     @Override
-    public final boolean zoom(int steps, double focusX, double focusY) {
+    public final void zoom(int steps, double focusX, double focusY) {
         int oldScaleStep = scaleStep;
         double oldScale = scale;
         scaleStep += steps;
@@ -92,16 +91,12 @@ public abstract class PictureArrangerBase implements PictureArranger {
             final double dy = screenDY * (1 - scaleChange);
             pan(dx, dy);
 
-            onZoomChanged(scale);
             notifyZoomChanged();
-
-            return true;
         }
-        return false;
     }
 
     @Override
-    public final boolean pan(double deltaX, double deltaY) {
+    public final void pan(double deltaX, double deltaY) {
         double oldCenterX = centerX;
         double oldCenterY = centerY;
 
@@ -114,11 +109,24 @@ public abstract class PictureArrangerBase implements PictureArranger {
                               centerY != oldCenterY;
 
         if (centerMoved) {
-            onCenterChanged(centerX, centerY);
             notifyCenterChanged();
         }
+    }
 
-        return centerMoved;
+    @Override
+    public final void center() {
+        double oldCenterX = centerX;
+        double oldCenterY = centerY;
+
+        centerX = 0;
+        centerY = 0;
+
+        clampCenter(minX, minY, maxX, maxY);
+
+        if (centerX != oldCenterX ||
+            centerY != oldCenterY) {
+            notifyCenterChanged();
+        }
     }
 
     @Override
@@ -174,63 +182,71 @@ public abstract class PictureArrangerBase implements PictureArranger {
         viewWidth = width;
         viewHeight = height;
         onViewSizeChanged(width, height);
-        calculateLayout();
+        layoutAndNotify();
     }
 
     protected void onViewSizeChanged(int width, int height) {}
 
-    public final boolean setScale(double targetScale) {
+    public final void setScale(double targetScale) {
         int originalScaleStep = scaleStep;
 
         // Find closest zoom level one step out that fits this one.
-        scaleStep = 0;
-
-        // Zoom in while scale would still be smaller than the target scale, and we don't hit max.
-        while (scaleForScaleStep(scaleStep + 1) < targetScale && scaleStep < MAX_ZOOM_LEVEL) {
-            scaleStep++;
+        ZoomLevel closestZoomLevel = null;
+        for (ZoomLevel zoomLevel : zoomLevels) {
+            if (closestZoomLevel == null ||
+                zoomLevel.distanceToScale(targetScale) < closestZoomLevel.distanceToScale(targetScale)) {
+                closestZoomLevel = zoomLevel;
+            }
         }
 
-        // Zoom out while we are larger than the target scale, and we dont hit min
-        while (scaleForScaleStep(scaleStep) > targetScale && scaleStep > MIN_ZOOM_LEVEL) {
-            scaleStep--;
-        }
+        scaleStep = closestZoomLevel.getStep();
 
         // Check if scale changed
         if (scaleStep != originalScaleStep) {
             scale = scaleForScaleStep(scaleStep);
-            onZoomChanged(scale);
             notifyZoomChanged();
-            return true;
-        }
-        else {
-            return false;
         }
     }
 
     private void notifyZoomChanged() {
+        // Tell derived class about scale change
+        onZoomChanged(scale);
+
+        // Notify listeners
+        ZoomLevel zoomLevel = getCurrentZoomLevel();
         for (ArrangerListener listener : listeners) {
-            listener.onZoomChanged(getCurrentZoomLevel());
+            listener.onZoomChanged(zoomLevel);
         }
     }
 
     private void notifyCenterChanged() {
+        // Tell derived class about center change
+        onCenterChanged(centerX, centerY);
+
+        // Tell listeners
         for (ArrangerListener listener : listeners) {
             listener.onCenterChanged(getCenterX(), getCenterY());
         }
     }
 
+    private void layoutAndNotify() {
+        // Tell derived class to layout itself
+        calculateLayout();
+
+        // Notify listeners
+        ZoomLevel zoomLevel = getCurrentZoomLevel();
+        for (ArrangerListener listener : listeners) {
+            listener.onLayoutUpdated(zoomLevel, getCenterX(), getCenterY());
+        }
+    }
+
     @Override
-    public boolean setZoomLevel(int step) {
+    public void setZoomLevel(int step) {
         // Check if scale changed
         if (step != scaleStep) {
             scaleStep = step;
             scale = scaleForScaleStep(scaleStep);
-            onZoomChanged(scale);
             notifyZoomChanged();
-            return true;
-        }
-        else {
-            return false;
         }
     }
 
@@ -310,7 +326,6 @@ public abstract class PictureArrangerBase implements PictureArranger {
 
         if (centerX != oldCenterX ||
             centerY != oldCenterY) {
-            onCenterChanged(centerX, centerY);
             notifyCenterChanged();
         }
     }
@@ -365,4 +380,8 @@ public abstract class PictureArrangerBase implements PictureArranger {
     public final void removeListener(ArrangerListener listener) {
         listeners.remove(listener);
     }
+
+
+
+
 }

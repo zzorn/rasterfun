@@ -12,7 +12,7 @@ import static java.lang.Math.*;
 /**
  * Arranges pictures in rows and columns to fit the available space well.
  */
-public class RowsAndColumnsArranger extends PictureArrangerBase {
+public class RowsAndColumnsArranger extends ArrangerBase {
 
     private static final int MIN_PADDING_X = 16;
     private static final int MIN_PADDING_Y = 16;
@@ -178,8 +178,9 @@ public class RowsAndColumnsArranger extends PictureArrangerBase {
         // NOTE: Maybe implement this later, for now do not spread out the pictures.
 
         // Calculate default zoom level
-        double targetScale = min(viewW / totalW,
-                                 viewH / totalH);
+        double targetScale = min(
+                (double)viewW / totalW,
+                (double)viewH / totalH);
         setScale(targetScale);
 
         // Specify where we can pan

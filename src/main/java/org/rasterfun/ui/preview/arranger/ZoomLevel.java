@@ -1,5 +1,7 @@
 package org.rasterfun.ui.preview.arranger;
 
+import static java.lang.Math.abs;
+
 /**
  * Simple descriptor of a zoom level, to allow showing them in a combo box.
  */
@@ -65,5 +67,8 @@ public final class ZoomLevel {
         return String.format("%8s", (int) (scale * 100) + "% ");
     }
 
+    double distanceToScale(double otherScale) {
+        return abs(scale - otherScale);
+    }
 
 }

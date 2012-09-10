@@ -7,10 +7,11 @@ import org.rasterfun.core.listeners.PictureCalculationsListenerSwingThreadAdapte
 import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.picture.Picture;
+import org.rasterfun.ui.preview.arranger.Arranger;
 import org.rasterfun.ui.preview.arranger.ArrangerListener;
-import org.rasterfun.ui.preview.arranger.PictureArranger;
 import org.rasterfun.ui.preview.arranger.RowsAndColumnsArranger;
 import org.rasterfun.ui.preview.arranger.ZoomLevel;
+import org.rasterfun.utils.JComboBoxWithWheelScroll;
 import org.rasterfun.utils.RasterPanel;
 
 import javax.swing.*;
@@ -31,13 +32,14 @@ public class PicturePreviewerImpl implements PicturePreviewer {
     private List<Picture> pictures = null;
     private List<Picture> previews = null;
 
-    private PictureArranger arranger = new RowsAndColumnsArranger();
+    private Arranger arranger = new RowsAndColumnsArranger();
 
     private JPanel mainPanel;
     private RasterPanel previewPanel;
     private JProgressBar progressBar;
     private JLabel statusBar;
     private JComboBox zoomCombo;
+    private JButton zoom100Button;
 
     // Listens to and handles mouse gestures
     private final MouseAdapter mouseListener = new MouseAdapter() {
@@ -48,10 +50,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
             // Zoom
-            boolean viewChanged = arranger.zoom(-e.getWheelRotation(), e.getX(), e.getY());
-            if (viewChanged) {
-                reRender();
-            }
+            arranger.zoom(-e.getWheelRotation(), e.getX(), e.getY());
         }
 
         @Override
@@ -73,10 +72,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getButton() == RESET_ZOOM_BUTTON) {
-                final boolean zoomChanged = arranger.setScale(1);
-                if (zoomChanged) {
-                    reRender();
-                }
+                arranger.setScale(1);
             }
         }
 
@@ -87,8 +83,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
                 int deltaX = e.getX() - lastPanX;
                 int deltaY = e.getY() - lastPanY;
 
-                boolean viewChanged = arranger.pan(deltaX, deltaY);
-                if (viewChanged) reRender();
+                arranger.pan(deltaX, deltaY);
 
                 lastPanX = e.getX();
                 lastPanY = e.getY();
@@ -144,6 +139,25 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         }
     });
 
+    private final ArrangerListener arrangerListener = new ArrangerListener() {
+        @Override
+        public void onZoomChanged(ZoomLevel zoomLevel) {
+            zoomCombo.setSelectedItem(zoomLevel);
+            reRender();
+        }
+
+        @Override
+        public void onCenterChanged(double centerX, double centerY) {
+            reRender();
+        }
+
+        @Override
+        public void onLayoutUpdated(ZoomLevel zoomLevel, double centerX, double centerY) {
+            zoomCombo.setSelectedItem(zoomLevel);
+            reRender();
+        }
+    };
+
     public PicturePreviewerImpl(PictureGenerator generator) {
         this.generator = generator;
     }
@@ -157,14 +171,19 @@ public class PicturePreviewerImpl implements PicturePreviewer {
 
     private void buildUi() {
         // Create UI components
-        previewPanel = new RasterPanel(arranger);
-        progressBar  = new JProgressBar();
-        statusBar    = new JLabel("");
-        zoomCombo    = createZoomCombo();
+        previewPanel  = new RasterPanel(arranger);
+        progressBar   = new JProgressBar();
+        statusBar     = new JLabel("");
+        zoomCombo     = createZoomCombo();
+        zoom100Button = createZoom100Button();
 
         // Arrange components
+        JPanel bottomLeft = new JPanel(new FlowLayout());
+        bottomLeft.add(new JLabel("Zoom"));
+        bottomLeft.add(zoomCombo);
+        bottomLeft.add(zoom100Button);
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(zoomCombo, BorderLayout.WEST);
+        bottomPanel.add(bottomLeft, BorderLayout.WEST);
         bottomPanel.add(statusBar, BorderLayout.CENTER);
         bottomPanel.add(progressBar, BorderLayout.EAST);
         mainPanel = new JPanel(new BorderLayout());
@@ -179,36 +198,44 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         // Listen to changes to the generator
         generator.addListener(generatorListener);
 
+        // Listens to updates in the layout or panning
+        arranger.addListener(arrangerListener);
+
         // Regenerate the image
         reGenerate();
     }
 
+    private JButton createZoom100Button() {
+        JButton button = new JButton("1:1");
+        button.setMargin(new Insets(2, 1, 1, 1));
+        button.setToolTipText("Set zoom to 100% and center view");
+        button.setFocusable(false);
+
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                arranger.setZoomLevel(Arranger.DEFAULT_ZOOM_LEVEL);
+                arranger.center();
+            }
+        });
+
+        return button;
+    }
+
     private JComboBox createZoomCombo() {
-        final JComboBox zoomCombo = new JComboBox(arranger.getZoomLevels().toArray());
+        final JComboBox zoomCombo = new JComboBoxWithWheelScroll(arranger.getZoomLevels().toArray());
         zoomCombo.setEditable(false);
         zoomCombo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ZoomLevel zoomLevel = (ZoomLevel) zoomCombo.getSelectedItem();
                 if (zoomLevel != null) {
-                    if (arranger.setZoomLevel(zoomLevel.getStep())) reRender();
+                    arranger.setZoomLevel(zoomLevel.getStep());
                 }
             }
         });
 
         zoomCombo.setSelectedItem(arranger.getCurrentZoomLevel());
-
-        arranger.addListener(new ArrangerListener() {
-            @Override
-            public void onZoomChanged(ZoomLevel zoomLevel) {
-                zoomCombo.setSelectedItem(zoomLevel);
-            }
-
-            @Override
-            public void onCenterChanged(double centerX, double centerY) {
-                // Ignore
-            }
-        });
 
         return zoomCombo;
     }
