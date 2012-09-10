@@ -1,5 +1,10 @@
 package org.rasterfun;
 
+import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.generator.SinglePictureGenerator;
+import org.rasterfun.ui.preview.PicturePreviewer;
+import org.rasterfun.utils.SimpleFrame;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,8 +43,11 @@ public class RasterfunApplication {
 
         // Load most recent project, or create a new empty / example one if none specified.
 
+        PictureGenerator generator = new SinglePictureGenerator();
 
+        final PicturePreviewer previewer = generator.getPreviewer();
 
+        new SimpleFrame("RasterFun", previewer.getUiComponent());
     }
 
 

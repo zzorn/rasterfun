@@ -225,6 +225,14 @@ public class PictureCalculations {
     }
 
     /**
+     * @return a read only list with the builders that are used to build the pictures.
+     * Contain some picture metadata such as picture size and name.
+     */
+    public List<CalculatorBuilder> getCalculatorBuilders() {
+        return Collections.unmodifiableList(calculatorBuilders);
+    }
+
+    /**
      * @return true if the calculation of the pictures has finished, or the calculation has stopped for some other reason.
      */
     public boolean isDone() {
@@ -303,6 +311,5 @@ public class PictureCalculations {
             list.remove(list.size() - 1);
         }
     }
-
 
 }

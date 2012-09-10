@@ -2,6 +2,7 @@ package org.rasterfun.util
 
 import java.awt.image.{BufferedImage, DirectColorModel, MemoryImageSource}
 import java.awt.{Color, Graphics, Toolkit, Image}
+import java.util
 
 /**
  * Fast, low level access image container.
@@ -41,10 +42,7 @@ class FastImage(val width: Int, val height: Int) {
   def clearToColor(color: Color) {
     require(color != null, "color should not be null")
 
-    val c = color.getRGB
-    var i = 0
-    while (i < imageData.length) {imageData(i) = c; i += 1}
-
+    util.Arrays.fill(imageData, color.getRGB)
   }
 
   def getImage: Image = image

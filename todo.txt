@@ -7,9 +7,8 @@ Implementation list:
 
 * Parameters [DONE]
 * Preview generation [DONE]
-* Preview user interface with panning and zooming, and toggle tiling
-  * If no tiling, show each picture separated from others in nice table formation (using table preview arranger?)
-  * If tiling, show pictures arranged with custom preview arranger, or random preview arranger if generator doesn't specify any
+* Preview user interface with panning and zooming [DONE]
+* Implement column and row arranger [DONE]
 * Perlin noise effect
 * Generator editor ui and parameter property editor ui
 * Re-render pictures on parameter changes, show progressbar & stop button, stop previous render if properties changed while rendering
@@ -17,6 +16,9 @@ Implementation list:
 * Load & save of project (using jaxb)
 * Automatically create schema from data classes on build
 * Export of image
+
+* Implement tiling arranger, shows pictures arranged randomly or according to specified tiling boundaries.
+* Add ability to toggle arranger in the preview
 
 
 

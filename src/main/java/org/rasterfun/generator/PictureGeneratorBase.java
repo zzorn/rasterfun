@@ -72,16 +72,24 @@ public abstract class PictureGeneratorBase implements PictureGenerator {
     public final PictureCalculations generatePictures(PictureCalculationsListener listener,
                                                       List<Picture> picturesToReuse,
                                                       List<Picture> previewsToReuse) {
-        // Compose the source
-        final List<CalculatorBuilder> builders = createPictureSources();
-
-        // Create calculation task and start it
-        final PictureCalculations calculation = new PictureCalculations(builders, picturesToReuse, previewsToReuse);
+        // Create calculation
+        final PictureCalculations calculation = generatePicturesWithoutStarting(picturesToReuse, previewsToReuse);
         if (listener != null) calculation.addListener(listener);
+
+        // Start it
         calculation.start();
 
         // Return reference to ongoing calculation
         return calculation;
+    }
+
+    @Override
+    public final PictureCalculations generatePicturesWithoutStarting(List<Picture> picturesToReuse, List<Picture> previewsToReuse) {
+        // Compose the source
+        final List<CalculatorBuilder> builders = createPictureSources();
+
+        // Create calculation task
+        return new PictureCalculations(builders, picturesToReuse, previewsToReuse);
     }
 
     /**

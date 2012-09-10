@@ -65,6 +65,13 @@ public final class PictureImpl implements Picture {
                                                 "the available channels are: " + Arrays.toString(channelNames));
     }
 
+    @Override
+    public int getChannelIndex(String channelName, int defaultValue) {
+        final Integer channelIndex = channelNameToIndex.get(channelName);
+        if (channelIndex != null) return channelIndex;
+        else return defaultValue;
+    }
+
     public void setName(String name) {
         ParameterChecker.checkNonEmptyString(name, "name");
         this.name = name;

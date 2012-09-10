@@ -76,6 +76,22 @@ public interface PictureGenerator extends GeneratorElement {
                                          List<Picture> previewsToReuse);
 
     /**
+     * Returns a calculator for pictures produced by this generator.
+     * Does not start the calculator before returning it.
+     *
+     * @param picturesToReuse a list of pictures to reuse when calculating the pictures.  Should be the same size and
+     *                        channel number to be useful.  Normally you would pass in pictures that were returned by
+     *                        an earlier call to generatePictures when you are regenerating a view.
+     *                        If null, new pictures will be allocated instead.
+     * @param previewsToReuse same as picturesToReuse, except for preview pictures.
+     * @return an object representing the ongoing calculation, that can be queried for a preview picture and the final picture.
+     *         Also has a method to wait for the calculation to complete and return the calculated pictures.
+     */
+    // TODO: By default, do not start the calculator, and do not take listener parameter
+    PictureCalculations generatePicturesWithoutStarting(List<Picture> picturesToReuse,
+                                                        List<Picture> previewsToReuse);
+
+    /**
      * @param listener a listener that should be notified when the generator changes.
      */
     void addListener(GeneratorListener listener);

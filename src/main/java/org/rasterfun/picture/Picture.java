@@ -8,6 +8,13 @@ import org.rasterfun.library.GeneratorElement;
  */
 public interface Picture extends GeneratorElement {
 
+    // Some default channel names
+    static final String RED   = "red";
+    static final String GREEN = "green";
+    static final String BLUE  = "blue";
+    static final String ALPHA = "alpha";
+    static final String VALUE = "value";
+
     int getWidth();
 
     int getHeight();
@@ -19,6 +26,11 @@ public interface Picture extends GeneratorElement {
      *         Throws an exception if there was no such channel.
      */
     int getChannelIndex(String channelName);
+
+    /**
+     * @return the index for the specified channel, or the specified default value if there is no such channel.
+     */
+    int getChannelIndex(String channelName, int defaultValue);
 
     /**
      * @return the value at the specified channel and coordinate.
