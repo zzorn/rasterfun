@@ -45,6 +45,8 @@ public abstract class PictureArrangerBase implements PictureArranger {
     private PictureDrawer drawer = new RgbPictureDrawer();
     private List<ZoomLevel> zoomLevels;
 
+    private List<ArrangerListener> listeners = new ArrayList<ArrangerListener>();
+
     protected PictureArrangerBase() {
         zoomLevels = new ArrayList<ZoomLevel>();
         for (int i = MIN_ZOOM_LEVEL; i <= MAX_ZOOM_LEVEL; i++) {
@@ -91,6 +93,7 @@ public abstract class PictureArrangerBase implements PictureArranger {
             pan(dx, dy);
 
             onZoomChanged(scale);
+            notifyZoomChanged();
 
             return true;
         }
@@ -110,7 +113,10 @@ public abstract class PictureArrangerBase implements PictureArranger {
         boolean centerMoved = centerX != oldCenterX ||
                               centerY != oldCenterY;
 
-        if (centerMoved) onCenterChanged(centerX, centerY);
+        if (centerMoved) {
+            onCenterChanged(centerX, centerY);
+            notifyCenterChanged();
+        }
 
         return centerMoved;
     }
@@ -193,10 +199,23 @@ public abstract class PictureArrangerBase implements PictureArranger {
         if (scaleStep != originalScaleStep) {
             scale = scaleForScaleStep(scaleStep);
             onZoomChanged(scale);
+            notifyZoomChanged();
             return true;
         }
         else {
             return false;
+        }
+    }
+
+    private void notifyZoomChanged() {
+        for (ArrangerListener listener : listeners) {
+            listener.onZoomChanged(getCurrentZoomLevel());
+        }
+    }
+
+    private void notifyCenterChanged() {
+        for (ArrangerListener listener : listeners) {
+            listener.onCenterChanged(getCenterX(), getCenterY());
         }
     }
 
@@ -207,6 +226,7 @@ public abstract class PictureArrangerBase implements PictureArranger {
             scaleStep = step;
             scale = scaleForScaleStep(scaleStep);
             onZoomChanged(scale);
+            notifyZoomChanged();
             return true;
         }
         else {
@@ -289,7 +309,10 @@ public abstract class PictureArrangerBase implements PictureArranger {
         clampCenter(minX, minY, maxX, maxY);
 
         if (centerX != oldCenterX ||
-            centerY != oldCenterY) onCenterChanged(centerX, centerY);
+            centerY != oldCenterY) {
+            onCenterChanged(centerX, centerY);
+            notifyCenterChanged();
+        }
     }
 
     /**
@@ -332,4 +355,14 @@ public abstract class PictureArrangerBase implements PictureArranger {
         centerY = MathTools.clamp(centerY, minY, maxY);
     }
 
+
+    @Override
+    public final void addListener(ArrangerListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public final void removeListener(ArrangerListener listener) {
+        listeners.remove(listener);
+    }
 }

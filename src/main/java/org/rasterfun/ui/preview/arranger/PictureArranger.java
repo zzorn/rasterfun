@@ -43,4 +43,8 @@ public interface PictureArranger extends FastImageRenderer {
     List<ZoomLevel> getZoomLevels();
 
     ZoomLevel getCurrentZoomLevel();
+
+    void addListener(ArrangerListener listener);
+
+    void removeListener(ArrangerListener listener);
 }

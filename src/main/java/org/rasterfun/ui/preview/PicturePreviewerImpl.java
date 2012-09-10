@@ -7,6 +7,7 @@ import org.rasterfun.core.listeners.PictureCalculationsListenerSwingThreadAdapte
 import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.picture.Picture;
+import org.rasterfun.ui.preview.arranger.ArrangerListener;
 import org.rasterfun.ui.preview.arranger.PictureArranger;
 import org.rasterfun.ui.preview.arranger.RowsAndColumnsArranger;
 import org.rasterfun.ui.preview.arranger.ZoomLevel;
@@ -49,7 +50,6 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             // Zoom
             boolean viewChanged = arranger.zoom(-e.getWheelRotation(), e.getX(), e.getY());
             if (viewChanged) {
-                updateZoomCombo();
                 reRender();
             }
         }
@@ -75,7 +75,6 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             if (e.getButton() == RESET_ZOOM_BUTTON) {
                 final boolean zoomChanged = arranger.setScale(1);
                 if (zoomChanged) {
-                    updateZoomCombo();
                     reRender();
                 }
             }
@@ -180,8 +179,6 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         // Listen to changes to the generator
         generator.addListener(generatorListener);
 
-        updateZoomCombo();
-
         // Regenerate the image
         reGenerate();
     }
@@ -199,11 +196,21 @@ public class PicturePreviewerImpl implements PicturePreviewer {
             }
         });
 
-        return zoomCombo;
-    }
-
-    private void updateZoomCombo() {
         zoomCombo.setSelectedItem(arranger.getCurrentZoomLevel());
+
+        arranger.addListener(new ArrangerListener() {
+            @Override
+            public void onZoomChanged(ZoomLevel zoomLevel) {
+                zoomCombo.setSelectedItem(zoomLevel);
+            }
+
+            @Override
+            public void onCenterChanged(double centerX, double centerY) {
+                // Ignore
+            }
+        });
+
+        return zoomCombo;
     }
 
     private void reGenerate() {
