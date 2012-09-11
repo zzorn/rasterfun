@@ -3,9 +3,8 @@ package org.rasterfun.generator;
 import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
-import org.rasterfun.library.GeneratorElement;
+import org.rasterfun.library.ParametrizedGeneratorElementBase;
 import org.rasterfun.parameters.Parameters;
-import org.rasterfun.parameters.ParametersImpl;
 import org.rasterfun.parameters.ParametersListener;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.PictureEditor;
@@ -21,30 +20,24 @@ import static org.rasterfun.utils.ParameterChecker.checkNotNull;
 /**
  * Common functionality for PictureGenerators.
  */
-public abstract class PictureGeneratorBase implements PictureGenerator {
+public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementBase implements PictureGenerator {
 
-    private final Parameters parameters = new ParametersImpl();
     private String name = getClass().getSimpleName();
     private List<GeneratorListener> listeners = null;
 
     protected PictureGeneratorBase() {
         // Listen to our own parameters
-        parameters.addListener(new ParametersListener() {
-                @Override
-                public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
-                    // Notify out listeners when our parameters are changed.
-                    if (listeners != null) {
-                        for (GeneratorListener listener : listeners) {
-                            listener.onGeneratorChanged(PictureGeneratorBase.this);
-                        }
+        getParameters().addListener(new ParametersListener() {
+            @Override
+            public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
+                // Notify out listeners when our parameters are changed.
+                if (listeners != null) {
+                    for (GeneratorListener listener : listeners) {
+                        listener.onGeneratorChanged(PictureGeneratorBase.this);
                     }
                 }
-            });
-    }
-
-    @Override
-    public Parameters getParameters() {
-        return parameters;
+            }
+        });
     }
 
     @Override
@@ -122,31 +115,4 @@ public abstract class PictureGeneratorBase implements PictureGenerator {
         this.name = name;
     }
 
-    @Override
-    public final GeneratorElement copy() {
-        // Clone instance
-        final PictureGeneratorBase theCopy = createCopyOfClass();
-
-        // Copy parameters
-        theCopy.getParameters().addParameterCopies(parameters);
-
-        // Do instance specific state copying
-        initializeCopy(theCopy);
-
-        return theCopy;
-    }
-
-    /**
-     * Called when a copy has been done of this generator.
-     * Provides opportunity for generator implementations to copy over any implementation specific state.
-     */
-    protected void initializeCopy(PictureGeneratorBase theCopy) {}
-
-    protected PictureGeneratorBase createCopyOfClass() {
-        try {
-            return getClass().newInstance();
-        } catch (Exception e) {
-            throw new IllegalStateException("Problem when copying a class instance of type "+getClass().getSimpleName()+": " + e, e);
-        }
-    }
 }
