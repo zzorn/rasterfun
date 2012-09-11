@@ -81,12 +81,13 @@ I/O
 * Export of image
 
 
-Gradients & function shapes
+Gradients & function shapes / 1D function
 * Copy over earlier gradient code
 * Gradient editor
 * Smooth ramps in gradient?
   * Selectable ramp style, per point or globally?
     * Types: Linear, flat/bar graph, spline, (cosine)
+  * Function expression to define function shape
 * Predefined simple gradient objects with specific ramp shapes
 * Have gradient double as general 1 -> N function shape editor
 
