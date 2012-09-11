@@ -50,12 +50,19 @@ Effects
   * Many other common effects can be implemented in terms of this one
 
 * Multipicture effect, that pastes pictures from a generator over an area, with (straight edge) tiling support
+* Also e.g. tile area with existing tiling pictures.
 
 * Load picture effect, that loads a picture from a specified location and puts it on specific location
 * Paste picture effect, uses other generator to generate pic that covers the whole area or a selected area,
   pass in parameters to the generator (implement by copying and overriding the specified params with new ones?)
 
 * Nested effect, contain list of other effects
+
+* Voronoi cells
+* Manhattan cells / brickwall
+* Ridged perlin etc if it needs anything special
+* Add simplex noise, with gradient output as well.
+* Stroke path effects for grass, fur etc.
 
 
 Editor
