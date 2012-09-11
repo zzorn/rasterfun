@@ -51,10 +51,6 @@ public class RgbPictureDrawer extends PictureDrawerBase {
                     int b = (int) (srcData[srcIndex + bIndex] * 255 + 0.5f);
                     int a = (int) (srcData[srcIndex + aIndex] * 255 + 0.5f);
 
-                    // TODO: Remove, debug thing
-                    a = 128;
-                    //r = 244;
-
                     // Clamp Alpha
                     if (a < 0) a = 0; else if (a > 255) a = 255;
 

@@ -20,8 +20,8 @@ import static org.rasterfun.utils.MathTools.clamp;
 // TODO: This class is getting long, some functionality could maybe be refactored into a separate class?
 public abstract class ArrangerBase implements Arranger {
 
-    private static final int MAX_ZOOM_LEVEL = 10;
-    private static final int MIN_ZOOM_LEVEL = -10;
+    private static final int MAX_ZOOM_LEVEL = 15;
+    private static final int MIN_ZOOM_LEVEL = -8;
     private static final double ZOOM_SCALE_PER_STEP =  2;
 
     private List<CalculatorBuilder> builders = null;

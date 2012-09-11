@@ -5,17 +5,29 @@ NEW robust implementation
 
 Implementation list:
 
+
+General
 * Parameters [DONE]
+* Listen to objects in parameter values (e.g. gradient)
+
+
+Preview
 * Preview generation [DONE]
 * Preview user interface with panning and zooming [DONE]
 * Implement column and row arranger [DONE]
-* Perlin noise effect
-* Generator editor ui and parameter property editor ui
+
+* Do not relayout on resizes, except for the first resize, and while the user has not yet done any zooming or panning. [DONE]
+  * Add a button to fit into view, this would then deselect the user interaction flag. [DONE]
+
+* Make sure the columns & rows layout keeps all pictures within the visible area when layouting.
+
+* Implement label rendering for columns & rows layout (change font size also somewhat)
+  * Use a scratch buffered image the size of a text label area to do the rendering, also provides cutting.
+  * Shorten too long picture names with ... in the middle of the picture name (if it ends with number), or in the end otherwise(?).
+
 * Re-render pictures on parameter changes, show progressbar & stop button, stop previous render if properties changed while rendering
-* Undo & redo for property changes and other edits
-* Load & save of project (using jaxb)
-* Automatically create schema from data classes on build
-* Export of image
+
+* Do not show previews during first second of calculation, if there is still more than ~50% left after that then show them
 
 * Implement tiling arranger, shows pictures arranged randomly or according to specified tiling boundaries.
 * Add ability to toggle arranger in the preview
@@ -25,11 +37,51 @@ Implementation list:
   * Multiline tooltip / send error report button
   * Error icon for statusbar
 
-* Do not relayout on resizes, except for the first resize, and while the user has not yet done any zooming or panning. [DONE]
-  * Add a button to fit into view, this would then deselect the user interaction flag. [DONE]
+
+Effects
+* Perlin noise effect [DONE]
+* pass in and parse picture specific parameter values to the pixel calculator from the compiler
+* Name passing in effects, system for effects to tell what variables they take and create (both at pixel calculation level and before loop level, or any level?)
+* System for unique namespaces in effects
+
+* Text input, parser checked generic function effect
+  * Provide basic arithmetic and a nice set of standard math and interpolation etc utils
+  * Also provide functions to sample existing image data at some offsets or positions, of the current picture or pictures passed in as params
+  * Many other common effects can be implemented in terms of this one
+
+* Multipicture effect, that pastes pictures from a generator over an area, with (straight edge) tiling support
+
+* Load picture effect, that loads a picture from a specified location and puts it on specific location
+* Paste picture effect, uses other generator to generate pic that covers the whole area or a selected area,
+  pass in parameters to the generator (implement by copying and overriding the specified params with new ones?)
+
+* Nested effect, contain list of other effects
 
 
+Editor
+* Generator editor ui and parameter property editor ui
+* Undo & redo for property changes and other edits
+* Color editor
+* Channel name editor
+* Float editors, select value or assign available variable to it
 
+Project
+* Load & save of project (using jaxb)
+
+
+I/O
+* Automatically create schema from data classes on build
+* Export of image
+
+
+Gradients & function shapes
+* Copy over earlier gradient code
+* Gradient editor
+* Smooth ramps in gradient?
+  * Selectable ramp style, per point or globally?
+    * Types: Linear, flat/bar graph, spline, (cosine)
+* Predefined simple gradient objects with specific ramp shapes
+* Have gradient double as general 1 -> N function shape editor
 
 
 

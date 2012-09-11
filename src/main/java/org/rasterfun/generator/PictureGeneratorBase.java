@@ -14,7 +14,6 @@ import org.rasterfun.ui.preview.PicturePreviewerImpl;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.rasterfun.utils.ParameterChecker.checkNonEmptyString;
 import static org.rasterfun.utils.ParameterChecker.checkNotNull;
 
 /**
@@ -22,20 +21,17 @@ import static org.rasterfun.utils.ParameterChecker.checkNotNull;
  */
 public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementBase implements PictureGenerator {
 
-    private String name = getClass().getSimpleName();
     private List<GeneratorListener> listeners = null;
 
     protected PictureGeneratorBase() {
+        getParameters().set(PictureGenerator.NAME, getDefaultName());
+
         // Listen to our own parameters
         getParameters().addListener(new ParametersListener() {
             @Override
             public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
                 // Notify out listeners when our parameters are changed.
-                if (listeners != null) {
-                    for (GeneratorListener listener : listeners) {
-                        listener.onGeneratorChanged(PictureGeneratorBase.this);
-                    }
-                }
+                notifyGeneratorChanged();
             }
         });
     }
@@ -91,7 +87,7 @@ public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementB
     protected abstract List<CalculatorBuilder> createPictureSources();
 
     @Override
-    public void addListener(GeneratorListener listener) {
+    public final void addListener(GeneratorListener listener) {
         checkNotNull(listener, "listener");
         if (listeners == null) {
             listeners = new ArrayList<GeneratorListener>();
@@ -100,19 +96,29 @@ public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementB
     }
 
     @Override
-    public void removeListener(GeneratorListener listener) {
+    public final void removeListener(GeneratorListener listener) {
         checkNotNull(listener, "listener");
         if (listeners != null) listeners.remove(listener);
     }
 
-    @Override
-    public String getName() {
-        return name;
+    /**
+     * @return default name for generators of this type.
+     * The actual name is stored in the Parameters.
+     */
+    protected String getDefaultName() {
+        return getClass().getSimpleName();
     }
 
-    public void setName(String name) {
-        checkNonEmptyString(name, "name");
-        this.name = name;
+
+    /**
+     * Tells listeners of this PictureGenerator that it has changed, and any previews need to be redrawn, etc.
+     */
+    protected final void notifyGeneratorChanged() {
+        if (listeners != null) {
+            for (GeneratorListener listener : listeners) {
+                listener.onGeneratorChanged(this);
+            }
+        }
     }
 
 }

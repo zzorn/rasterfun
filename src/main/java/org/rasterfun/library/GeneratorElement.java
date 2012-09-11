@@ -7,6 +7,6 @@ import org.rasterfun.parameters.Copyable;
  */
 public interface GeneratorElement extends Copyable<GeneratorElement> {
 
-    String getName();
+    // TODO: Add listener support, so that if a gradient is changed, the generators it is used in will be updated as well.
 
 }

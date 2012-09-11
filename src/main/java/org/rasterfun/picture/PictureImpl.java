@@ -37,7 +37,6 @@ public final class PictureImpl implements Picture {
         createChannelNamesLookup();
     }
 
-    @Override
     public String getName() {
         return name;
     }
@@ -92,8 +91,9 @@ public final class PictureImpl implements Picture {
 
     @Override
     public GeneratorElement copy() {
-        // TODO: Implement
-        return null;
+        // NOTE: Picture references in generator properties should probably be treated as references -
+        // a change to the picture modifies the generator.  So we just return a reference to ourselves.
+        return this;
     }
 
     @Override

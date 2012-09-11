@@ -62,6 +62,80 @@ public final class PerlinNoise {
     }
 
     /**
+     * @return a noise value at the specific position, with the specified seed.
+     */
+    public static double noise(double x, double y, int seed) {
+        // Get closest grid center to the upper left
+        int intX = fastFloor(x);
+        int intY = fastFloor(y);
+
+        // Add together the values of the surflets of the four closest integer grid centers at this point
+        return surflet(x, y, intX    , intY    , seed) +
+               surflet(x, y, intX + 1, intY    , seed) +
+               surflet(x, y, intX    , intY + 1, seed) +
+               surflet(x, y, intX + 1, intY + 1, seed);
+
+    }
+
+    /**
+     * @return a tiling noise value at the specific position, with the specified tiling.
+     */
+    public static double tilingNoise(double x, double y,
+                                     double edgeX1, double edgeY1,
+                                     double edgeX2, double edgeY2,
+                                     int fillSeed,
+                                     int edgeSeed) {
+        // Get closest grid center to the upper left
+        int intX = fastFloor(x);
+        int intY = fastFloor(y);
+
+        // Get edge grid positions
+        double offs = 0;
+        int edgeGridX1 = fastFloor(edgeX1 + offs);
+        int edgeGridY1 = fastFloor(edgeY1 + offs);
+        int edgeGridX2 = fastFloor(edgeX2 + offs);
+        int edgeGridY2 = fastFloor(edgeY2 + offs);
+
+        // Add together the values of the surflets of the four closest integer grid centers at this point
+        return tilingSurflet(x, y, intX,     intY,     edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
+               tilingSurflet(x, y, intX + 1, intY,     edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
+               tilingSurflet(x, y, intX    , intY + 1, edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
+               tilingSurflet(x, y, intX + 1, intY + 1, edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed);
+
+    }
+
+    /**
+     * Calculates a noise consisting of many octaves.
+     */
+    public static double octaveNoise(double x, double y, double octaves, int seed) {
+        double sum = 0;
+        double octave = min(octaves, MAX_OCTAVES);
+        double amplitude = 1;
+        double scale = 1;
+        double strength = 1;
+
+        int octaveSeed = seed % NUM;
+        if (octaveSeed < 0) octaveSeed += NUM;
+
+        while (octave > 0 ) {
+            // Support for fractional octaves, the fractional octave is just partially added in.
+            if (octave < 1) strength = octave;
+
+            // Add octave,using unique random seed for each octave, and permutations table to randomize it.
+            sum += strength * amplitude * noise(x * scale, y * scale, permutations[octaveSeed++]);
+
+            // Scale amplitude down and noise density up.
+            amplitude *= 0.5;
+            scale *= 2;
+
+            // Move to next (more detailed) octave
+            octave -= 1;
+        }
+
+        return sum;
+    }
+
+    /**
      * Calculates a noise consisting of many octaves, that uses one seed for edges and another elsewhere.
      *
      * @param x
@@ -119,53 +193,6 @@ public final class PerlinNoise {
     }
 
     /**
-     * Calculates a noise consisting of many octaves.
-     */
-    public static double octaveNoise(double x, double y, double octaves, int seed) {
-        double sum = 0;
-        double octave = min(octaves, MAX_OCTAVES);
-        double amplitude = 1;
-        double scale = 1;
-        double strength = 1;
-
-        int octaveSeed = seed % NUM;
-        if (octaveSeed < 0) octaveSeed += NUM;
-
-        while (octave > 0 ) {
-            // Support for fractional octaves, the fractional octave is just partially added in.
-            if (octave < 1) strength = octave;
-
-            // Add octave,using unique random seed for each octave, and permutations table to randomize it.
-            sum += strength * amplitude * noise(x * scale, y * scale, permutations[octaveSeed++]);
-
-            // Scale amplitude down and noise density up.
-            amplitude *= 0.5;
-            scale *= 2;
-
-            // Move to next (more detailed) octave
-            octave -= 1;
-        }
-
-        return sum;
-    }
-
-    /**
-     * @return a noise value at the specific position, with the specified seed.
-     */
-    public static double noise(double x, double y, int seed) {
-        // Get closest grid center to the upper left
-        int intX = fastFloor(x);
-        int intY = fastFloor(y);
-
-        // Add together the values of the surflets of the four closest integer grid centers at this point
-        return surflet(x, y, intX    , intY    , seed) +
-                surflet(x, y, intX + 1, intY    , seed) +
-                surflet(x, y, intX    , intY + 1, seed) +
-                surflet(x, y, intX + 1, intY + 1, seed);
-
-    }
-
-    /**
      * Calculates the value of one surflet in the noise, which is basically a gradient in a random direction located at
      * an integer grid corner, damped by a polynomial falloff function that fades it to zero before the next grid corners.
      */
@@ -202,33 +229,6 @@ public final class PerlinNoise {
 
         // Fade the gradient with the polynomial
         return polyX * polyY * grad;
-    }
-
-    /**
-     * @return a tiling noise value at the specific position, with the specified tiling.
-     */
-    public static double tilingNoise(double x, double y,
-                                     double edgeX1, double edgeY1,
-                                     double edgeX2, double edgeY2,
-                                     int fillSeed,
-                                     int edgeSeed) {
-        // Get closest grid center to the upper left
-        int intX = fastFloor(x);
-        int intY = fastFloor(y);
-
-        // Get edge grid positions
-        double offs = 0;
-        int edgeGridX1 = fastFloor(edgeX1 + offs);
-        int edgeGridY1 = fastFloor(edgeY1 + offs);
-        int edgeGridX2 = fastFloor(edgeX2 + offs);
-        int edgeGridY2 = fastFloor(edgeY2 + offs);
-
-        // Add together the values of the surflets of the four closest integer grid centers at this point
-        return tilingSurflet(x, y, intX,     intY,     edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
-                tilingSurflet(x, y, intX + 1, intY,     edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
-                tilingSurflet(x, y, intX    , intY + 1, edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed) +
-                tilingSurflet(x, y, intX + 1, intY + 1, edgeGridX1, edgeGridY1, edgeGridX2, edgeGridY2, fillSeed, edgeSeed);
-
     }
 
     /**

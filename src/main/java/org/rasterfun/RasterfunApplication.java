@@ -1,6 +1,6 @@
 package org.rasterfun;
 
-import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.effect.NoiseEffect;
 import org.rasterfun.generator.SimplePictureGenerator;
 import org.rasterfun.ui.preview.PicturePreviewer;
 import org.rasterfun.utils.SimpleFrame;
@@ -57,8 +57,12 @@ public class RasterfunApplication {
         // Load default library and any other configured libraries
 
         // Load most recent project, or create a new empty / example one if none specified.
-        PictureGenerator generator = new SimplePictureGenerator();
-        generator.getParameters().set(SimplePictureGenerator.NUMBER, 9);
+        SimplePictureGenerator generator = new SimplePictureGenerator();
+        generator.getParameters().set(SimplePictureGenerator.NUMBER, 6);
+        generator.addEffect(new NoiseEffect("red",   142, 7, 0.4f, 1f));
+        generator.addEffect(new NoiseEffect("green", 253, 3, 0.4f, 1f));
+        generator.addEffect(new NoiseEffect("blue",  344, 0.9f, 0.3f, 1.3f));
+        generator.addEffect(new NoiseEffect("alpha", 445,  5, 0.9f, 1.5f));
 
         final PicturePreviewer previewer = generator.getPreviewer();
 

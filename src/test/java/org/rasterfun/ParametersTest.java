@@ -12,8 +12,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test parameter class.
@@ -264,7 +264,6 @@ public class ParametersTest {
             this.value = value;
         }
 
-        @Override
         public String getName() {
             return name;
         }

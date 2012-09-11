@@ -19,6 +19,6 @@ public interface Effect extends GeneratorElement {
      * Adds source to the passed in build context.
      * Can use any local variables specified in the context, and may add own local variables to the context.
      */
-    void buildSource(CalculatorBuilder context);
+    void buildSource(CalculatorBuilder builder);
 
 }

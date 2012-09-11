@@ -15,6 +15,7 @@ import org.rasterfun.picture.Picture;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import static org.rasterfun.core.compiler.SourceLocation.AT_PIXEL;
 
 /**
  * Tests core aspect of the pixel calculator, and the PictureCalculation.
@@ -38,8 +39,8 @@ public class PixelCalculatorTest {
         // Create builder with some output
         parameters.set(PictureGenerator.CHANNELS, new String[]{"xs", "ys"});
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.addEvaluationLoopSource("        pixelData[pixelIndex]     = x;\n" +
-                                                  "        pixelData[pixelIndex + 1] = y;\n");
+        calculatorBuilder.setVariable(AT_PIXEL, "xs", "x");
+        calculatorBuilder.setVariable(AT_PIXEL, "ys", "y");
 
         // Create calculation task and start it
         final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
@@ -122,7 +123,7 @@ public class PixelCalculatorTest {
 
         // Lets make a division by zero halfway through
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.addEvaluationLoopSource("int w = 1 / (50 - y); // Oops!\n");
+        calculatorBuilder.addPixelCalculationLine("int w = 1 / (50 - y); // Oops!\n");
 
         final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
 
@@ -164,7 +165,7 @@ public class PixelCalculatorTest {
     public void testStop() throws CompilationException {
         // Create builder with sleep
         CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.addEvaluationLoopSource("        try {\n" +
+        calculatorBuilder.addPixelCalculationLine("        try {\n" +
                                                   "            Thread.sleep(10);\n" +
                                                   "        } \n" +
                                                   "        catch (InterruptedException e) {\n" +
