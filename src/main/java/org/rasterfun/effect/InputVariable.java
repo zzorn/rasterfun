@@ -32,14 +32,21 @@ public class InputVariable extends VariableBase {
         ParameterChecker.checkNotNull(constantValue, "constantValue");
 
         this.constantValue = constantValue;
+
+        if (sourceVariable != null) sourceVariable.removeUser(this);
         sourceVariable = null;
     }
 
-    public void bindToVariable(OutputVariable sourceVariable) {
-        ParameterChecker.checkNotNull(sourceVariable, "sourceVariable");
-        if (!canBindTo(sourceVariable)) throw new IllegalArgumentException("Can not bind variable "+this+" to the source variable " + sourceVariable + " (incompatible types).");
+    public void bindToVariable(OutputVariable newSourceVariable) {
+        if (sourceVariable != newSourceVariable) {
+            ParameterChecker.checkNotNull(newSourceVariable, "newSourceVariable");
+            if (!canBindTo(newSourceVariable)) throw new IllegalArgumentException("Can not bind variable "+this+" to the source variable " +
+                                                                                  newSourceVariable + " (incompatible types).");
 
-        this.sourceVariable = sourceVariable;
+            if (sourceVariable != null) sourceVariable.removeUser(this);
+            sourceVariable = newSourceVariable;
+            if (sourceVariable != null) sourceVariable.addUser(this);
+        }
     }
 
     public OutputVariable getSourceVariable() {
@@ -66,7 +73,7 @@ public class InputVariable extends VariableBase {
     public String getExpression() {
         if (sourceVariable != null) {
             // If we have a source value specified, get the value of that
-            return sourceVariable.getIdentifier();
+            return sourceVariable.getVarIdentifier();
         }
         else {
             if (ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
@@ -79,4 +86,10 @@ public class InputVariable extends VariableBase {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return getExpression();
+    }
+
 }

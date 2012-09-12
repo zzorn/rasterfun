@@ -79,8 +79,4 @@ public abstract class VariableBase implements Variable {
         return CalculatorBuilder.VAR_PREFIX + getIdentifier();
     }
 
-    @Override
-    public String toString() {
-        return getVarIdentifier();
-    }
 }

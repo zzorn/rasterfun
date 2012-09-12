@@ -18,6 +18,13 @@ public class NoiseEffect extends EffectBase {
     private float scale;
     private float amplitude = 1;
     private float offset = 0;
+    private InputVariable seedVar;
+    private InputVariable scaleVar;
+    private InputVariable amplitudeVar;
+    private InputVariable offsetVar;
+    private InputVariable y;
+    private InputVariable x;
+    private OutputVariable noiseOut;
 
     @Override
     protected void initVariables() {
@@ -25,17 +32,21 @@ public class NoiseEffect extends EffectBase {
         // TODO: Ability to put some variables outside the loop
 
         // TODO: Need references to the default variables available in the pixel renderer, such as x, y, pictureSeed, generatorSeed, localSeed, and channel values.
-        final InputVariable x = addInput("x", 0f, "x coordinate to get the noise at", Float.class);
-        final InputVariable y = addInput("y", 0f, "y coordinate to get the noise at", Float.class);
+        x = addInput("x", 0f, "x coordinate to get the noise at", Float.class);
+        y = addInput("y", 0f, "y coordinate to get the noise at", Float.class);
 
-        final InputVariable seedVar = addInput("seed", seed, "random seed for the noise", Integer.class);
-        final InputVariable scaleVar = addInput("scale", scale, "frequency of the noise", Float.class);
-        final InputVariable amplitudeVar = addInput("amplitude", amplitude, "contrast of the noise", Float.class);
-        final InputVariable offsetVar = addInput("offset", offset, "brightness / darkness of the noise", Float.class);
+        seedVar      = addInput("seed", seed, "random seed for the noise", Integer.class);
+        scaleVar     = addInput("scale", scale, "frequency of the noise", Float.class);
+        amplitudeVar = addInput("amplitude", amplitude, "contrast of the noise", Float.class);
+        offsetVar    = addInput("offset", offset, "brightness / darkness of the noise", Float.class);
 
+        System.out.println("scaleVar.toString() = " + scaleVar.toString());
+
+        // TODO: This is called when an effect is added to a generator, but not after that,
+        // so any changes do not get propagated to the epression.
+        // TODO: Fix this by recalculating the expression, or separating expression generation from the variable declaration.
         final String expression = offsetVar+" + "+amplitudeVar+" * (float)PerlinNoise.noise("+scaleVar+" * "+RELATIVE_X+", "+scaleVar+" * "+RELATIVE_Y+", "+seedVar+")";
-
-        addOutput("noise", "the created noise", Float.class, expression, outChannel);
+        noiseOut = addOutput("noise", "the created noise", Float.class, expression, outChannel);
 
     }
 
@@ -65,4 +76,31 @@ public class NoiseEffect extends EffectBase {
         this.amplitude = amplitude;
     }
 
+    public InputVariable getSeedVar() {
+        return seedVar;
+    }
+
+    public InputVariable getScaleVar() {
+        return scaleVar;
+    }
+
+    public InputVariable getAmplitudeVar() {
+        return amplitudeVar;
+    }
+
+    public InputVariable getOffsetVar() {
+        return offsetVar;
+    }
+
+    public InputVariable getY() {
+        return y;
+    }
+
+    public InputVariable getX() {
+        return x;
+    }
+
+    public OutputVariable getNoiseOut() {
+        return noiseOut;
+    }
 }

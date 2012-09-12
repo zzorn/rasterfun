@@ -16,6 +16,8 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
 
     private List<Effect> effects = new ArrayList<Effect>();
 
+    private int nextEffectNamespaceId = 1;
+
     public SimplePictureGenerator() {
         getParameters().set(PictureGenerator.WIDTH, 128);
         getParameters().set(PictureGenerator.HEIGHT, 128);
@@ -39,10 +41,7 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
     private CalculatorBuilder createPictureBuilder(int pictureIndex) {
         final CalculatorBuilder builder = new CalculatorBuilder(createPictureParameters(pictureIndex));
 
-        int effectIndex = 0;
         for (Effect effect : effects) {
-            final String namespace = "_" + (effectIndex++); // TODO: Clean up mess with var prefix
-            effect.initVariables(namespace);
 
             effect.buildSource(builder);
         }
@@ -59,8 +58,14 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
     }
 
 
-    public void addEffect(Effect effect) {
+    public <T extends Effect> T addEffect(T effect) {
         effects.add(effect);
+
+        // Initialize effect namesapce
+        final String namespace = "_" + (nextEffectNamespaceId++); // TODO: Clean up mess with var prefix
+        effect.initVariables(namespace);
+
+        return effect;
     }
 
     public void removeEffect(Effect effect) {
