@@ -1,5 +1,6 @@
 package org.rasterfun.effect;
 
+import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.utils.ParameterChecker;
 import org.rasterfun.utils.StringUtils;
 
@@ -11,6 +12,8 @@ public abstract class VariableBase implements Variable {
     private final Class<?> type;
     private String name;
     private String description;
+    private String namespace;
+
 
     protected VariableBase(Class<?> type) {
         ParameterChecker.checkNotNull(type, "type");
@@ -48,11 +51,36 @@ public abstract class VariableBase implements Variable {
         this.description = description;
     }
 
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    @Override
+    public void buildSource(CalculatorBuilder builder) {
+    }
+
     /**
      * @return generated identifier based on the name
      */
-    public String createIdentifierPart() {
-        return StringUtils.identifierFromName(getName(), 'Q');
+    public final String getIdentifier() {
+        if (namespace == null) throw new IllegalStateException("Can not calculate the identifier, as the namespace was not yet initialized.");
+
+        // Create variable id part that is guaranteed to have no underscores (so that it can't collide with namespaces).
+        final String variableIdPart = StringUtils.identifierFromName(getName().replace('_', ' '), 'Q');
+        final String identifier = namespace + "_" + variableIdPart;
+
+        // Sanity check // NOTE: it gets var prefix added automatically
+        //ParameterChecker.checkIsIdentifier(identifier, "generated variable identifier");
+        return identifier;
     }
 
+
+    public String getVarIdentifier() {
+        return CalculatorBuilder.VAR_PREFIX + getIdentifier();
+    }
+
+    @Override
+    public String toString() {
+        return getVarIdentifier();
+    }
 }

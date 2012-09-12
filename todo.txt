@@ -60,9 +60,35 @@ Effects
 
 * Voronoi cells
 * Manhattan cells / brickwall
+* Other tiling patterns
 * Ridged perlin etc if it needs anything special
 * Add simplex noise, with gradient output as well.
 * Stroke path effects for grass, fur etc.
+
+* Combine pictures, e.g. fade between pictures based on some variable / third picture
+  * Can use a selected generator to generate an input picture for use when creating the current picture
+  * Mix by e.g. height channel
+
+* Manually created patterns, generate variables e.g. for distance to edge (inside positive, outside negative).
+  * Use polygons defined with points, possibly splines, as well as just simple rectangles, circles, etc.
+  * Use boolean logic to combine them (max, min, etc, and * if the values are normalized suitably)
+* Also render fonts and create similar greyscale patterns from them
+
+* Render effects that use height channel / variable to calculate lighting, reflections, shadows.
+  * Also preview that renders e.g. a sphere texturized with the texture
+
+* Default generators with rgba channels + height/bump, specular, luminance, etc
+
+* Normal map generation effect (use height/bump map as source)
+
+* Possibility to group effects into a combined effect, and ungroup a combined effect.
+
+
+Generator
+
+* Possibility for the pictures produced by a generator to use common parts, E.g. export color, normal, bump etc map images.
+
+* Take some generator(s) as input, apply a set of effects on all of them
 
 
 Editor
@@ -71,6 +97,12 @@ Editor
 * Color editor
 * Channel name editor
 * Float editors, select value or assign available variable to it
+
+* Show small preview of picture after the effect has been applied, or of the effect itself?
+  * Also for nested effects
+  * The purpose would be to make it easier to understand what each effect contributes,
+    and view changes caused by editing properties.
+
 
 Project
 * Load & save of project (using jaxb)

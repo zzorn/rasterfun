@@ -62,4 +62,16 @@ public final class StringUtils {
     }
 
 
+    /**
+     * @return number of times the character c is found in the string s.
+     */
+    public static int countCharacters(String s, char c) {
+        int sum = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == c) sum++;
+        }
+        return sum;
+    }
+
+
 }

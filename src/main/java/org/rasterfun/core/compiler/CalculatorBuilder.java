@@ -6,13 +6,15 @@ import org.rasterfun.core.PixelCalculator;
 import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.parameters.Parameters;
+import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
+import org.rasterfun.utils.StringUtils;
 import scala.actors.threadpool.Arrays;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 import static org.rasterfun.core.compiler.SourceLocation.*;
 
@@ -27,6 +29,7 @@ public class CalculatorBuilder {
 
     public static final String PIXEL_DATA = "pixelData";
     public static final String VAR_PREFIX = "var_";
+    public static final String PARAMETER_PREFIX = "parameter_";
     public static final String PIXEL_INDEX = "pixelIndex";
     public static final String X_NAME = "x";
     public static final String Y_NAME = "x";
@@ -42,9 +45,14 @@ public class CalculatorBuilder {
 
     private final Map<SourceLocation, StringBuilder> inputSources = new HashMap<SourceLocation, StringBuilder>();
 
+    private final List<ObjectParameter> objectParameters = new ArrayList<ObjectParameter>();
+
     private String source;
 
     private final String generatorName;
+
+    private final Set<Class<?>> alreadyImported = new HashSet<Class<?>>();
+
 
     public CalculatorBuilder(Parameters parameters) {
         // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
@@ -186,6 +194,23 @@ public class CalculatorBuilder {
                      );
     }
 
+    /**
+     * Add an object parameter that will be passed in to the pixel calculator before it is started.
+     * @param namePart optional descriptive java identifier that gets added to the generated object variable identifier.
+     * @param parameterValue the object to pass in.
+     * @return the identifier of the variable that the object will be accessible through in the pixel calculator code.
+     */
+    public String addParameter(String namePart, Object parameterValue, Class<?> parameterType) {
+        ParameterChecker.checkNotNull(parameterValue, "parameterValue");
+
+        addImport(parameterType);
+
+        final int index = objectParameters.size();
+        String identifier = PARAMETER_PREFIX + "_" + index + (namePart == null ? "" : "_" + StringUtils.identifierFromName(namePart, 'Q'));
+        objectParameters.add(new ObjectParameter(parameterValue, identifier, index, parameterType));
+        return identifier;
+    }
+
     public String getVariableName(String baseName) {
         ParameterChecker.checkIsIdentifier(baseName, "baseName");
         return VAR_PREFIX + baseName;
@@ -195,7 +220,11 @@ public class CalculatorBuilder {
      * Adds an import for the specified class or interface.
      */
     public void addImport(Class<?> classToImport) {
-        addSourceLine(IMPORTS, "import " + classToImport.getName());
+        // Avoid duplicate import rows
+        if (!alreadyImported.contains(classToImport)) {
+            addSourceLine(IMPORTS, "import " + classToImport.getName());
+            alreadyImported.add(classToImport);
+        }
     }
 
     /**
@@ -211,16 +240,19 @@ public class CalculatorBuilder {
                  "package " + packageName + ";\n" +
                  sourcesFor(IMPORTS) +
                  "public final class "+className+" implements PixelCalculator {\n" +
-                 "  \n" +
                  "  private boolean running = true;\n" +
+                 "  \n" +
+                 generateParameterDeclarations() +
+                 "  \n" +
+                 sourcesFor(FIELDS) +
+                 "  \n" +
+                 "  // Initialize with input parameters\n"+
+                 "  public "+className+"(Object[] parameters) {\n" +
+                 generateParameterAssignments() +
+                 "  }\n" +
                  "  \n" +
                  "  public final void stop() {\n" +
                  "    running = false;\n" +
-                 "  }\n" +
-                 sourcesFor(FIELDS) +
-                 "  // Read input parameters\n"+
-                 "  public void setParameters(Object[] parameters) {\n" +
-                 "    \n" + // TODO: Handle parameter assignment here
                  "  }\n" +
                  "  \n" +
                  "  public final void calculatePixels(final int width,\n" +
@@ -251,7 +283,7 @@ public class CalculatorBuilder {
                  "    for (int y = startY; (y < endY) && running; y++) {\n" +
 //                             "       try {Thread.sleep(1);} catch (Exception e) {}\n" +
                  sourcesFor(BEFORE_LINE) +
-                 "      relX = (width == 1) ? 0.5f : (float)startX / (width - 1);"+
+                 "      relX = (width == 1) ? 0.5f : (float)startX / (width - 1);\n"+
                  "      for (int x = startX; (x < endX) && running; x++) {\n" +
                  "\n" +
                  sourcesFor(BEFORE_PIXEL) +
@@ -275,6 +307,9 @@ public class CalculatorBuilder {
                  sourcesFor(METHODS) +
                  "}\n\n";
 
+        // TODO: DEBUG
+        System.out.println("source = " + source);
+
         try {
             // Compile
             janinoCompiler.cook(new StringReader(source));
@@ -282,12 +317,19 @@ public class CalculatorBuilder {
             // Get compiled class
             Class calculatorClass = janinoCompiler.getClassLoader().loadClass(fullCalculatorName);
 
-            // Create a new instance of it
-            final PixelCalculator pixelCalculator = (PixelCalculator) calculatorClass.newInstance();
+            // Pass in any non-literal parameters that could not be compiled into the code
+            final Object[] parameters = new Object[objectParameters.size()];
+            for (int i = 0; i < objectParameters.size(); i++) {
+                parameters[i] = objectParameters.get(i).getObject();
+            }
 
-            // Initialize it with the parameters
-            // TODO: Pass in any non-literal parameters that could not be compiled into the code
-            pixelCalculator.setParameters(new Object[0]);
+            // Create a new instance of it by calling the constructor
+            // NOTE: We need to create an array of parameters for the constructor, because if we try to pass in our
+            // parameters directly, it gets expanded into the varargs, instead of being the value of a single parameter.
+            // See e.g. http://www.coderanch.com/t/328722/java/java/Passing-array-vararg-method-Reflection
+            final Object[] constructorParams = {parameters};
+            final PixelCalculator pixelCalculator = (PixelCalculator) calculatorClass.getConstructor(Object[].class).newInstance(
+                    constructorParams);
 
             return pixelCalculator;
 
@@ -324,8 +366,38 @@ public class CalculatorBuilder {
                                            "or some other resources needed by the renderer.\n" +
                                            "The problematic resource was '" +e.getMessage()+"'"
             );
+        } catch (NoSuchMethodException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not could not instantiate the compiled renderer",
+                                           "Could not call the constructor of the the compiled renderer.  \n" +
+                                           "The reason was '" +e.getMessage() + "'."
+            );
+        } catch (InvocationTargetException e) {
+            throw new CompilationException(e, generatorName, source,
+                                           "Could not could not instantiate the compiled renderer",
+                                           "Could not call the constructor of the the compiled renderer.  \n" +
+                                           "The reason was '" +e.getMessage() + "'."
+            );
         }
 
+    }
+
+    private String generateParameterDeclarations() {
+        StringBuilder s = new StringBuilder();
+        s.append("  // Parameter field declarations\n");
+        for (ObjectParameter objectParameter : objectParameters) {
+            s.append(objectParameter.generateFieldDeclaration());
+        }
+        s.append("\n");
+        return s.toString();
+    }
+
+    private String generateParameterAssignments() {
+        StringBuilder s = new StringBuilder();
+        for (ObjectParameter objectParameter : objectParameters) {
+            s.append(objectParameter.generateInitialization());
+        }
+        return s.toString();
     }
 
     /**
@@ -387,6 +459,53 @@ public class CalculatorBuilder {
                location.getIndent() + "// " + location.toString() + "\n" +
                inputSources.get(location).toString() +
                "\n";
+    }
+
+    public boolean hasChannel(String channel) {
+        if (channel == null) return false;
+        for (String s : getChannels()) {
+            if (channel.equals(s)) return true;
+        }
+        return false;
+    }
+
+
+    private static class ObjectParameter {
+        private final Object object;
+        private final String identifier;
+        private final int index;
+        private final Class<?> type;
+
+        private ObjectParameter(Object object, String identifier, int index, Class<?> type) {
+            this.object = object;
+            this.identifier = identifier;
+            this.index = index;
+            this.type = type;
+        }
+
+        public Object getObject() {
+            return object;
+        }
+
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public Class<?> getType() {
+            return type;
+        }
+
+        public String generateFieldDeclaration() {
+            return "  private final " + ClassUtils.getTypeDeclaration(type) + " " + identifier + ";\n";
+        }
+
+        public String generateInitialization() {
+            return "    " + identifier + " = parameters["+index+"];\n";
+        }
     }
 
 }

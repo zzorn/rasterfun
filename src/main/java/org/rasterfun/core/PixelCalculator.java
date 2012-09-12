@@ -9,15 +9,13 @@ import org.rasterfun.core.listeners.CalculationListener;
  * Note that a single calculator instance may have its calculatePixels method invoked
  * simultaneously from multiple threads to different areas on the image data, so do not store any
  * changing temporary data in fields, just local variables.
+ *
+ * Must have a constructor that takes as parameter an array of Objects, which contains any non-literal
+ * parameters that could not be compiled directly into the code.
+ * The code should be generated so that it knows what parameter is at which index.
  */
 // TODO: Rename to renderer or somesuch
 public interface PixelCalculator {
-
-    /**
-     * @param parameters any non-literal parameters that could not be compiled directly into the code.
-     *                   The code should be generated so that it knows what parameter is at which index.
-     */
-    void setParameters(Object[] parameters);
 
     /**
      * Generates all pixels for the given picture.

@@ -26,6 +26,7 @@ public interface PictureGenerator extends GeneratorElement {
     /**
      * @return the parameters defined for this picture generator, with their current values.
      * Edits to these parameters affect the PictureGenerator, create a copy of them if you do not want that.
+     * @deprecated - can we implement these using effect variables?
      */
     Parameters getParameters();
 

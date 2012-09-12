@@ -7,21 +7,24 @@ package org.rasterfun.effect;
 public class OutputVariable extends VariableBase {
 
     private String expression;
-
-    public OutputVariable(Class<?> type) {
-        super(type);
-    }
-
-    public OutputVariable(Class<?> type, String name, String description) {
-        super(type, name, description);
-    }
+    private String writeToChannel;
 
     public OutputVariable(Class<?> type, String name, String description, String expression) {
         super(type, name, description);
         this.expression = expression;
     }
 
+    public OutputVariable(Class<?> type, String name, String description, String expression, String writeToChannel) {
+        super(type, name, description);
+        this.expression = expression;
+        this.writeToChannel = writeToChannel;
+    }
+
     public String getExpression() {
         return expression;
+    }
+
+    public String getWriteToChannel() {
+        return writeToChannel;
     }
 }

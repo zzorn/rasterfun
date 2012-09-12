@@ -15,9 +15,10 @@ import java.util.List;
 public interface Effect extends GeneratorElement {
 
     /**
+     * Called to allow the effect to add variables to itself.
      * @param nameSpacePrefix any prefix that should be used for variables created by this effect.
      */
-    void setNameSpacePrefix(String nameSpacePrefix);
+    void initVariables(String nameSpacePrefix);
 
     /**
      * Adds source to the passed in build context.

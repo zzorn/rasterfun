@@ -1,5 +1,7 @@
 package org.rasterfun.effect;
 
+import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
 
 /**
@@ -12,9 +14,11 @@ public class InputVariable extends VariableBase {
 
     private OutputVariable sourceVariable;
     private Object         constantValue;
+    private String constantFieldName;
 
     public InputVariable(Class<?> type, Object constantValue) {
         super(type);
+        ParameterChecker.checkNotNull(constantValue, "constantValue");
         this.constantValue = constantValue;
     }
 
@@ -48,5 +52,31 @@ public class InputVariable extends VariableBase {
 
     public boolean canBindTo(OutputVariable outputVariable) {
         return getType().isAssignableFrom(outputVariable.getType());
+    }
+
+    @Override
+    public void buildSource(CalculatorBuilder builder) {
+        // Pass in the constant value as a parameter to the builder, if we use the constant value ant it is not a primitive type.
+        if (sourceVariable == null && !ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
+            constantFieldName = builder.addParameter(getName(), constantValue, constantValue.getClass());
+        }
+    }
+
+    @Override
+    public String getExpression() {
+        if (sourceVariable != null) {
+            // If we have a source value specified, get the value of that
+            return sourceVariable.getIdentifier();
+        }
+        else {
+            if (ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
+                // If the constant is a primitive insert it directly in the source.
+                return ClassUtils.wrappedPrimitiveTypeAsConstantString(constantValue);
+            }
+            else {
+                // Otherwise we return a reference to the field holding the parameter, which we passed in in buildSource.
+                return constantFieldName;
+            }
+        }
     }
 }

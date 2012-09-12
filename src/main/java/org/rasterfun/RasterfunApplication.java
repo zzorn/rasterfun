@@ -58,7 +58,7 @@ public class RasterfunApplication {
 
         // Load most recent project, or create a new empty / example one if none specified.
         SimplePictureGenerator generator = new SimplePictureGenerator();
-        generator.getParameters().set(SimplePictureGenerator.NUMBER, 6);
+        generator.getParameters().set(SimplePictureGenerator.NUMBER, 66);
         generator.addEffect(new NoiseEffect("red",   142, 7, 0.4f, 1f));
         generator.addEffect(new NoiseEffect("green", 253, 3, 0.4f, 1f));
         generator.addEffect(new NoiseEffect("blue",  344, 0.9f, 0.3f, 1.3f));

@@ -39,7 +39,11 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
     private CalculatorBuilder createPictureBuilder(int pictureIndex) {
         final CalculatorBuilder builder = new CalculatorBuilder(createPictureParameters(pictureIndex));
 
+        int effectIndex = 0;
         for (Effect effect : effects) {
+            final String namespace = "_" + (effectIndex++); // TODO: Clean up mess with var prefix
+            effect.initVariables(namespace);
+
             effect.buildSource(builder);
         }
 
