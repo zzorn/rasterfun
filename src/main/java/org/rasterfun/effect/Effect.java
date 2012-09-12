@@ -2,7 +2,6 @@ package org.rasterfun.effect;
 
 import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.library.GeneratorElement;
-import org.rasterfun.parameters.Parameters;
 
 import java.util.List;
 
@@ -16,9 +15,9 @@ import java.util.List;
 public interface Effect extends GeneratorElement {
 
     /**
-     * @return the parameters used to configure this effect.  Initialized with default values.
+     * @param nameSpacePrefix any prefix that should be used for variables created by this effect.
      */
-    Parameters getParameters();
+    void setNameSpacePrefix(String nameSpacePrefix);
 
     /**
      * Adds source to the passed in build context.
@@ -27,23 +26,8 @@ public interface Effect extends GeneratorElement {
     void buildSource(CalculatorBuilder builder);
 
     /**
-     * Binds the specified input variable (of this effect)
-     * to get the value from the specified source variable.
-     */
-    void bindInputToVariable(InputVariable inputVariable, OutputVariable sourceVariable);
-
-    /**
-     * Binds the specified input variable to use specified constant number.
-     */
-    void bindInputToNumber(InputVariable inputVariable, float constant);
-
-    /**
-     * Binds the specified input variable to use specified constant value.
-     */
-    void bindInputToElement(InputVariable inputVariable, GeneratorElement element);
-
-    /**
      * @return list of inputs that the effect expects.
+     *         Can be bound to either constant values, or output variables of effects before this one.
      */
     List<InputVariable> getInputVariables();
 

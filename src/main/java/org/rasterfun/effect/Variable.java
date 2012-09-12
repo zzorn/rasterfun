@@ -5,12 +5,6 @@ package org.rasterfun.effect;
  */
 public interface Variable {
 
-    String getUserReadableName();
-
-    String getDescription();
-
-    String getIdentifierName();
-
     /**
      *
      * @return the type of the variable.
@@ -22,4 +16,17 @@ public interface Variable {
     // TODO: Maybe have types for color triplets and directions as well? Could be implemented as multiple variables with postfixes.
     Class<?> getType();
 
+    /**
+     * @return user readable name for the variable.  Not actual identifier used in code.
+     */
+    String getName();
+
+    void setName(String name);
+
+    String getDescription();
+
+    void setDescription(String description);
+
+    String getExpression();
+    String createIdentifierPart();
 }
