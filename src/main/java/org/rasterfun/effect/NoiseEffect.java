@@ -1,10 +1,13 @@
 package org.rasterfun.effect;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
+import org.rasterfun.effect.variable.InputVariable;
+import org.rasterfun.effect.variable.OutputVariable;
+import org.rasterfun.effect.variable.VariableExpression;
 import org.rasterfun.utils.PerlinNoise;
 
-import static org.rasterfun.core.compiler.CalculatorBuilder.RELATIVE_X;
-import static org.rasterfun.core.compiler.CalculatorBuilder.RELATIVE_Y;
+import static org.rasterfun.core.compiler.RendererBuilder.RELATIVE_X;
+import static org.rasterfun.core.compiler.RendererBuilder.RELATIVE_Y;
 
 /**
  *
@@ -29,8 +32,6 @@ public class NoiseEffect extends EffectBase {
     @Override
     protected void initVariables() {
 
-        // TODO: Ability to put some variables outside the loop
-
         // TODO: Need references to the default variables available in the pixel renderer, such as x, y, pictureSeed, generatorSeed, localSeed, and channel values.
         x = addInput("x", 0f, "x coordinate to get the noise at", Float.class);
         y = addInput("y", 0f, "y coordinate to get the noise at", Float.class);
@@ -42,16 +43,18 @@ public class NoiseEffect extends EffectBase {
 
         System.out.println("scaleVar.toString() = " + scaleVar.toString());
 
-        // TODO: This is called when an effect is added to a generator, but not after that,
-        // so any changes do not get propagated to the epression.
-        // TODO: Fix this by recalculating the expression, or separating expression generation from the variable declaration.
-        final String expression = offsetVar+" + "+amplitudeVar+" * (float)PerlinNoise.noise("+scaleVar+" * "+RELATIVE_X+", "+scaleVar+" * "+RELATIVE_Y+", "+seedVar+")";
+        final VariableExpression expression = new VariableExpression() {
+            @Override
+            public String getExpressionString() {
+                return offsetVar+" + "+amplitudeVar+" * (float)PerlinNoise.noise("+scaleVar+" * "+RELATIVE_X+", "+scaleVar+" * "+RELATIVE_Y+", "+seedVar+")";
+            }
+        };
         noiseOut = addOutput("noise", "the created noise", Float.class, expression, outChannel);
 
     }
 
     @Override
-    public void onBuildSource(CalculatorBuilder builder) {
+    public void onBuildSource(RendererBuilder builder) {
 
         builder.addImport(PerlinNoise.class);
 

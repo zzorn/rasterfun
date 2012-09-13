@@ -1,6 +1,6 @@
-package org.rasterfun.effect;
+package org.rasterfun.effect.variable;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.utils.ParameterChecker;
 import org.rasterfun.utils.StringUtils;
 
@@ -56,7 +56,7 @@ public abstract class VariableBase implements Variable {
     }
 
     @Override
-    public void buildSource(CalculatorBuilder builder) {
+    public void buildSource(RendererBuilder builder) {
     }
 
     /**
@@ -76,7 +76,7 @@ public abstract class VariableBase implements Variable {
 
 
     public String getVarIdentifier() {
-        return CalculatorBuilder.VAR_PREFIX + getIdentifier();
+        return RendererBuilder.VAR_PREFIX + getIdentifier();
     }
 
 }

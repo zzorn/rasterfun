@@ -66,7 +66,7 @@ public class RasterfunApplication {
         red.getScaleVar().bindToVariable(scaleNoise.getNoiseOut());
         System.out.println("scaleNoise.getNoiseOut() = " + scaleNoise.getNoiseOut());
         System.out.println("red.getScaleVar() = " + red.getScaleVar());
-        System.out.println("red.getScaleVar().getExpression() = " + red.getScaleVar().getExpression());
+        System.out.println("red.getScaleVar().getExpressionString() = " + red.getScaleVar().getExpressionString());
 
         generator.addEffect(new NoiseEffect("green", 253, 3, 0.4f, 1f));
         generator.addEffect(new NoiseEffect("blue",  344, 0.9f, 0.3f, 1.3f));

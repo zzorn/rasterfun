@@ -1,6 +1,6 @@
 package org.rasterfun.generator;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.effect.Effect;
 import org.rasterfun.parameters.Parameters;
 
@@ -21,14 +21,14 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
     public SimplePictureGenerator() {
         getParameters().set(PictureGenerator.WIDTH, 128);
         getParameters().set(PictureGenerator.HEIGHT, 128);
-        getParameters().set(PictureGenerator.CHANNELS, CalculatorBuilder.DEFAULT_CHANNELS);
+        getParameters().set(PictureGenerator.CHANNELS, RendererBuilder.DEFAULT_CHANNELS);
         getParameters().set(NUMBER, 1);
     }
 
     @Override
-    protected List<CalculatorBuilder> createPictureSources() {
+    protected List<RendererBuilder> createPictureSources() {
 
-        final ArrayList<CalculatorBuilder> builders = new ArrayList<CalculatorBuilder>();
+        final ArrayList<RendererBuilder> builders = new ArrayList<RendererBuilder>();
 
         final Integer builderCount = getParameters().get(NUMBER, 1);
         for (int i = 0; i < builderCount; i++) {
@@ -38,8 +38,8 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
         return builders;
     }
 
-    private CalculatorBuilder createPictureBuilder(int pictureIndex) {
-        final CalculatorBuilder builder = new CalculatorBuilder(createPictureParameters(pictureIndex));
+    private RendererBuilder createPictureBuilder(int pictureIndex) {
+        final RendererBuilder builder = new RendererBuilder(createPictureParameters(pictureIndex));
 
         for (Effect effect : effects) {
 

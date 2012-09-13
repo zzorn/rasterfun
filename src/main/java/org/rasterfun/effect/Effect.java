@@ -1,6 +1,8 @@
 package org.rasterfun.effect;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
+import org.rasterfun.effect.variable.InputVariable;
+import org.rasterfun.effect.variable.OutputVariable;
 import org.rasterfun.library.GeneratorElement;
 
 import java.util.List;
@@ -24,7 +26,7 @@ public interface Effect extends GeneratorElement {
      * Adds source to the passed in build context.
      * Can use any local variables specified in the context, and may add own local variables to the context.
      */
-    void buildSource(CalculatorBuilder builder);
+    void buildSource(RendererBuilder builder);
 
     /**
      * @return list of inputs that the effect expects.

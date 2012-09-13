@@ -1,7 +1,7 @@
 package org.rasterfun.core;
 
 import org.rasterfun.RasterfunApplication;
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerDelegate;
@@ -27,7 +27,7 @@ public class PictureCalculations {
     public static final double DEFAULT_PREVIEW_IMAGE_SCALE_FACTOR = 0.1;
     public static final int DEFAULT_MIN_PREVIEW_IMAGE_SIZE = 8;
 
-    private final List<CalculatorBuilder> calculatorBuilders = new ArrayList<CalculatorBuilder>();
+    private final List<RendererBuilder> rendererBuilders = new ArrayList<RendererBuilder>();
     private final List<Picture> pictures = new ArrayList<Picture>();
     private final List<Picture> previews = new ArrayList<Picture>();
     private final boolean generatePreviews;
@@ -112,67 +112,67 @@ public class PictureCalculations {
      * Creates a calculation to generate the specified picture, and a preview picture as well if they would be large enough.
      * The picture to render to will be allocated as needed.
      *
-     * @param calculatorBuilder the source for the calculator, used to generate the actual calculator.
+     * @param rendererBuilder the source for the calculator, used to generate the actual calculator.
      */
-    public PictureCalculations(CalculatorBuilder calculatorBuilder) {
-        this(Collections.singletonList(calculatorBuilder), null, null, true);
+    public PictureCalculations(RendererBuilder rendererBuilder) {
+        this(Collections.singletonList(rendererBuilder), null, null, true);
     }
 
     /**
      * Creates a calculation to generate the specified pictures, and preview pictures as well if they would be large enough.
      * The pictures to render to will be allocated as needed.
      *
-     * @param calculatorBuilders the source for the calculators, used to generate the actual calculators.
+     * @param rendererBuilders the source for the calculators, used to generate the actual calculators.
      */
-    public PictureCalculations(List<CalculatorBuilder> calculatorBuilders) {
-        this(calculatorBuilders, null, null, true);
+    public PictureCalculations(List<RendererBuilder> rendererBuilders) {
+        this(rendererBuilders, null, null, true);
     }
 
     /**
      * Creates a calculation to generate the specified pictures, and preview pictures as well if they would be large enough.
      *
-     * @param calculatorBuilders the source for the calculators, used to generate the actual calculators.
+     * @param rendererBuilders the source for the calculators, used to generate the actual calculators.
      * @param pictures target pictures to reuse and render to.  If null, or wrong size or numbers, new pictures will be created.
      */
-    public PictureCalculations(List<CalculatorBuilder> calculatorBuilders, List<Picture> pictures, List<Picture> previews) {
-        this(calculatorBuilders, pictures, previews, true);
+    public PictureCalculations(List<RendererBuilder> rendererBuilders, List<Picture> pictures, List<Picture> previews) {
+        this(rendererBuilders, pictures, previews, true);
     }
 
     /**
      * Creates a calculation to generate the specified pictures, and preview pictures as well if specified.
      *
-     * @param calculatorBuilders the source for the calculators, used to generate the actual calculators.
+     * @param rendererBuilders the source for the calculators, used to generate the actual calculators.
      * @param pictures target pictures to reuse and render to.  If null, or wrong size or numbers, new pictures will be created.
      * @param generatePreviews if true, smaller preview images will be rendered.
      */
-    public PictureCalculations(List<CalculatorBuilder> calculatorBuilders,
+    public PictureCalculations(List<RendererBuilder> rendererBuilders,
                                List<Picture> pictures,
                                List<Picture> previews,
                                boolean generatePreviews) {
-        this(calculatorBuilders, pictures, previews, generatePreviews, DEFAULT_PREVIEW_IMAGE_SCALE_FACTOR, DEFAULT_MIN_PREVIEW_IMAGE_SIZE);
+        this(rendererBuilders, pictures, previews, generatePreviews, DEFAULT_PREVIEW_IMAGE_SCALE_FACTOR, DEFAULT_MIN_PREVIEW_IMAGE_SIZE);
     }
 
     /**
      * Creates a calculation to generate the specified pictures, and preview pictures as well if specified.
      *
-     * @param calculatorBuilders the source for the calculators, used to generate the actual calculators.
+     * @param rendererBuilders the source for the calculators, used to generate the actual calculators.
      * @param pictures target pictures to reuse and render to.  If null, or wrong size or numbers, new pictures will be created.
      * @param generatePreviews if true, smaller preview images will be rendered.
      * @param previewImageScaleFactor if a preview should be generated, this tells the scaling to use for it.
      *                                E.g. 0.1 will generate a preview picture that has 1/10 the width and height of the original.
      * @param minPreviewImageSize if the preview picture would have a width or height smaller than this, it will not be generated.
      */
-    public PictureCalculations(List<CalculatorBuilder> calculatorBuilders,
+    public PictureCalculations(List<RendererBuilder> rendererBuilders,
                                List<Picture> pictures,
                                List<Picture> previews,
                                boolean generatePreviews,
                                double previewImageScaleFactor,
                                int minPreviewImageSize) {
-        ParameterChecker.checkNotNull(calculatorBuilders, "calculatorBuilders");
+        ParameterChecker.checkNotNull(rendererBuilders, "rendererBuilders");
         ParameterChecker.checkPositiveNonZeroNormalNumber(previewImageScaleFactor, "previewImageScaleFactor");
         ParameterChecker.checkPositiveNonZeroInteger(minPreviewImageSize, "minPreviewImageSize");
 
-        this.calculatorBuilders.addAll(calculatorBuilders);
+        this.rendererBuilders.addAll(rendererBuilders);
         if (pictures != null) this.pictures.addAll(pictures);
         if (previews != null) this.previews.addAll(previews);
         this.generatePreviews = generatePreviews;
@@ -206,12 +206,12 @@ public class PictureCalculations {
 
         this.calculationIndex = calculationIndex;
 
-        totalPictures = calculatorBuilders.size();
+        totalPictures = rendererBuilders.size();
 
         // Create or reuse the needed pictures and preview pictures
         try {
             int pictureIndex = 0;
-            for (CalculatorBuilder builder : calculatorBuilders) {
+            for (RendererBuilder builder : rendererBuilders) {
                 final String   name     = builder.getName();
                 final int      width    = builder.getWidth();
                 final int      height   = builder.getHeight();
@@ -262,8 +262,8 @@ public class PictureCalculations {
         }
 
         // Discard unused pictures
-        discardDownToLength(pictures, calculatorBuilders.size());
-        discardDownToLength(previews, calculatorBuilders.size());
+        discardDownToLength(pictures, rendererBuilders.size());
+        discardDownToLength(previews, rendererBuilders.size());
 
         // Calculate total pixels to calculate, so that we can estimate progress
         for (Picture picture : pictures) {
@@ -277,10 +277,10 @@ public class PictureCalculations {
         previewSlicesCompleted = new AtomicIntegerArray(previews.size());
 
         // Start compiling all the image calculators
-        List<Future<PixelCalculator>> pixelCalculatorFutures = new ArrayList<Future<PixelCalculator>>();
-        for (CalculatorBuilder calculatorBuilder : calculatorBuilders) {
+        List<Future<Renderer>> pixelCalculatorFutures = new ArrayList<Future<Renderer>>();
+        for (RendererBuilder rendererBuilder : rendererBuilders) {
             pixelCalculatorFutures.add(RasterfunApplication.getExecutor().submit(new CompileTask(calculationIndex,
-                                                                                                 calculatorBuilder,
+                    rendererBuilder,
                                                                                                  renderListener)));
         }
 
@@ -300,7 +300,7 @@ public class PictureCalculations {
     }
 
     private void createPictureRenderingTasks(int calculationIndex,
-                                             List<Future<PixelCalculator>> pixelCalculatorFutures,
+                                             List<Future<Renderer>> pixelCalculatorFutures,
                                              final List<Picture> pictures,
                                              final boolean forPreviews,
                                              final int slicesPerPicture) {
@@ -396,8 +396,8 @@ public class PictureCalculations {
      * @return a read only list with the builders that are used to build the pictures.
      * Contain some picture metadata such as picture size and name.
      */
-    public List<CalculatorBuilder> getCalculatorBuilders() {
-        return Collections.unmodifiableList(calculatorBuilders);
+    public List<RendererBuilder> getRendererBuilders() {
+        return Collections.unmodifiableList(rendererBuilders);
     }
 
     /**

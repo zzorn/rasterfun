@@ -7,7 +7,6 @@ import static org.rasterfun.utils.MathTools.map;
  * PictureDrawer that renders RGBA channels to a target image, replacing any missing color channel with the value channel,
  * or channel number 0 if no value channel is present.
  */
-// TODO: Implement option for alpha blending over background of grey squares
 public class RgbPictureDrawer extends PictureDrawerBase {
 
     private int transparencyGridSize = 16;
@@ -65,6 +64,9 @@ public class RgbPictureDrawer extends PictureDrawerBase {
                         r = (255 * gridValue + a * (r - gridValue)) / 255;
                         g = (255 * gridValue + a * (g - gridValue)) / 255;
                         b = (255 * gridValue + a * (b - gridValue)) / 255;
+
+                        // Alpha is now solid
+                        a = 255;
                     }
 
                     // Clamp RGB

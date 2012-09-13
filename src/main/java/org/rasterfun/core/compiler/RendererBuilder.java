@@ -2,7 +2,7 @@ package org.rasterfun.core.compiler;
 
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.SimpleCompiler;
-import org.rasterfun.core.PixelCalculator;
+import org.rasterfun.core.Renderer;
 import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.parameters.Parameters;
@@ -19,10 +19,10 @@ import java.util.*;
 import static org.rasterfun.core.compiler.SourceLocation.*;
 
 /**
- * Used to collect data about a PixelCalculator,
- * convert it to java source code, and then compile and return a PixelCalculator.
+ * Used to collect data about a Renderer,
+ * convert it to java source code, and then compile and return a Renderer.
  */
-public class CalculatorBuilder {
+public class RendererBuilder {
 
     public static final int PROGRESS_REPORT_STEPS = Math.max(2, 50 / Runtime.getRuntime().availableProcessors());
     public static final String[] DEFAULT_CHANNELS = new String[]{"red", "green", "blue", "alpha"};
@@ -54,7 +54,7 @@ public class CalculatorBuilder {
     private final Set<Class<?>> alreadyImported = new HashSet<Class<?>>();
 
 
-    public CalculatorBuilder(Parameters parameters) {
+    public RendererBuilder(Parameters parameters) {
         // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
         this.parameters = parameters.copy();
 
@@ -72,7 +72,7 @@ public class CalculatorBuilder {
         }
 
         // Add default imports
-        addImport(PixelCalculator.class);
+        addImport(Renderer.class);
         addImport(CalculationListener.class);
         addImport(Parameters.class);
 
@@ -91,18 +91,6 @@ public class CalculatorBuilder {
                           PIXEL_DATA + "[" + PIXEL_INDEX + " + " + channelIndex + "] = " + VAR_PREFIX + channel);
             channelIndex++;
         }
-
-        /*
-        // TODO: Remove, debug
-        Random r = new Random();
-        for (String channel : getChannels()) {
-            addVariable(BEFORE_LOOP, "channelValue_"+ channel, "" + r.nextFloat() + "f");
-        }
-        int i = 2;
-        for (String channel : getChannels()) {
-            setVariable(AT_PIXEL, channel, getVariableName("channelValue_"+ channel) + " * ((float)x / endX) * (y % "+(i++)+")", true);
-        }
-        */
     }
 
     public String getChannelVariable(int channelIndex) {
@@ -230,7 +218,7 @@ public class CalculatorBuilder {
     /**
      * @return compiles the source provided and generates a picture calculator, or throws an error if it could not be done.
      */
-    public PixelCalculator compilePixelCalculator() throws CompilationException {
+    public Renderer compilePixelCalculator() throws CompilationException {
 
         final String className = "GeneratedPixelCalculator";
         final String packageName = "org.rasterfun.generated";
@@ -239,7 +227,7 @@ public class CalculatorBuilder {
         source = "\n// Generated Pixel Calculator source: \n" +
                  "package " + packageName + ";\n" +
                  sourcesFor(IMPORTS) +
-                 "public final class "+className+" implements PixelCalculator {\n" +
+                 "public final class "+className+" implements Renderer {\n" +
                  "  private boolean running = true;\n" +
                  "  \n" +
                  generateParameterDeclarations() +
@@ -328,10 +316,10 @@ public class CalculatorBuilder {
             // parameters directly, it gets expanded into the varargs, instead of being the value of a single parameter.
             // See e.g. http://www.coderanch.com/t/328722/java/java/Passing-array-vararg-method-Reflection
             final Object[] constructorParams = {parameters};
-            final PixelCalculator pixelCalculator = (PixelCalculator) calculatorClass.getConstructor(Object[].class).newInstance(
+            final Renderer renderer = (Renderer) calculatorClass.getConstructor(Object[].class).newInstance(
                     constructorParams);
 
-            return pixelCalculator;
+            return renderer;
 
         } catch (CompileException e) {
             throw new CompilationException(e, generatorName, source,
@@ -423,7 +411,7 @@ public class CalculatorBuilder {
 
     /**
      * @return default width of the generated picture.
-     *         The final width is determined by the data array size passed to the PixelCalculator
+     *         The final width is determined by the data array size passed to the Renderer
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getWidth() {
@@ -432,7 +420,7 @@ public class CalculatorBuilder {
 
     /**
      * @return default height of the generated picture.
-     *         The final height is determined by the data array size passed to the PixelCalculator
+     *         The final height is determined by the data array size passed to the Renderer
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getHeight() {

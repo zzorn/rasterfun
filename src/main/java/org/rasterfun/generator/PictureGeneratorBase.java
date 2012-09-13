@@ -1,7 +1,7 @@
 package org.rasterfun.generator;
 
 import org.rasterfun.core.PictureCalculations;
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.library.ParametrizedGeneratorElementBase;
 import org.rasterfun.parameters.Parameters;
@@ -75,16 +75,16 @@ public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementB
     @Override
     public final PictureCalculations generatePicturesWithoutStarting(List<Picture> picturesToReuse, List<Picture> previewsToReuse) {
         // Compose the source
-        final List<CalculatorBuilder> builders = createPictureSources();
+        final List<RendererBuilder> builders = createPictureSources();
 
         // Create calculation task
         return new PictureCalculations(builders, picturesToReuse, previewsToReuse);
     }
 
     /**
-     * @return the CalculatorBuilder with the source to generate each picture that this generator produces.
+     * @return the RendererBuilder with the source to generate each picture that this generator produces.
      */
-    protected abstract List<CalculatorBuilder> createPictureSources();
+    protected abstract List<RendererBuilder> createPictureSources();
 
     @Override
     public final void addListener(GeneratorListener listener) {

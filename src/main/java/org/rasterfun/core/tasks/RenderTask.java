@@ -1,6 +1,6 @@
 package org.rasterfun.core.tasks;
 
-import org.rasterfun.core.PixelCalculator;
+import org.rasterfun.core.Renderer;
 import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.utils.ParameterChecker;
@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 /**
- * Task that renders a Picture using a PixelCalculator.
+ * Task that renders a Picture using a Renderer.
  */
 public class RenderTask implements Callable<Picture> {
 
@@ -19,10 +19,10 @@ public class RenderTask implements Callable<Picture> {
     private final int startY;
     private final int endY;
     private final Picture picture;
-    private final Future<PixelCalculator> pixelCalculatorFuture;
+    private final Future<Renderer> pixelCalculatorFuture;
     private final CalculationListener listener;
 
-    private PixelCalculator pixelCalculator = null;
+    private Renderer renderer = null;
     private boolean stopped = false;
 
     public RenderTask(int calculationIndex,
@@ -31,7 +31,7 @@ public class RenderTask implements Callable<Picture> {
                       int startY,
                       int endY,
                       Picture picture,
-                      Future<PixelCalculator> pixelCalculatorFuture,
+                      Future<Renderer> pixelCalculatorFuture,
                       CalculationListener listener) {
         ParameterChecker.checkNotNull(picture, "picture");
         ParameterChecker.checkNotNull(pixelCalculatorFuture, "pixelCalculatorFuture");
@@ -52,13 +52,13 @@ public class RenderTask implements Callable<Picture> {
     public Picture call() throws Exception {
         try {
             // Wait for pixel renderer compilation task to complete
-            pixelCalculator = pixelCalculatorFuture.get();
+            renderer = pixelCalculatorFuture.get();
 
             // If we weren't stopped, proceed to rendering phase
-            if (!stopped && pixelCalculator != null) {
+            if (!stopped && renderer != null) {
 
                 // Render the part of the picture we have been assigned
-                pixelCalculator.calculatePixels(picture.getWidth(),
+                renderer.calculatePixels(picture.getWidth(),
                                                 picture.getHeight(),
                                                 picture.getChannelNames(),
                                                 picture.getData(),
@@ -93,7 +93,7 @@ public class RenderTask implements Callable<Picture> {
      */
     public void stop() {
         stopped = true;
-        if (pixelCalculator != null) pixelCalculator.stop();
+        if (renderer != null) renderer.stop();
     }
 
 

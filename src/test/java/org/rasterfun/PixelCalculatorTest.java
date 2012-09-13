@@ -3,8 +3,8 @@ package org.rasterfun;
 import org.junit.Before;
 import org.junit.Test;
 import org.rasterfun.core.PictureCalculations;
-import org.rasterfun.core.compiler.CalculatorBuilder;
 import org.rasterfun.core.compiler.CompilationException;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
 import org.rasterfun.generator.PictureGenerator;
@@ -38,12 +38,12 @@ public class PixelCalculatorTest {
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
         parameters.set(PictureGenerator.CHANNELS, new String[]{"xs", "ys"});
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.setVariable(AT_PIXEL, "xs", "x");
-        calculatorBuilder.setVariable(AT_PIXEL, "ys", "y");
+        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
+        rendererBuilder.setVariable(AT_PIXEL, "xs", "x");
+        rendererBuilder.setVariable(AT_PIXEL, "ys", "y");
 
         // Create calculation task and start it
-        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
         calculation.start(TEST_CALCULATION_INDEX);
 
         // Get result picture
@@ -74,8 +74,8 @@ public class PixelCalculatorTest {
 
     @Test
     public void testCalculationIndex() throws Exception {
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
+        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
+        final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
 
         final int[] calcIndexes = {-1, -1, -1, -1, -1};
         calculation.addListener(new PictureCalculationsListener() {
@@ -122,10 +122,10 @@ public class PixelCalculatorTest {
     public void testErrorCalculation() throws CompilationException {
 
         // Lets make a division by zero halfway through
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.addPixelCalculationLine("int w = 1 / (50 - y); // Oops!\n");
+        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
+        rendererBuilder.addPixelCalculationLine("int w = 1 / (50 - y); // Oops!\n");
 
-        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
 
         final boolean[] errorReported = {false};
         final float[] progressMade = {0};
@@ -164,8 +164,8 @@ public class PixelCalculatorTest {
     @Test
     public void testStop() throws CompilationException {
         // Create builder with sleep
-        CalculatorBuilder calculatorBuilder = new CalculatorBuilder(parameters);
-        calculatorBuilder.addPixelCalculationLine("        try {\n" +
+        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
+        rendererBuilder.addPixelCalculationLine("        try {\n" +
                                                   "            Thread.sleep(10);\n" +
                                                   "        } \n" +
                                                   "        catch (InterruptedException e) {\n" +
@@ -174,7 +174,7 @@ public class PixelCalculatorTest {
 
 
         // Create calculation task and start it
-        final PictureCalculations calculation = new PictureCalculations(calculatorBuilder);
+        final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
         calculation.start();
 
         // Should be running

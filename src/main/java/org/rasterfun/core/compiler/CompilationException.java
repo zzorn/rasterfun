@@ -1,7 +1,7 @@
 package org.rasterfun.core.compiler;
 
 /**
- * Exception thrown by CalculatorBuilder in case of errors.
+ * Exception thrown by RendererBuilder in case of errors.
  */
 public class CompilationException extends Exception {
 

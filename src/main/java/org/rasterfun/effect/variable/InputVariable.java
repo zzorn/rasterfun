@@ -1,6 +1,6 @@
-package org.rasterfun.effect;
+package org.rasterfun.effect.variable;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
 
@@ -62,7 +62,7 @@ public class InputVariable extends VariableBase {
     }
 
     @Override
-    public void buildSource(CalculatorBuilder builder) {
+    public void buildSource(RendererBuilder builder) {
         // Pass in the constant value as a parameter to the builder, if we use the constant value ant it is not a primitive type.
         if (sourceVariable == null && !ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
             constantFieldName = builder.addParameter(getName(), constantValue, constantValue.getClass());
@@ -70,7 +70,7 @@ public class InputVariable extends VariableBase {
     }
 
     @Override
-    public String getExpression() {
+    public String getExpressionString() {
         if (sourceVariable != null) {
             // If we have a source value specified, get the value of that
             return sourceVariable.getVarIdentifier();
@@ -89,7 +89,7 @@ public class InputVariable extends VariableBase {
 
     @Override
     public String toString() {
-        return getExpression();
+        return getExpressionString();
     }
 
 }

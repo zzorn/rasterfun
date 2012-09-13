@@ -1,6 +1,6 @@
-package org.rasterfun.effect;
+package org.rasterfun.effect.variable;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 
 /**
  * Represents a generated variable in the code, used to pass information between effects.
@@ -29,9 +29,9 @@ public interface Variable {
 
     void setDescription(String description);
 
-    void buildSource(CalculatorBuilder builder);
+    void buildSource(RendererBuilder builder);
 
-    String getExpression();
+    String getExpressionString();
     String getIdentifier();
 
     void setNamespace(String namespace);

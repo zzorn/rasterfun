@@ -1,4 +1,4 @@
-package org.rasterfun.effect;
+package org.rasterfun.effect.variable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,26 +7,19 @@ import java.util.List;
  * Represents code fields created by effects, or from the picture generator parameters.
  * Can generate an unique variable name to the source code.
  */
-public class OutputVariable extends VariableBase {
+public class OutputVariable extends ExpressionVariableBase {
 
     private List<InputVariable> users = new ArrayList<InputVariable>();
 
-    private String expression;
     private String channelToWriteTo;
 
-    public OutputVariable(Class<?> type, String name, String description, String expression) {
-        super(type, name, description);
-        this.expression = expression;
+    public OutputVariable(Class<?> type, String name, String description, VariableExpression expression) {
+        super(type, name, description, expression);
     }
 
-    public OutputVariable(Class<?> type, String name, String description, String expression, String channelToWriteTo) {
-        super(type, name, description);
-        this.expression = expression;
+    public OutputVariable(Class<?> type, String name, String description, VariableExpression expression, String channelToWriteTo) {
+        super(type, name, description, expression);
         this.channelToWriteTo = channelToWriteTo;
-    }
-
-    public String getExpression() {
-        return expression;
     }
 
     public String getChannelToWriteTo() {
@@ -41,11 +34,11 @@ public class OutputVariable extends VariableBase {
         users.remove(inputVariable);
     }
 
-    boolean hasUsers() {
+    public boolean hasUsers() {
         return !users.isEmpty();
     }
 
-    boolean hasChannel() {
+    public boolean hasChannel() {
         return channelToWriteTo != null;
     }
 }

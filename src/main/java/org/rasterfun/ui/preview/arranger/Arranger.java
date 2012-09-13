@@ -1,6 +1,6 @@
 package org.rasterfun.ui.preview.arranger;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.utils.FastImageRenderer;
 
@@ -21,7 +21,7 @@ public interface Arranger extends FastImageRenderer {
      * Should cause the arranger to clear the area.
      * @param builders information on the sizes and names of the pictures that will be calculated.
      */
-    void setContentInfo(List<CalculatorBuilder> builders);
+    void setContentInfo(List<RendererBuilder> builders);
 
     void zoom(int steps, double focusX, double focusY);
 

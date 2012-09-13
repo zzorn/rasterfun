@@ -1,6 +1,6 @@
 package org.rasterfun.ui.preview.arranger;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureDrawer;
 import org.rasterfun.picture.RgbPictureDrawer;
@@ -24,7 +24,7 @@ public abstract class ArrangerBase implements Arranger {
     private static final int MIN_ZOOM_LEVEL = -8;
     private static final double ZOOM_SCALE_PER_STEP =  2;
 
-    private List<CalculatorBuilder> builders = null;
+    private List<RendererBuilder> builders = null;
 
     private double centerX = 0;
     private double centerY = 0;
@@ -59,7 +59,7 @@ public abstract class ArrangerBase implements Arranger {
     }
 
     @Override
-    public final void setContentInfo(List<CalculatorBuilder> builders) {
+    public final void setContentInfo(List<RendererBuilder> builders) {
         // Check if we need to recalculate the layout
         boolean differencesFound = builderListsDifferEnoughForReLayout(this.builders, builders);
 
@@ -83,14 +83,14 @@ public abstract class ArrangerBase implements Arranger {
         }
     }
 
-    private boolean builderListsDifferEnoughForReLayout(List<CalculatorBuilder> oldBuilders, List<CalculatorBuilder> newBuilders) {
+    private boolean builderListsDifferEnoughForReLayout(List<RendererBuilder> oldBuilders, List<RendererBuilder> newBuilders) {
         if (newBuilders == null || oldBuilders == null || oldBuilders.size() != newBuilders.size()) {
             // Different number, or either null, need to relayout always.
             return true;
         } else {
             int i = 0;
-            for (CalculatorBuilder newBuilder : newBuilders) {
-                CalculatorBuilder oldBuidler = oldBuilders.get(i++);
+            for (RendererBuilder newBuilder : newBuilders) {
+                RendererBuilder oldBuidler = oldBuilders.get(i++);
 
                 // Check for differences
                 if (builderDifferEnoughToForceReLayout(oldBuidler, newBuilder)) {
@@ -103,7 +103,7 @@ public abstract class ArrangerBase implements Arranger {
         return false;
     }
 
-    protected boolean builderDifferEnoughToForceReLayout(CalculatorBuilder oldBuidler, CalculatorBuilder newBuilder) {
+    protected boolean builderDifferEnoughToForceReLayout(RendererBuilder oldBuidler, RendererBuilder newBuilder) {
         return oldBuidler.getWidth()  != newBuilder.getWidth() ||
                oldBuidler.getHeight() != newBuilder.getHeight();
     }
@@ -217,7 +217,7 @@ public abstract class ArrangerBase implements Arranger {
         this.drawer = drawer;
     }
 
-    protected final List<CalculatorBuilder> getBuilders() {
+    protected final List<RendererBuilder> getBuilders() {
         if (builders == null) return Collections.emptyList();
         else return builders;
     }
@@ -368,7 +368,7 @@ public abstract class ArrangerBase implements Arranger {
         return builders.get(pictureIndex).getName();
     }
 
-    protected final CalculatorBuilder getBuilder(int pictureIndex) {
+    protected final RendererBuilder getBuilder(int pictureIndex) {
         return builders.get(pictureIndex);
     }
 
@@ -425,7 +425,7 @@ public abstract class ArrangerBase implements Arranger {
     /**
      * Called when we have new valid content.
      */
-    protected void onContentChanged(List<CalculatorBuilder> builders) {}
+    protected void onContentChanged(List<RendererBuilder> builders) {}
 
     /**
      * Should do any needed basic layout calculations.

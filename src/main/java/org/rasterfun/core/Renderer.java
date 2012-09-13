@@ -14,8 +14,7 @@ import org.rasterfun.core.listeners.CalculationListener;
  * parameters that could not be compiled directly into the code.
  * The code should be generated so that it knows what parameter is at which index.
  */
-// TODO: Rename to renderer or somesuch
-public interface PixelCalculator {
+public interface Renderer {
 
     /**
      * Generates all pixels for the given picture.

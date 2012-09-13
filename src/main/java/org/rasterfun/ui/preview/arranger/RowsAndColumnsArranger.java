@@ -1,6 +1,6 @@
 package org.rasterfun.ui.preview.arranger;
 
-import org.rasterfun.core.compiler.CalculatorBuilder;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.picture.PictureDrawer;
 import org.rasterfun.utils.FastImage;
@@ -87,7 +87,7 @@ public class RowsAndColumnsArranger extends ArrangerBase {
 
                     final Picture picture = getPictureOrPreviewOrNull(pictureIndex);
                     if (picture != null) {
-                        final CalculatorBuilder builder = getBuilder(pictureIndex);
+                        final RendererBuilder builder = getBuilder(pictureIndex);
 
                         // Calculate picture position and size on the target image
                         int targetPicW = (int) (builder.getWidth()  * scale);
@@ -127,7 +127,7 @@ public class RowsAndColumnsArranger extends ArrangerBase {
         // Calculate max picture size
         maxPicW = 0;
         maxPicH = 0;
-        for (CalculatorBuilder builder : getBuilders()) {
+        for (RendererBuilder builder : getBuilders()) {
             final int w = builder.getWidth();
             final int h = builder.getHeight();
             if (w > maxPicW) maxPicW = w;

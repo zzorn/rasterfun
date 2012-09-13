@@ -313,7 +313,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         calculations.addListener(calculationsListener);
 
         // (Re)layout if needed
-        arranger.setContentInfo(calculations.getCalculatorBuilders());
+        arranger.setContentInfo(calculations.getRendererBuilders());
 
         // Start calculating
         calculations.start(++ongoingCalculationIndex);
