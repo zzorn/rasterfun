@@ -35,4 +35,14 @@ public interface Variable {
     String getIdentifier();
 
     void setNamespace(String namespace);
+
+    /**
+     * @param listener a listener that gets notified when the variable is changed (binding or expression etc. changed).
+     */
+    void addListener(VariableListener listener);
+
+    /**
+     * @param listener listener to remove.
+     */
+    void removeListener(VariableListener listener);
 }

@@ -1,6 +1,7 @@
 package org.rasterfun.generator;
 
 import org.rasterfun.core.PictureCalculations;
+import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.parameters.Parameters;
@@ -13,7 +14,7 @@ import java.util.List;
 /**
  * Something that generates pictures based on provided parameters.
  */
-public interface PictureGenerator extends GeneratorElement {
+public interface Generator extends GeneratorElement {
 
     // Common property names
     static final String NAME     = "name";
@@ -35,13 +36,13 @@ public interface PictureGenerator extends GeneratorElement {
      * optionally in some picture generator specific arrangement (e.g. tile seamless pictures randomly).
      * The previewer should update whenever the picture generator parameters are updated.
      */
-    PicturePreviewer getPreviewer();
+    PicturePreviewer createPreviewer();
 
     /**
      * @return an editor that can be used to edit the parameters and effects of this picture generator.
      * Changes in the editor will update the picture parameters, and trigger any preview to re-render.
      */
-    PictureEditor getEditor();
+    PictureEditor createEditor();
 
     /**
      * Starts calculating the pictures produced by this generator, using the default values for the parameters.
@@ -103,5 +104,11 @@ public interface PictureGenerator extends GeneratorElement {
      * @param listener listener to remove.
      */
     void removeListener(GeneratorListener listener);
+
+
+    /**
+     * @return the RendererBuilder with the source to generate each picture that this generator produces.
+     */
+    public abstract List<RendererBuilder> createBuilders();
 
 }

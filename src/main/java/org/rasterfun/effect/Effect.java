@@ -39,5 +39,14 @@ public interface Effect extends GeneratorElement {
      */
     List<OutputVariable> getOutputVariables();
 
+    /**
+     * @param listener listener to be notified about changes to the effect.
+     */
+    void addListener(EffectListener listener);
+
+    /**
+     * @param listener listener to remvoe.
+     */
+    void removeListener(EffectListener listener);
 
 }

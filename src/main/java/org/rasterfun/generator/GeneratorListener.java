@@ -8,6 +8,6 @@ public interface GeneratorListener {
     /**
      * Called when a property or something else changed in the generator.
      */
-    void onGeneratorChanged(PictureGenerator generator);
+    void onGeneratorChanged(Generator generator);
 
 }

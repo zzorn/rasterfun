@@ -6,9 +6,7 @@ import org.rasterfun.effect.variable.*;
 import org.rasterfun.library.ParametrizedGeneratorElementBase;
 import org.rasterfun.utils.ParameterChecker;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Common functionality for Effects.
@@ -18,6 +16,14 @@ public abstract class EffectBase extends ParametrizedGeneratorElementBase implem
     private final List<InputVariable> inputVariables = new ArrayList<InputVariable>();
     private final List<InternalVariable> internalVariables = new ArrayList<InternalVariable>();
     private final List<OutputVariable> outputVariables = new ArrayList<OutputVariable>();
+    private final Set<EffectListener> listeners = new HashSet<EffectListener>(3);
+
+    private final VariableListener variableListener = new VariableListener() {
+        @Override
+        public void onVariableChanged(Variable variable) {
+            notifyEffectChanged();
+        }
+    };
 
     private String namespace = null;
     private int nextFreeVariableIndex = 1;
@@ -43,6 +49,11 @@ public abstract class EffectBase extends ParametrizedGeneratorElementBase implem
         initializeNamespace(variable);
 
         inputVariables.add(variable);
+
+        variable.addListener(variableListener);
+
+        notifyEffectChanged();
+
         return variable;
     }
 
@@ -55,6 +66,11 @@ public abstract class EffectBase extends ParametrizedGeneratorElementBase implem
         initializeNamespace(variable);
 
         internalVariables.add(variable);
+
+        variable.addListener(variableListener);
+
+        notifyEffectChanged();
+
         return variable;
     }
 
@@ -72,6 +88,11 @@ public abstract class EffectBase extends ParametrizedGeneratorElementBase implem
         initializeNamespace(variable);
 
         outputVariables.add(variable);
+
+        variable.addListener(variableListener);
+
+        notifyEffectChanged();
+
         return variable;
     }
 
@@ -137,6 +158,25 @@ public abstract class EffectBase extends ParametrizedGeneratorElementBase implem
             }
         }
 
+    }
+
+    /**
+     * Notifies listeners that this effect changed.
+     */
+    protected final void notifyEffectChanged() {
+        for (EffectListener listener : listeners) {
+            listener.onEffectChanged(this);
+        }
+    }
+
+    @Override
+    public final void addListener(EffectListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public final void removeListener(EffectListener listener) {
+        listeners.remove(listener);
     }
 
     protected void onBuildSource(RendererBuilder builder) {}

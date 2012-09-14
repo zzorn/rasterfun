@@ -4,9 +4,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
+import org.rasterfun.generator.Generator;
 import org.rasterfun.generator.GeneratorListener;
-import org.rasterfun.generator.PictureGenerator;
-import org.rasterfun.generator.SimplePictureGenerator;
+import org.rasterfun.generator.SimpleGenerator;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.PicturePreviewer;
 
@@ -20,13 +20,13 @@ import static org.junit.Assert.*;
  */
 public class PictureGeneratorTest {
 
-    private SimplePictureGenerator pictureGenerator;
+    private SimpleGenerator pictureGenerator;
     private TestListener testListener;
 
     @Before
     public void setUp() throws Exception {
 
-        pictureGenerator = new SimplePictureGenerator();
+        pictureGenerator = new SimpleGenerator();
 
         testListener = new TestListener();
         pictureGenerator.addListener(testListener);
@@ -93,7 +93,7 @@ public class PictureGeneratorTest {
 
     @Test
     public void testPreviewUI() throws Exception {
-        final PicturePreviewer previewer = pictureGenerator.getPreviewer();
+        final PicturePreviewer previewer = pictureGenerator.createPreviewer();
 
         assertNotNull("A previewer should be returned", previewer);
 
@@ -103,7 +103,7 @@ public class PictureGeneratorTest {
         final JComponent ui2 = previewer.getUiComponent();
         assertTrue("The ui should be the same each time", ui1 == ui2);
 
-        final PicturePreviewer previewer2 = pictureGenerator.getPreviewer();
+        final PicturePreviewer previewer2 = pictureGenerator.createPreviewer();
         assertTrue("The previewer should be a new one each time", previewer != previewer2);
     }
 
@@ -138,10 +138,10 @@ public class PictureGeneratorTest {
 
     @Test
     public void testGenerateManyPictures() throws Exception {
-        pictureGenerator.getParameters().set(SimplePictureGenerator.NUMBER, 3);
-        pictureGenerator.getParameters().set(SimplePictureGenerator.WIDTH, 100);
-        pictureGenerator.getParameters().set(SimplePictureGenerator.HEIGHT, 100);
-        pictureGenerator.getParameters().set(SimplePictureGenerator.CHANNELS, new String[]{"red, blue"});
+        pictureGenerator.getParameters().set(SimpleGenerator.NUMBER, 3);
+        pictureGenerator.getParameters().set(SimpleGenerator.WIDTH, 100);
+        pictureGenerator.getParameters().set(SimpleGenerator.HEIGHT, 100);
+        pictureGenerator.getParameters().set(SimpleGenerator.CHANNELS, new String[]{"red, blue"});
 
         final PictureCalculations calculations = pictureGenerator.generatePictures();
         final List<Picture> pictures = calculations.getPicturesAndWait();
@@ -163,10 +163,10 @@ public class PictureGeneratorTest {
 
     private final static class TestListener implements GeneratorListener {
         private int changeCount = 0;
-        private PictureGenerator generator;
+        private Generator generator;
 
         @Override
-        public void onGeneratorChanged(PictureGenerator generator) {
+        public void onGeneratorChanged(Generator generator) {
             this.generator = generator;
             changeCount++;
         }
@@ -183,7 +183,7 @@ public class PictureGeneratorTest {
             return changeCount;
         }
 
-        public PictureGenerator getChangedGenerator() {
+        public Generator getChangedGenerator() {
             return generator;
         }
     }

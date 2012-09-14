@@ -4,8 +4,8 @@ import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
 import org.rasterfun.core.listeners.PictureCalculationsListenerSwingThreadAdapter;
+import org.rasterfun.generator.Generator;
 import org.rasterfun.generator.GeneratorListener;
-import org.rasterfun.generator.PictureGenerator;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.arranger.Arranger;
 import org.rasterfun.ui.preview.arranger.ArrangerListener;
@@ -26,7 +26,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
 
     private static final int PAN_BUTTON = MouseEvent.BUTTON1;
     private static final int RESET_ZOOM_BUTTON = MouseEvent.BUTTON2; // Clicking the scrollwheel sets zoom to 1:1
-    private final PictureGenerator generator;
+    private final Generator generator;
     private PictureCalculations calculations = null;
 
     private List<Picture> pictures = null;
@@ -95,7 +95,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
     // Listens to parameter changes in the generator
     private final GeneratorListener generatorListener = new GeneratorListener() {
         @Override
-        public void onGeneratorChanged(PictureGenerator generator) {
+        public void onGeneratorChanged(Generator generator) {
             reGenerate();
         }
     };
@@ -175,7 +175,7 @@ public class PicturePreviewerImpl implements PicturePreviewer {
         }
     };
 
-    public PicturePreviewerImpl(PictureGenerator generator) {
+    public PicturePreviewerImpl(Generator generator) {
         this.generator = generator;
     }
 

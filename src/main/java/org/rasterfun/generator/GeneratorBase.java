@@ -19,12 +19,12 @@ import static org.rasterfun.utils.ParameterChecker.checkNotNull;
 /**
  * Common functionality for PictureGenerators.
  */
-public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementBase implements PictureGenerator {
+public abstract class GeneratorBase extends ParametrizedGeneratorElementBase implements Generator {
 
     private List<GeneratorListener> listeners = null;
 
-    protected PictureGeneratorBase() {
-        getParameters().set(PictureGenerator.NAME, getDefaultName());
+    protected GeneratorBase() {
+        getParameters().set(Generator.NAME, getDefaultName());
 
         // Listen to our own parameters
         getParameters().addListener(new ParametersListener() {
@@ -37,12 +37,12 @@ public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementB
     }
 
     @Override
-    public PicturePreviewer getPreviewer() {
+    public PicturePreviewer createPreviewer() {
         return new PicturePreviewerImpl(this);
     }
 
     @Override
-    public PictureEditor getEditor() {
+    public PictureEditor createEditor() {
         // TODO: Provide default editor? (just edit properties)
         return null;
     }
@@ -75,16 +75,11 @@ public abstract class PictureGeneratorBase extends ParametrizedGeneratorElementB
     @Override
     public final PictureCalculations generatePicturesWithoutStarting(List<Picture> picturesToReuse, List<Picture> previewsToReuse) {
         // Compose the source
-        final List<RendererBuilder> builders = createPictureSources();
+        final List<RendererBuilder> builders = createBuilders();
 
         // Create calculation task
         return new PictureCalculations(builders, picturesToReuse, previewsToReuse);
     }
-
-    /**
-     * @return the RendererBuilder with the source to generate each picture that this generator produces.
-     */
-    protected abstract List<RendererBuilder> createPictureSources();
 
     @Override
     public final void addListener(GeneratorListener listener) {

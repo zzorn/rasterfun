@@ -4,6 +4,9 @@ import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.utils.ParameterChecker;
 import org.rasterfun.utils.StringUtils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Common functionality for Variables.
  */
@@ -13,6 +16,7 @@ public abstract class VariableBase implements Variable {
     private String name;
     private String description;
     private String namespace;
+    private Set<VariableListener> listeners = new HashSet<VariableListener>(3);
 
 
     protected VariableBase(Class<?> type) {
@@ -78,5 +82,26 @@ public abstract class VariableBase implements Variable {
     public String getVarIdentifier() {
         return RendererBuilder.VAR_PREFIX + getIdentifier();
     }
+
+    @Override
+    public final void addListener(VariableListener listener) {
+        listeners.add(listener);
+
+    }
+
+    @Override
+    public final void removeListener(VariableListener listener) {
+        listeners.remove(listener);
+    }
+
+    /**
+     * Notify listeners that this variable has changed.
+     */
+    public final void notifyVariableChanged() {
+        for (VariableListener listener : listeners) {
+            listener.onVariableChanged(this);
+        }
+    }
+
 
 }

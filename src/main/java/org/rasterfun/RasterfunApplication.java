@@ -1,7 +1,9 @@
 package org.rasterfun;
 
 import org.rasterfun.effect.NoiseEffect;
-import org.rasterfun.generator.SimplePictureGenerator;
+import org.rasterfun.generator.CompositeGenerator;
+import org.rasterfun.generator.Generator;
+import org.rasterfun.generator.SimpleGenerator;
 import org.rasterfun.ui.preview.PicturePreviewer;
 import org.rasterfun.utils.SimpleFrame;
 
@@ -57,26 +59,34 @@ public class RasterfunApplication {
         // Load default library and any other configured libraries
 
         // Load most recent project, or create a new empty / example one if none specified.
-        SimplePictureGenerator generator = new SimplePictureGenerator();
-        generator.getParameters().set(SimplePictureGenerator.NUMBER, 66);
+        SimpleGenerator generator1 = createSimpleGenerator(128, 128, 6, "green");
+        SimpleGenerator generator2 = createSimpleGenerator(64, 64, 10, "red");
+        CompositeGenerator compositeGenerator = new CompositeGenerator();
+        compositeGenerator.addGenerator(generator1);
+        compositeGenerator.addGenerator(generator2);
 
-        NoiseEffect scaleNoise = generator.addEffect(new NoiseEffect(null, 142, 7, 0.4f, 1f));
-
-        NoiseEffect red = generator.addEffect(new NoiseEffect("red", 142, 7, 0.4f, 1f));
-        red.getScaleVar().bindToVariable(scaleNoise.getNoiseOut());
-        System.out.println("scaleNoise.getNoiseOut() = " + scaleNoise.getNoiseOut());
-        System.out.println("red.getScaleVar() = " + red.getScaleVar());
-        System.out.println("red.getScaleVar().getExpressionString() = " + red.getScaleVar().getExpressionString());
-
-        generator.addEffect(new NoiseEffect("green", 253, 3, 0.4f, 1f));
-        generator.addEffect(new NoiseEffect("blue",  344, 0.9f, 0.3f, 1.3f));
-        generator.addEffect(new NoiseEffect("alpha", 445,  5, 0.9f, 1.5f));
-
-        final PicturePreviewer previewer = generator.getPreviewer();
+        final PicturePreviewer previewer = compositeGenerator.createPreviewer();
 
         new SimpleFrame("RasterFun", previewer.getUiComponent());
     }
 
+    private static SimpleGenerator createSimpleGenerator(final int width,
+                                                         final int height,
+                                                         final int count,
+                                                         final String channel) {
+        SimpleGenerator generator = new SimpleGenerator();
+        generator.getParameters().set(SimpleGenerator.NUMBER, count);
+        generator.getParameters().set(Generator.WIDTH, width);
+        generator.getParameters().set(Generator.HEIGHT, height);
+
+        NoiseEffect scaleNoise = generator.addEffect(new NoiseEffect(null, 43, 10, 4f, 2f));
+
+        NoiseEffect red = generator.addEffect(new NoiseEffect(channel, 21421, 7, 0.4f, 1f));
+        red.getScaleVar().bindToVariable(scaleNoise.getNoiseOut());
+
+        generator.addEffect(new NoiseEffect("alpha", 445,  5, 10.9f, 1.5f));
+        return generator;
+    }
 
 
 }

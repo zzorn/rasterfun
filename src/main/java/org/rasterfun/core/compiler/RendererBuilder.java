@@ -4,7 +4,7 @@ import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.SimpleCompiler;
 import org.rasterfun.core.Renderer;
 import org.rasterfun.core.listeners.CalculationListener;
-import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.generator.Generator;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
@@ -58,7 +58,7 @@ public class RendererBuilder {
         // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
         this.parameters = parameters.copy();
 
-        generatorName = parameters.get(PictureGenerator.NAME, null);
+        generatorName = parameters.get(Generator.NAME, null);
 
         // Ensure channel names are valid
         int channelIndex = 0;
@@ -406,7 +406,7 @@ public class RendererBuilder {
      * @return the name for this generated picture.
      */
     public String getName() {
-        return parameters.get(PictureGenerator.NAME, DEFAULT_NAME);
+        return parameters.get(Generator.NAME, DEFAULT_NAME);
     }
 
     /**
@@ -415,7 +415,7 @@ public class RendererBuilder {
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getWidth() {
-        return parameters.get(PictureGenerator.WIDTH, DEFAULT_SIZE);
+        return parameters.get(Generator.WIDTH, DEFAULT_SIZE);
     }
 
     /**
@@ -424,7 +424,7 @@ public class RendererBuilder {
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getHeight() {
-        return parameters.get(PictureGenerator.HEIGHT, DEFAULT_SIZE);
+        return parameters.get(Generator.HEIGHT, DEFAULT_SIZE);
     }
 
     /**
@@ -438,7 +438,7 @@ public class RendererBuilder {
      * @return names of the channels in the generated picture.
      */
     public String[] getChannels() {
-        return parameters.get(PictureGenerator.CHANNELS, DEFAULT_CHANNELS);
+        return parameters.get(Generator.CHANNELS, DEFAULT_CHANNELS);
     }
 
 

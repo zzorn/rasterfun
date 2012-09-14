@@ -7,7 +7,7 @@ import org.rasterfun.core.compiler.CompilationException;
 import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
-import org.rasterfun.generator.PictureGenerator;
+import org.rasterfun.generator.Generator;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.parameters.ParametersImpl;
 import org.rasterfun.picture.Picture;
@@ -28,16 +28,16 @@ public class PixelCalculatorTest {
     @Before
     public void setUp() throws Exception {
         parameters = new ParametersImpl();
-        parameters.set(PictureGenerator.NAME, "TestPic");
-        parameters.set(PictureGenerator.WIDTH, 100);
-        parameters.set(PictureGenerator.HEIGHT, 100);
-        parameters.set(PictureGenerator.CHANNELS, new String[]{"roses", "violets"});
+        parameters.set(Generator.NAME, "TestPic");
+        parameters.set(Generator.WIDTH, 100);
+        parameters.set(Generator.HEIGHT, 100);
+        parameters.set(Generator.CHANNELS, new String[]{"roses", "violets"});
     }
 
     @Test
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
-        parameters.set(PictureGenerator.CHANNELS, new String[]{"xs", "ys"});
+        parameters.set(Generator.CHANNELS, new String[]{"xs", "ys"});
         RendererBuilder rendererBuilder = new RendererBuilder(parameters);
         rendererBuilder.setVariable(AT_PIXEL, "xs", "x");
         rendererBuilder.setVariable(AT_PIXEL, "ys", "y");

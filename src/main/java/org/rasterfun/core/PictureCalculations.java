@@ -227,12 +227,14 @@ public class PictureCalculations {
                 int previewHeight = (int)(previewImageScaleFactor * picture.getHeight());
 
                 // Create or reuse preview if we should generate one
-                Picture preview = null;
+                Picture preview = getPictureAtOrNull(previews, pictureIndex);
                 if (shouldGeneratePreview(previewWidth, previewHeight)) {
-                    preview = getPictureAtOrNull(previews, pictureIndex);
                     preview = reuseOrRecreate(preview, name + " Preview", previewWidth, previewHeight, channels);
+                    previews.set(pictureIndex, preview);
                 }
-                previews.set(pictureIndex, preview);
+                else {
+                    previews.set(pictureIndex, null);
+                }
 
                 pictureIndex++;
             }
@@ -459,7 +461,7 @@ public class PictureCalculations {
         }
         else {
             // Create space filled with nulls up to the index
-            while (list.size() <= pictureIndex) {
+            while (list.size() <= pictureIndex + 1) {
                 list.add(null);
             }
         }

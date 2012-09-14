@@ -1,6 +1,8 @@
 package org.rasterfun.effect.variable;
 
 import org.rasterfun.core.compiler.RendererBuilder;
+import org.rasterfun.effect.variable.value.ValueListener;
+import org.rasterfun.effect.variable.value.VariableValue;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
 
@@ -14,7 +16,14 @@ public class InputVariable extends VariableBase {
 
     private OutputVariable sourceVariable;
     private Object         constantValue;
-    private String constantFieldName;
+    private String         constantFieldName;
+
+    private final ValueListener valueListener = new ValueListener() {
+        @Override
+        public void onValueChanged(VariableValue value) {
+            notifyVariableChanged();
+        }
+    };
 
     public InputVariable(Class<?> type, Object constantValue) {
         super(type);
@@ -31,10 +40,27 @@ public class InputVariable extends VariableBase {
     public void bindToConstant(Object constantValue) {
         ParameterChecker.checkNotNull(constantValue, "constantValue");
 
-        this.constantValue = constantValue;
+        if (this.constantValue != constantValue) {
 
-        if (sourceVariable != null) sourceVariable.removeUser(this);
-        sourceVariable = null;
+            // Remove any variable binding we have
+            if (sourceVariable != null) sourceVariable.removeUser(this);
+            sourceVariable = null;
+
+            // Stop listening to old value
+            if (VariableValue.class.isInstance(this.constantValue)) {
+                ((VariableValue)constantValue).removeListener(valueListener);
+            }
+
+            // Change value
+            this.constantValue = constantValue;
+
+            // Start listening to new value
+            if (VariableValue.class.isInstance(this.constantValue)) {
+                ((VariableValue)constantValue).addListener(valueListener);
+            }
+
+            notifyVariableChanged();
+        }
     }
 
     public void bindToVariable(OutputVariable newSourceVariable) {
@@ -46,6 +72,8 @@ public class InputVariable extends VariableBase {
             if (sourceVariable != null) sourceVariable.removeUser(this);
             sourceVariable = newSourceVariable;
             if (sourceVariable != null) sourceVariable.addUser(this);
+
+            notifyVariableChanged();
         }
     }
 

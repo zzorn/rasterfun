@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Generates one or more pictures using a set of effects.
  */
-public class SimplePictureGenerator extends PictureGeneratorBase {
+public class SimpleGenerator extends GeneratorBase {
 
     public static final String NUMBER = "number";
 
@@ -18,15 +18,15 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
 
     private int nextEffectNamespaceId = 1;
 
-    public SimplePictureGenerator() {
-        getParameters().set(PictureGenerator.WIDTH, 128);
-        getParameters().set(PictureGenerator.HEIGHT, 128);
-        getParameters().set(PictureGenerator.CHANNELS, RendererBuilder.DEFAULT_CHANNELS);
+    public SimpleGenerator() {
+        getParameters().set(Generator.WIDTH, 128);
+        getParameters().set(Generator.HEIGHT, 128);
+        getParameters().set(Generator.CHANNELS, RendererBuilder.DEFAULT_CHANNELS);
         getParameters().set(NUMBER, 1);
     }
 
     @Override
-    protected List<RendererBuilder> createPictureSources() {
+    public List<RendererBuilder> createBuilders() {
 
         final ArrayList<RendererBuilder> builders = new ArrayList<RendererBuilder>();
 
@@ -61,15 +61,19 @@ public class SimplePictureGenerator extends PictureGeneratorBase {
     public <T extends Effect> T addEffect(T effect) {
         effects.add(effect);
 
-        // Initialize effect namesapce
+        // Initialize effect namespace
         final String namespace = "_" + (nextEffectNamespaceId++); // TODO: Clean up mess with var prefix
         effect.initVariables(namespace);
+
+        notifyGeneratorChanged();
 
         return effect;
     }
 
     public void removeEffect(Effect effect) {
         effects.remove(effect);
+
+        notifyGeneratorChanged();
     }
 
 }
