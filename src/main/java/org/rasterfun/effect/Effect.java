@@ -1,6 +1,7 @@
 package org.rasterfun.effect;
 
 import org.rasterfun.core.compiler.RendererBuilder;
+import org.rasterfun.effect.container.EffectContainer;
 import org.rasterfun.effect.variable.InputVariable;
 import org.rasterfun.effect.variable.OutputVariable;
 import org.rasterfun.library.GeneratorElement;
@@ -14,19 +15,24 @@ import java.util.List;
 // TODO: generator parameters / properties are visible as outputVariables to effects.
 // TODO: Variables and variable binding might completely replace parameters
 // Variables should have availability also, based on source location
+// TODO: Rethink namespace concept, best if it is independent of the effect (pass in where needed)
 public interface Effect extends GeneratorElement {
 
     /**
-     * Called to allow the effect to add variables to itself.
-     * @param nameSpacePrefix any prefix that should be used for variables created by this effect.
+     * @return the container that this effect is in, or null if it is free floating (e.g. in library).
      */
-    void initVariables(String nameSpacePrefix);
+    EffectContainer getContainer();
+
+    /**
+     * @param container the container that this effect is in, or null if it is free floating (e.g. in library).
+     */
+    void setContainer(EffectContainer container);
 
     /**
      * Adds source to the passed in build context.
      * Can use any local variables specified in the context, and may add own local variables to the context.
      */
-    void buildSource(RendererBuilder builder);
+    void generateCode(RendererBuilder builder, String effectNamespace, EffectContainer container);
 
     /**
      * @return list of inputs that the effect expects.
@@ -45,7 +51,7 @@ public interface Effect extends GeneratorElement {
     void addListener(EffectListener listener);
 
     /**
-     * @param listener listener to remvoe.
+     * @param listener listener to remove.
      */
     void removeListener(EffectListener listener);
 

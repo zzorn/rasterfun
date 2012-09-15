@@ -1,11 +1,18 @@
 package org.rasterfun.effect.variable;
 
-import org.rasterfun.core.compiler.RendererBuilder;
-
 /**
  * Represents a generated variable in the code, used to pass information between effects.
  */
+// TODO: Add location to variable?, support some of the locations only
 public interface Variable {
+
+    /* TODO?
+    / **
+     * @return the effect that this variable is in.
+     *         Needed e.g. when presenting input variables to user in clear manner.
+     * /
+    Effect getEffect();
+    */
 
     /**
      *
@@ -28,13 +35,6 @@ public interface Variable {
     String getDescription();
 
     void setDescription(String description);
-
-    void buildSource(RendererBuilder builder);
-
-    String getExpressionString();
-    String getIdentifier();
-
-    void setNamespace(String namespace);
 
     /**
      * @param listener a listener that gets notified when the variable is changed (binding or expression etc. changed).

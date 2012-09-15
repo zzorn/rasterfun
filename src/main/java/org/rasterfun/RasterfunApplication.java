@@ -2,7 +2,6 @@ package org.rasterfun;
 
 import org.rasterfun.effect.NoiseEffect;
 import org.rasterfun.generator.CompositeGenerator;
-import org.rasterfun.generator.Generator;
 import org.rasterfun.generator.SimpleGenerator;
 import org.rasterfun.ui.preview.PicturePreviewer;
 import org.rasterfun.utils.SimpleFrame;
@@ -74,17 +73,21 @@ public class RasterfunApplication {
                                                          final int height,
                                                          final int count,
                                                          final String channel) {
-        SimpleGenerator generator = new SimpleGenerator();
-        generator.getParameters().set(SimpleGenerator.NUMBER, count);
-        generator.getParameters().set(Generator.WIDTH, width);
-        generator.getParameters().set(Generator.HEIGHT, height);
+        SimpleGenerator generator = new SimpleGenerator("testpic", width, height, count);
 
-        NoiseEffect scaleNoise = generator.addEffect(new NoiseEffect(null, 43, 10, 4f, 2f));
+        NoiseEffect scaleNoise = generator.addEffect(new NoiseEffect(43, 10, 2f, 2f));
 
-        NoiseEffect red = generator.addEffect(new NoiseEffect(channel, 21421, 7, 0.4f, 1f));
-        red.getScaleVar().bindToVariable(scaleNoise.getNoiseOut());
+        NoiseEffect noise2 = generator.addEffect(new NoiseEffect(21421, 7, 0.4f, 1f));
+        noise2.getScaleVar().setToVariable(scaleNoise.getOutput());
 
-        generator.addEffect(new NoiseEffect("alpha", 445,  5, 10.9f, 1.5f));
+        final NoiseEffect alphaNoise = generator.addEffect(new NoiseEffect(445, 5, 10f, 1.5f));
+
+        final NoiseEffect blueNoise = generator.addEffect(new NoiseEffect(42, 8, 0.5f, 2f));
+
+        generator.getEffectContainer().setChannelVar(channel, noise2.getOutput());
+        generator.getEffectContainer().setChannelVar("alpha", alphaNoise.getOutput());
+        generator.getEffectContainer().setChannelVar("blue", blueNoise.getOutput());
+
         return generator;
     }
 

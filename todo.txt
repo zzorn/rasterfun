@@ -8,7 +8,7 @@ Implementation list:
 
 General
 * Parameters [DONE]
-* Listen to objects in parameter values (e.g. gradient)
+* Listen to objects in parameter values (e.g. gradient) [TODO: TEST]
 
 
 Preview
@@ -37,12 +37,16 @@ Preview
   * Multiline tooltip / send error report button
   * Error icon for statusbar
 
+* Possibility to select one picture
+* Export selected picture
+* View sourcecode for a picture (debugging feature mostly)
+
 
 Effects
 * Perlin noise effect [DONE]
-* pass in and parse picture specific parameter values to the pixel calculator from the compiler
+* pass in picture specific parameter values to the pixel calculator through the builder [DONE]
 * Name passing in effects, system for effects to tell what variables they take and create (both at pixel calculation level and before loop level, or any level?)
-* System for unique namespaces in effects
+* System for unique namespaces in effects [DONE]
 
 * Text input, parser checked generic function effect
   * Provide basic arithmetic and a nice set of standard math and interpolation etc utils
@@ -55,8 +59,6 @@ Effects
 * Load picture effect, that loads a picture from a specified location and puts it on specific location
 * Paste picture effect, uses other generator to generate pic that covers the whole area or a selected area,
   pass in parameters to the generator (implement by copying and overriding the specified params with new ones?)
-
-* Nested effect, contain list of other effects
 
 * Voronoi cells
 * Manhattan cells / brickwall
@@ -82,6 +84,8 @@ Effects
 * Normal map generation effect (use height/bump map as source)
 
 * Possibility to group effects into a combined effect, and ungroup a combined effect.
+* Composite effect, contain list of other effects [TODO: TEST]
+
 
 
 Generator

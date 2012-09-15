@@ -9,6 +9,6 @@ public interface ValueListener {
      * Called when the value is changed.
      * @param value the value object that changed.
      */
-    void onValueChanged(VariableValue value);
+    void onValueChanged(Value value);
 
 }

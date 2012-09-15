@@ -7,40 +7,32 @@ import org.rasterfun.core.compiler.CompilationException;
 import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.core.listeners.PictureCalculationsListenerAdapter;
-import org.rasterfun.generator.Generator;
-import org.rasterfun.parameters.Parameters;
-import org.rasterfun.parameters.ParametersImpl;
 import org.rasterfun.picture.Picture;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.rasterfun.core.compiler.SourceLocation.AT_PIXEL;
 
 /**
  * Tests core aspect of the pixel calculator, and the PictureCalculation.
  */
-public class PixelCalculatorTest {
+public class BuilderTest {
 
     public static final int TEST_CALCULATION_INDEX = 123;
-    private Parameters parameters;
+    private RendererBuilder rendererBuilder;
 
     @Before
     public void setUp() throws Exception {
-        parameters = new ParametersImpl();
-        parameters.set(Generator.NAME, "TestPic");
-        parameters.set(Generator.WIDTH, 100);
-        parameters.set(Generator.HEIGHT, 100);
-        parameters.set(Generator.CHANNELS, new String[]{"roses", "violets"});
+        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("roses", "violets"), 0, 1);
     }
 
     @Test
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
-        parameters.set(Generator.CHANNELS, new String[]{"xs", "ys"});
-        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
-        rendererBuilder.setVariable(AT_PIXEL, "xs", "x");
-        rendererBuilder.setVariable(AT_PIXEL, "ys", "y");
+        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("xs", "ys"), 0, 1);
+        rendererBuilder.addChannelAssignment("xs", "x");
+        rendererBuilder.addChannelAssignment("ys", "y");
 
         // Create calculation task and start it
         final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
@@ -74,7 +66,6 @@ public class PixelCalculatorTest {
 
     @Test
     public void testCalculationIndex() throws Exception {
-        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
         final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
 
         final int[] calcIndexes = {-1, -1, -1, -1, -1};
@@ -122,7 +113,6 @@ public class PixelCalculatorTest {
     public void testErrorCalculation() throws CompilationException {
 
         // Lets make a division by zero halfway through
-        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
         rendererBuilder.addPixelCalculationLine("int w = 1 / (50 - y); // Oops!\n");
 
         final PictureCalculations calculation = new PictureCalculations(rendererBuilder);
@@ -164,7 +154,6 @@ public class PixelCalculatorTest {
     @Test
     public void testStop() throws CompilationException {
         // Create builder with sleep
-        RendererBuilder rendererBuilder = new RendererBuilder(parameters);
         rendererBuilder.addPixelCalculationLine("        try {\n" +
                                                   "            Thread.sleep(10);\n" +
                                                   "        } \n" +
@@ -207,5 +196,10 @@ public class PixelCalculatorTest {
         assertEquals("We should get the correct pixel value at channel " + channel + ", location (x: "+x+", y: "+y+")",
                      expected, picture.getPixel(channel, x, y), 0.0001);
     }
+
+    private List<String> channelsList(String ... names) {
+        return Arrays.asList(names);
+    }
+
 
 }

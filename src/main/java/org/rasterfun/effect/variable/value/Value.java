@@ -6,7 +6,7 @@ import javax.swing.*;
  * Something that can be assigned to an InputVariable, e.g. a gradient.
  * Supports listening and editing.
  */
-public interface VariableValue {
+public interface Value {
 
     /**
      * @return a new editor that edits this value.

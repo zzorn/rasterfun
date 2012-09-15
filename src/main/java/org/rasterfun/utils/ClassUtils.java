@@ -33,6 +33,29 @@ public class ClassUtils {
         else throw new IllegalStateException("Unhandled type: " + value.getClass());
     }
 
+    public static String getPrimitiveTypeNameOrNull(Class<?> type) {
+        checkNotNull(type, "type");
+
+        if (Boolean.class.equals(type)) return "boolean";
+        else if (Byte.class.equals(type)) return "byte";
+        else if (Short.class.equals(type)) return "short";
+        else if (Integer.class.equals(type)) return "int";
+        else if (Long.class.equals(type)) return "long";
+        else if (Float.class.equals(type)) return "float";
+        else if (Double.class.equals(type)) return "double";
+        else if (Character.class.equals(type)) return "char";
+
+        else if (Boolean.TYPE.equals(type)) return "boolean";
+        else if (Byte.TYPE.equals(type)) return "byte";
+        else if (Short.TYPE.equals(type)) return "short";
+        else if (Integer.TYPE.equals(type)) return "int";
+        else if (Long.TYPE.equals(type)) return "long";
+        else if (Float.TYPE.equals(type)) return "float";
+        else if (Double.TYPE.equals(type)) return "double";
+        else if (Character.TYPE.equals(type)) return "char";
+        else return null;
+    }
+
     public static String getTypeDeclaration(Class<?> type) {
         StringBuilder s = new StringBuilder();
 

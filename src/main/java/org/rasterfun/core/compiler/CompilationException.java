@@ -27,6 +27,11 @@ public class CompilationException extends Exception {
         return source;
     }
 
+    @Override
+    public String getMessage() {
+        return super.getMessage();
+    }
+
     public String getLongExplanation() {
         return longExplanation;
     }

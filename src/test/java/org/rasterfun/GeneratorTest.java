@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
+import org.rasterfun.effect.NoiseEffect;
+import org.rasterfun.effect.variable.InputVariable;
 import org.rasterfun.generator.Generator;
 import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.SimpleGenerator;
@@ -11,6 +13,7 @@ import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.PicturePreviewer;
 
 import javax.swing.*;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -18,18 +21,18 @@ import static org.junit.Assert.*;
 /**
  * Test PictureGenerators
  */
-public class PictureGeneratorTest {
+public class GeneratorTest {
 
-    private SimpleGenerator pictureGenerator;
+    private SimpleGenerator generator;
     private TestListener testListener;
 
     @Before
     public void setUp() throws Exception {
 
-        pictureGenerator = new SimpleGenerator();
+        generator = new SimpleGenerator();
 
         testListener = new TestListener();
-        pictureGenerator.addListener(testListener);
+        generator.addListener(testListener);
     }
 
     @Test
@@ -39,7 +42,7 @@ public class PictureGeneratorTest {
         final boolean[] readyCalled = {false};
         final boolean[] allReadyCalled = {false};
         final boolean[] previewReadyCalled = {false};
-        final PictureCalculations calculation = pictureGenerator.generatePictures(
+        final PictureCalculations calculation = generator.generatePictures(
                 new PictureCalculationsListener() {
                     @Override
                     public void onProgress(int calculationIndex, float progress) {
@@ -93,7 +96,7 @@ public class PictureGeneratorTest {
 
     @Test
     public void testPreviewUI() throws Exception {
-        final PicturePreviewer previewer = pictureGenerator.createPreviewer();
+        final PicturePreviewer previewer = generator.createPreviewer();
 
         assertNotNull("A previewer should be returned", previewer);
 
@@ -103,57 +106,130 @@ public class PictureGeneratorTest {
         final JComponent ui2 = previewer.getUiComponent();
         assertTrue("The ui should be the same each time", ui1 == ui2);
 
-        final PicturePreviewer previewer2 = pictureGenerator.createPreviewer();
+        final PicturePreviewer previewer2 = generator.createPreviewer();
         assertTrue("The previewer should be a new one each time", previewer != previewer2);
     }
 
     @Test
     public void testListener() throws Exception {
-        assertListenerCallCount(0);
+        int calls = 0;
+        assertListenerCallCount(calls++);
 
-        pictureGenerator.getParameters().set("foo", 2);
-        assertListenerCallCount(1);
+        generator.setHeight(200);
+        assertListenerCallCount(calls++);
 
-        pictureGenerator.getParameters().set("foo", 3);
-        assertListenerCallCount(2);
+        generator.setHeight(300);
+        assertListenerCallCount(calls++);
 
-        pictureGenerator.getParameters().set("bar", 2);
-        assertListenerCallCount(3);
+        generator.setWidth(200);
+        assertListenerCallCount(calls++);
+
+        generator.setCount(42);
+        assertListenerCallCount(calls++);
+
+        generator.setSize(10, 20);
+        assertListenerCallCount(calls++);
+
+        generator.setChannels(channelsList("burgundy", "mustard", "turquoise"));
+        assertListenerCallCount(calls++);
+
+        generator.setName("ohaioTestPic");
+        assertListenerCallCount(calls++);
     }
 
     @Test
     public void testChangingToSameValueShouldNotTriggerListenerEvent() throws Exception {
-        pictureGenerator.getParameters().set("foo", 1);
+        generator.setCount(3);
         assertListenerCallCount(1);
 
-        pictureGenerator.getParameters().set("foo", 1);
+        generator.setCount(3);
         assertListenerCallCount(1);
+
+        generator.setSize(13, 14);
+        assertListenerCallCount(2);
+
+        generator.setSize(13, 14);
+        assertListenerCallCount(2);
+
+        generator.setChannels(channelsList("height", "luminosity", "specularity"));
+        assertListenerCallCount(3);
+
+        generator.setChannels(channelsList("height", "luminosity", "specularity"));
+        assertListenerCallCount(3);
     }
 
     @Test
     public void testChangedListenerShouldBeCorrect() throws Exception {
-        pictureGenerator.getParameters().set("foo", 1);
-        assertEquals("The correct generator should be reported in the listener", pictureGenerator, testListener.getChangedGenerator());
+        generator.setHeight(199);
+        assertEquals("The correct generator should be reported in the listener",
+                     generator, testListener.getChangedGenerator());
     }
 
     @Test
     public void testGenerateManyPictures() throws Exception {
-        pictureGenerator.getParameters().set(SimpleGenerator.NUMBER, 3);
-        pictureGenerator.getParameters().set(SimpleGenerator.WIDTH, 100);
-        pictureGenerator.getParameters().set(SimpleGenerator.HEIGHT, 100);
-        pictureGenerator.getParameters().set(SimpleGenerator.CHANNELS, new String[]{"red, blue"});
+        generator.setCount(3);
+        generator.setSize(100, 100);
+        generator.setChannels(channelsList("red", "blue"));
 
-        final PictureCalculations calculations = pictureGenerator.generatePictures();
+        final PictureCalculations calculations = generator.generatePictures();
         final List<Picture> pictures = calculations.getPicturesAndWait();
 
         assertEquals("We should ge the expected number of pictures", 3, pictures.size());
 
         for (Picture picture : pictures) {
             assertEquals("Width should be as expected", 100, picture.getWidth());
-            assertArrayEquals("Picture should have expected channels",
-                              new String[]{"red, blue"},
-                              picture.getChannelNames());
+            assertEquals("Picture should have expected channels",
+                         channelsList("red", "blue"),
+                         picture.getChannelNames());
         }
+    }
+
+    @Test
+    public void testListeners() throws Exception {
+        assertListenerCallCount(0);
+
+        final NoiseEffect effect = generator.addEffect(new NoiseEffect(1));
+        assertListenerCallCount(1);
+
+        effect.getScaleVar().setValue(5);
+        assertListenerCallCount(2);
+
+        generator.removeEffect(effect);
+        assertListenerCallCount(3);
+
+        effect.getScaleVar().setValue(8);
+        assertListenerCallCount(3);
+    }
+
+    @Test
+    public void testCopyEffect() throws Exception {
+        final NoiseEffect effect = new NoiseEffect(1);
+        effect.getScaleVar().setValue(33);
+
+        final NoiseEffect copy = (NoiseEffect) effect.copy();
+        for (InputVariable inputVariable : copy.getInputVariables()) {
+            System.out.println("inputVariable.getName() = " + inputVariable.getName());
+            System.out.println("inputVariable.getValue() = " + inputVariable.getValue());
+        }
+
+        assertEquals(33, copy.getScaleVar().getValue());
+    }
+
+    @Test
+    public void testCopy() throws Exception {
+        final NoiseEffect effect = generator.addEffect(new NoiseEffect(1));
+        effect.getScaleVar().setValue(5);
+        assertEquals("value should be correct", 5, effect.getScaleVar().getValue());
+
+        final SimpleGenerator generatorCopy = (SimpleGenerator) generator.copy();
+        assertEquals("The copy should have one effect", 1, generatorCopy.getEffects().size());
+
+        final InputVariable copyScaleVar =
+                ((NoiseEffect)(generatorCopy.getEffects().get(0))).getScaleVar();
+        assertEquals("The copy should have the correct value in the copied variable", 5, copyScaleVar.getValue());
+
+        effect.getScaleVar().setValue(9);
+        assertEquals("The copy should not be modified if the original is modified", 5, copyScaleVar.getValue());
     }
 
     private void assertListenerCallCount(int expected) {
@@ -187,4 +263,9 @@ public class PictureGeneratorTest {
             return generator;
         }
     }
+
+    private List<String> channelsList(String ... names) {
+        return Arrays.asList(names);
+    }
+
 }

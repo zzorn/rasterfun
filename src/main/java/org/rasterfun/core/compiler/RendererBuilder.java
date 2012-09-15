@@ -4,7 +4,6 @@ import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.SimpleCompiler;
 import org.rasterfun.core.Renderer;
 import org.rasterfun.core.listeners.CalculationListener;
-import org.rasterfun.generator.Generator;
 import org.rasterfun.parameters.Parameters;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
@@ -29,6 +28,7 @@ public class RendererBuilder {
 
     public static final String PIXEL_DATA = "pixelData";
     public static final String VAR_PREFIX = "var_";
+    public static final String CHANNEL_PREFIX = "channel_";
     public static final String PARAMETER_PREFIX = "parameter_";
     public static final String PIXEL_INDEX = "pixelIndex";
     public static final String X_NAME = "x";
@@ -39,7 +39,13 @@ public class RendererBuilder {
     private static final int DEFAULT_SIZE = 128;
     private static final String DEFAULT_NAME = "Picture";
 
-    private final Parameters parameters;
+    private final String name;
+    private final int width;
+    private final int height;
+    private final List<String> channels;
+    private final int index;
+    private final int count;
+    private final float relativeIndex;
 
     private final SimpleCompiler janinoCompiler = new SimpleCompiler();
 
@@ -49,16 +55,17 @@ public class RendererBuilder {
 
     private String source;
 
-    private final String generatorName;
-
     private final Set<Class<?>> alreadyImported = new HashSet<Class<?>>();
 
 
-    public RendererBuilder(Parameters parameters) {
-        // Take a copy of the parameters so that if they are changed after calculation started the calculation is not affected
-        this.parameters = parameters.copy();
-
-        generatorName = parameters.get(Generator.NAME, null);
+    public RendererBuilder(String name, int width, int height, Collection<String> channels, int currentIndex, int totalCount) {
+        this.name = name;
+        this.width = width;
+        this.height = height;
+        this.channels = new ArrayList<String>(channels);
+        this.index = currentIndex;
+        this.count = totalCount;
+        this.relativeIndex = totalCount == 1 ? 0.5f : (float) currentIndex / (totalCount - 1);
 
         // Ensure channel names are valid
         int channelIndex = 0;
@@ -80,7 +87,7 @@ public class RendererBuilder {
         channelIndex = 0;
         for (String channel : getChannels()) {
             final String expression = PIXEL_DATA+"[" + PIXEL_INDEX + " + " + channelIndex + "]";
-            addVariable(BEFORE_PIXEL, channel, expression, "float", false);
+            addVariable(BEFORE_PIXEL, CHANNEL_PREFIX + channel, expression, Float.class, false);
             channelIndex++;
         }
 
@@ -88,7 +95,7 @@ public class RendererBuilder {
         channelIndex = 0;
         for (String channel : getChannels()) {
             addSourceLine(AFTER_PIXEL,
-                          PIXEL_DATA + "[" + PIXEL_INDEX + " + " + channelIndex + "] = " + VAR_PREFIX + channel);
+                          PIXEL_DATA + "[" + PIXEL_INDEX + " + " + channelIndex + "] = " + CHANNEL_PREFIX + channel);
             channelIndex++;
         }
     }
@@ -98,17 +105,17 @@ public class RendererBuilder {
             throw new IllegalArgumentException("There is no channel with the index " + channelIndex + ", " +
                                                "valid channels indexes are: 0.." + (getChannelCount() - 1));
         }
-        return getChannelVariable(getChannels()[channelIndex]);
+        return getChannelVariable(channels.get(channelIndex));
     }
 
     public String getChannelVariable(String channelName) {
-        for (String existingChannelName : getChannels()) {
+        for (String existingChannelName : channels) {
             if (channelName.equals(existingChannelName)) {
                 return VAR_PREFIX + existingChannelName;
             }
         }
         throw new IllegalArgumentException("There is no channel with the name '" + channelName + "', valid channels are: " +
-                                           Arrays.toString(getChannels()));
+                                           Arrays.toString(channels.toArray()));
     }
 
     // Helper methods for adding variables, contexts, etc.
@@ -139,7 +146,7 @@ public class RendererBuilder {
     public void addVariable(SourceLocation location,
                             String variableName,
                             String initializationExpression) {
-        addVariable(location, variableName, initializationExpression, "float", false);
+        addVariable(location, variableName, initializationExpression, Float.class, false);
     }
 
     /**
@@ -149,21 +156,40 @@ public class RendererBuilder {
     public void addVariable(SourceLocation location,
                             String variableName,
                             String initializationExpression,
-                            String variableType,
+                            Class<?> variableType,
                             boolean isFinal) {
         ParameterChecker.checkNotNull(location, "location");
-        ParameterChecker.checkIsIdentifier(variableType, "variableType");
+        ParameterChecker.checkNotNull(variableType, "variableType");
         ParameterChecker.checkIsIdentifier(variableName, "variableName");
         ParameterChecker.checkNotNull(initializationExpression, "initializationExpression");
         if (!location.isValidVariableLocation()) throw new IllegalArgumentException("Variables can not be added to the location " + location);
 
+        String typeCode = ClassUtils.getPrimitiveTypeNameOrNull(variableType);
+        if (typeCode == null) {
+            // TODO: Check if the type is allowed in generated code
+
+            addImport(variableType);
+            typeCode = variableType.getName();
+        }
+
         addSourceLine(location,
                       (location == FIELDS ? "private " : "") +
                       (isFinal ? "final " : "") +
-                      variableType + " " +
-                      VAR_PREFIX + variableName + " = " +
+                      typeCode + " " +
+                      variableName + " = " +
                       initializationExpression
                      );
+    }
+
+    /**
+     * Adds an assignment to a channel.
+     */
+    public void addChannelAssignment(String channel, String expression) {
+        ParameterChecker.checkNotNull(channel, "location");
+        ParameterChecker.checkNotNull(expression, "variableType");
+        ParameterChecker.checkContained(channel, channels, "channels");
+
+        addSourceLine(AT_PIXEL, CHANNEL_PREFIX + channel + " = " + expression);
     }
 
     /**
@@ -322,46 +348,46 @@ public class RendererBuilder {
             return renderer;
 
         } catch (CompileException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not compile the renderer because incorrect source code was generated",
                                            "There was a compile error in the generated renderer source code.\n" +
                                            "The compile error is: \n" + e.getMessage() + "\n\n" +
                                            "And the complete source of the renderer is:\n\n" + source
             );
         } catch (ClassNotFoundException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not compile the renderer because a requested class was not found",
                                            "There was an attempt to access a non-existing or unavailable class \n" +
                                            "in the generated renderer source code.  The class that was not found was:\n" +
                                            e.getMessage() + "\nThe exception was " + e
             );
         } catch (InstantiationException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not could not instantiate the compiled renderer",
                                            "Could not create an instance of the compiled renderer.  \n" +
                                            "The reason was '" +e.getMessage() + "'."
             );
         } catch (IllegalAccessException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not access the compiled renderer",
                                            "There was a problem in accessing the compiled renderer. \n" +
                                            "The problematic access was '"+e.getMessage() + "'"
             );
         } catch (IOException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not read the renderer source or other resource",
                                            "There was a problem accessing the renderer source, \n" +
                                            "or some other resources needed by the renderer.\n" +
                                            "The problematic resource was '" +e.getMessage()+"'"
             );
         } catch (NoSuchMethodException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not could not instantiate the compiled renderer",
                                            "Could not call the constructor of the the compiled renderer.  \n" +
                                            "The reason was '" +e.getMessage() + "'."
             );
         } catch (InvocationTargetException e) {
-            throw new CompilationException(e, generatorName, source,
+            throw new CompilationException(e, name, source,
                                            "Could not could not instantiate the compiled renderer",
                                            "Could not call the constructor of the the compiled renderer.  \n" +
                                            "The reason was '" +e.getMessage() + "'."
@@ -389,13 +415,6 @@ public class RendererBuilder {
     }
 
     /**
-     * @return the parameters used when generating the picture.
-     */
-    public Parameters getParameters() {
-        return parameters;
-    }
-
-    /**
      * @return the generated source, or null if it has not yet been generated.
      */
     public String getSource() {
@@ -406,7 +425,7 @@ public class RendererBuilder {
      * @return the name for this generated picture.
      */
     public String getName() {
-        return parameters.get(Generator.NAME, DEFAULT_NAME);
+        return name;
     }
 
     /**
@@ -415,7 +434,7 @@ public class RendererBuilder {
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getWidth() {
-        return parameters.get(Generator.WIDTH, DEFAULT_SIZE);
+        return width;
     }
 
     /**
@@ -424,21 +443,21 @@ public class RendererBuilder {
      *         (this allows us to generate smaller preview pictures easily).
      */
     public int getHeight() {
-        return parameters.get(Generator.HEIGHT, DEFAULT_SIZE);
+        return height;
     }
 
     /**
      * @return number of channels in the generated picture.
      */
     public int getChannelCount() {
-        return getChannels().length;
+        return channels.size();
     }
 
     /**
      * @return names of the channels in the generated picture.
      */
-    public String[] getChannels() {
-        return parameters.get(Generator.CHANNELS, DEFAULT_CHANNELS);
+    public List<String> getChannels() {
+        return Collections.unmodifiableList(channels);
     }
 
 

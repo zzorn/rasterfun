@@ -5,6 +5,7 @@ import org.rasterfun.core.listeners.CalculationListener;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.utils.ParameterChecker;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -58,16 +59,18 @@ public class RenderTask implements Callable<Picture> {
             if (!stopped && renderer != null) {
 
                 // Render the part of the picture we have been assigned
+                final List<String> channelNamesList = picture.getChannelNames();
+                final String[] channelNamesArray = channelNamesList.toArray(new String[channelNamesList.size()]);
                 renderer.calculatePixels(picture.getWidth(),
-                                                picture.getHeight(),
-                                                picture.getChannelNames(),
-                                                picture.getData(),
-                                                0,
-                                                startY,
-                                                picture.getWidth(),
-                                                endY,
-                                                isPreview ? null : listener,
-                                                calculationIndex);
+                                         picture.getHeight(),
+                                         channelNamesArray,
+                                         picture.getData(),
+                                         0,
+                                         startY,
+                                         picture.getWidth(),
+                                         endY,
+                                         isPreview ? null : listener,
+                                         calculationIndex);
 
                 // Notify listener
                 listener.onPictureSliceReady(calculationIndex, pictureIndex, picture, isPreview);

@@ -1,8 +1,6 @@
 package org.rasterfun.effect.variable;
 
-import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.utils.ParameterChecker;
-import org.rasterfun.utils.StringUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +13,6 @@ public abstract class VariableBase implements Variable {
     private final Class<?> type;
     private String name;
     private String description;
-    private String namespace;
     private Set<VariableListener> listeners = new HashSet<VariableListener>(3);
 
 
@@ -55,33 +52,6 @@ public abstract class VariableBase implements Variable {
         this.description = description;
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    @Override
-    public void buildSource(RendererBuilder builder) {
-    }
-
-    /**
-     * @return generated identifier based on the name
-     */
-    public final String getIdentifier() {
-        if (namespace == null) throw new IllegalStateException("Can not calculate the identifier, as the namespace was not yet initialized.");
-
-        // Create variable id part that is guaranteed to have no underscores (so that it can't collide with namespaces).
-        final String variableIdPart = StringUtils.identifierFromName(getName().replace('_', ' '), 'Q');
-        final String identifier = namespace + "_" + variableIdPart;
-
-        // Sanity check // NOTE: it gets var prefix added automatically
-        //ParameterChecker.checkIsIdentifier(identifier, "generated variable identifier");
-        return identifier;
-    }
-
-
-    public String getVarIdentifier() {
-        return RendererBuilder.VAR_PREFIX + getIdentifier();
-    }
 
     @Override
     public final void addListener(VariableListener listener) {

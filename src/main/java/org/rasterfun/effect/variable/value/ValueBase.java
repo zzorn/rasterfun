@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Common functionality for VariableValue implementations.
+ * Common functionality for Value implementations.
  */
-public abstract class VariableValueBase implements VariableValue {
+public abstract class ValueBase implements Value {
 
     private Set<ValueListener> listeners = new HashSet<ValueListener>(3);
 

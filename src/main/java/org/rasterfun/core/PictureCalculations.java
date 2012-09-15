@@ -212,10 +212,10 @@ public class PictureCalculations {
         try {
             int pictureIndex = 0;
             for (RendererBuilder builder : rendererBuilders) {
-                final String   name     = builder.getName();
-                final int      width    = builder.getWidth();
-                final int      height   = builder.getHeight();
-                final String[] channels = builder.getChannels();
+                final String   name         = builder.getName();
+                final int      width        = builder.getWidth();
+                final int      height       = builder.getHeight();
+                final List<String> channels = builder.getChannels();
 
                 // Check the passed in images, if any are missing or the wrong size then we re-create them
                 Picture picture = getPictureAtOrNull(pictures, pictureIndex);
@@ -437,12 +437,12 @@ public class PictureCalculations {
                previewWidth  >= minPreviewImageSize;
     }
 
-    private Picture reuseOrRecreate(Picture picture, String name, int width, int height, String[] channels) {
+    private Picture reuseOrRecreate(Picture picture, String name, int width, int height, List<String> channels) {
         if (picture == null ||
             // Recreate
             picture.getWidth()  != width ||
             picture.getHeight() != height ||
-            picture.getChannelCount() != channels.length) {
+            picture.getChannelCount() != channels.size()) {
             picture = new PictureImpl(name, width, height, channels);
         }
         else {

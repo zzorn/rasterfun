@@ -2,6 +2,8 @@ package org.rasterfun.picture;
 
 import org.rasterfun.library.GeneratorElement;
 
+import java.util.List;
+
 /**
  * Contains the image data for a picture as float values.
  * May have arbitrary channels.
@@ -19,7 +21,11 @@ public interface Picture extends GeneratorElement {
 
     int getHeight();
 
-    String[] getChannelNames();
+    /**
+     * @return unmodifiable list with the names of the channels in this picture,
+     * in the order they are stored in the data for each pixel.
+     */
+    List<String> getChannelNames();
 
     /**
      * @return the index for the specified channel
@@ -59,7 +65,7 @@ public interface Picture extends GeneratorElement {
      * @param channelNames new channel names for this picture.
      *                     Just renames existing channels, should not change the number of channels.
      */
-    void setChannelNames(String[] channelNames);
+    void setChannelNames(List<String>  channelNames);
 
     /**
      * @return the underlying data for the picture.

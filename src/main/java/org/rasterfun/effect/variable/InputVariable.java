@@ -1,8 +1,8 @@
 package org.rasterfun.effect.variable;
 
 import org.rasterfun.core.compiler.RendererBuilder;
+import org.rasterfun.effect.variable.value.Value;
 import org.rasterfun.effect.variable.value.ValueListener;
-import org.rasterfun.effect.variable.value.VariableValue;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
 
@@ -12,6 +12,7 @@ import org.rasterfun.utils.ParameterChecker;
  */
 // TODO: Should we return an editor directly, or pass parameters to editor from here?
 // We need e.g. range information.  Maybe input variable subtype for numbers with range info?
+// TODO: Store references to input variables as variable name, pass in map of collected variable names + effect id etc when generating source/expression
 public class InputVariable extends VariableBase {
 
     private OutputVariable sourceVariable;
@@ -20,7 +21,7 @@ public class InputVariable extends VariableBase {
 
     private final ValueListener valueListener = new ValueListener() {
         @Override
-        public void onValueChanged(VariableValue value) {
+        public void onValueChanged(Value value) {
             notifyVariableChanged();
         }
     };
@@ -37,38 +38,37 @@ public class InputVariable extends VariableBase {
         this.constantValue = constantValue;
     }
 
-    public void bindToConstant(Object constantValue) {
+
+    public void setValue(Object constantValue) {
         ParameterChecker.checkNotNull(constantValue, "constantValue");
 
-        if (this.constantValue != constantValue) {
+        if (!constantValue.equals(this.constantValue)) {
 
             // Remove any variable binding we have
             if (sourceVariable != null) sourceVariable.removeUser(this);
             sourceVariable = null;
 
             // Stop listening to old value
-            if (VariableValue.class.isInstance(this.constantValue)) {
-                ((VariableValue)constantValue).removeListener(valueListener);
+            if (Value.class.isInstance(this.constantValue)) {
+                ((Value)constantValue).removeListener(valueListener);
             }
 
             // Change value
             this.constantValue = constantValue;
 
             // Start listening to new value
-            if (VariableValue.class.isInstance(this.constantValue)) {
-                ((VariableValue)constantValue).addListener(valueListener);
+            if (Value.class.isInstance(this.constantValue)) {
+                ((Value)constantValue).addListener(valueListener);
             }
 
             notifyVariableChanged();
         }
     }
 
-    public void bindToVariable(OutputVariable newSourceVariable) {
+    public void setToVariable(OutputVariable newSourceVariable) {
         if (sourceVariable != newSourceVariable) {
-            ParameterChecker.checkNotNull(newSourceVariable, "newSourceVariable");
-            if (!canBindTo(newSourceVariable)) throw new IllegalArgumentException("Can not bind variable "+this+" to the source variable " +
+            if (newSourceVariable != null && !canBindTo(newSourceVariable)) throw new IllegalArgumentException("Can not bind variable "+this+" to the source variable " +
                                                                                   newSourceVariable + " (incompatible types).");
-
             if (sourceVariable != null) sourceVariable.removeUser(this);
             sourceVariable = newSourceVariable;
             if (sourceVariable != null) sourceVariable.addUser(this);
@@ -81,7 +81,7 @@ public class InputVariable extends VariableBase {
         return sourceVariable;
     }
 
-    public Object getConstantValue() {
+    public Object getValue() {
         return constantValue;
     }
 
@@ -89,7 +89,6 @@ public class InputVariable extends VariableBase {
         return getType().isAssignableFrom(outputVariable.getType());
     }
 
-    @Override
     public void buildSource(RendererBuilder builder) {
         // Pass in the constant value as a parameter to the builder, if we use the constant value ant it is not a primitive type.
         if (sourceVariable == null && !ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
@@ -97,11 +96,10 @@ public class InputVariable extends VariableBase {
         }
     }
 
-    @Override
-    public String getExpressionString() {
+    public String getExpr() {
         if (sourceVariable != null) {
             // If we have a source value specified, get the value of that
-            return sourceVariable.getVarIdentifier();
+            return sourceVariable.getCodeIdentifier();
         }
         else {
             if (ClassUtils.isWrappedPrimitiveType(constantValue.getClass())) {
@@ -109,15 +107,10 @@ public class InputVariable extends VariableBase {
                 return ClassUtils.wrappedPrimitiveTypeAsConstantString(constantValue);
             }
             else {
-                // Otherwise we return a reference to the field holding the parameter, which we passed in in buildSource.
+                // Otherwise we return a reference to the field holding the parameter, which we passed in in generateCode.
                 return constantFieldName;
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        return getExpressionString();
     }
 
 }

@@ -3,9 +3,7 @@ package org.rasterfun.generator;
 import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
-import org.rasterfun.library.ParametrizedGeneratorElementBase;
-import org.rasterfun.parameters.Parameters;
-import org.rasterfun.parameters.ParametersListener;
+import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.PictureEditor;
 import org.rasterfun.ui.preview.PicturePreviewer;
@@ -19,21 +17,11 @@ import static org.rasterfun.utils.ParameterChecker.checkNotNull;
 /**
  * Common functionality for PictureGenerators.
  */
-public abstract class GeneratorBase extends ParametrizedGeneratorElementBase implements Generator {
+public abstract class GeneratorBase implements GeneratorElement, Generator {
 
     private List<GeneratorListener> listeners = null;
 
     protected GeneratorBase() {
-        getParameters().set(Generator.NAME, getDefaultName());
-
-        // Listen to our own parameters
-        getParameters().addListener(new ParametersListener() {
-            @Override
-            public void onParameterChanged(Parameters parameters, String name, Object oldValue, Object newValue) {
-                // Notify out listeners when our parameters are changed.
-                notifyGeneratorChanged();
-            }
-        });
     }
 
     @Override
