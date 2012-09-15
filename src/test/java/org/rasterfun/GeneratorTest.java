@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.rasterfun.core.PictureCalculations;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.effect.NoiseEffect;
+import org.rasterfun.effect.container.CompositeEffect;
 import org.rasterfun.effect.variable.InputVariable;
 import org.rasterfun.generator.Generator;
 import org.rasterfun.generator.GeneratorListener;
@@ -230,6 +231,35 @@ public class GeneratorTest {
 
         effect.getScaleVar().setValue(9);
         assertEquals("The copy should not be modified if the original is modified", 5, copyScaleVar.getValue());
+    }
+
+    @Test
+    public void testCompositeEffect() throws Exception {
+
+        // Test listening on composites
+
+        CompositeEffect compositeEffect = new CompositeEffect();
+        assertListenerCallCount(0);
+
+        generator.addEffect(compositeEffect);
+        assertListenerCallCount(1);
+
+        CompositeEffect innerComposite = new CompositeEffect();
+        compositeEffect.addEffect(innerComposite);
+        assertListenerCallCount(2);
+
+        NoiseEffect noiseEffect = new NoiseEffect();
+        innerComposite.addEffect(noiseEffect);
+        assertListenerCallCount(3);
+
+        noiseEffect.getAmplitudeVar().setValue(99);
+        assertListenerCallCount(4);
+
+        // Test generate
+        final PictureCalculations calculations = generator.generatePictures();
+        final List<Picture> pictures = calculations.getPicturesAndWait();
+        assertNotNull("We should have some pictures", pictures);
+        assertTrue("We should have some pictures", !pictures.isEmpty());
     }
 
     private void assertListenerCallCount(int expected) {

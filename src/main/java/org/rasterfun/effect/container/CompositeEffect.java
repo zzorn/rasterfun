@@ -16,6 +16,7 @@ import java.util.List;
  */
 public final class CompositeEffect extends AbstractEffect {
 
+
     private final EffectContainer effectContainer;
 
 
@@ -68,11 +69,17 @@ public final class CompositeEffect extends AbstractEffect {
     }
 
 
+
     @Override
     public GeneratorElement copy() {
         return new CompositeEffect(effectContainer.copy());
     }
 
+    public void addEffect(Effect effect) {getEffectContainer().addEffect(effect);}
+    public void addEffect(Effect effect, int position) {getEffectContainer().addEffect(effect, position);}
+    public void moveEffect(Effect effect, int position) {getEffectContainer().moveEffect(effect, position);}
+    public void removeEffect(Effect effect) {getEffectContainer().removeEffect(effect);}
+    public List<Effect> getEffects() {return getEffectContainer().getEffects();}
 
 
 

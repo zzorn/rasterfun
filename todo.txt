@@ -26,6 +26,7 @@ Preview
   * Shorten too long picture names with ... in the middle of the picture name (if it ends with number), or in the end otherwise(?).
 
 * Re-render pictures on parameter changes, show progressbar & stop button, stop previous render if properties changed while rendering
+  * Replace re-render button with stop button if a rendering is ongoing.
 
 * Do not show previews during first second of calculation, if there is still more than ~50% left after that then show them
 
@@ -84,7 +85,7 @@ Effects
 * Normal map generation effect (use height/bump map as source)
 
 * Possibility to group effects into a combined effect, and ungroup a combined effect.
-* Composite effect, contain list of other effects [TODO: TEST]
+* Composite effect, contain list of other effects [DONE]
 
 
 
