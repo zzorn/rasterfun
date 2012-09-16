@@ -237,29 +237,49 @@ public class GeneratorTest {
     public void testCompositeEffect() throws Exception {
 
         // Test listening on composites
-
+        int calls = 0;
         CompositeEffect compositeEffect = new CompositeEffect();
-        assertListenerCallCount(0);
+        assertListenerCallCount(calls++);
 
         generator.addEffect(compositeEffect);
-        assertListenerCallCount(1);
+        assertListenerCallCount(calls++);
 
         CompositeEffect innerComposite = new CompositeEffect();
         compositeEffect.addEffect(innerComposite);
-        assertListenerCallCount(2);
+        assertListenerCallCount(calls++);
 
         NoiseEffect noiseEffect = new NoiseEffect();
         innerComposite.addEffect(noiseEffect);
-        assertListenerCallCount(3);
+        assertListenerCallCount(calls++);
+
+        NoiseEffect noiseEffect2 = new NoiseEffect();
+        innerComposite.addEffect(noiseEffect2);
+        assertListenerCallCount(calls++);
+
+        // Bind noise 2 scale to noise 1 output
+        noiseEffect2.getScaleVar().setToVariable(noiseEffect.getOutput());
+        assertListenerCallCount(calls++);
 
         noiseEffect.getAmplitudeVar().setValue(99);
-        assertListenerCallCount(4);
+        assertListenerCallCount(calls++);
 
         // Test generate
         final PictureCalculations calculations = generator.generatePictures();
         final List<Picture> pictures = calculations.getPicturesAndWait();
         assertNotNull("We should have some pictures", pictures);
         assertTrue("We should have some pictures", !pictures.isEmpty());
+
+        // Test copy
+        CompositeEffect compositeEffectCopy = (CompositeEffect) compositeEffect.copy();
+        CompositeEffect innerCompositeCopy = (CompositeEffect) compositeEffectCopy.getEffects().get(0);
+        NoiseEffect noiseEffectCopy = (NoiseEffect) innerCompositeCopy.getEffects().get(0);
+        NoiseEffect noiseEffect2Copy = (NoiseEffect) innerCompositeCopy.getEffects().get(1);
+        assertEquals("Copy should have copied values", 99, noiseEffectCopy.getAmplitudeVar().getValue());
+        assertEquals("Copy should have copied variable references", noiseEffectCopy.getOutput(), noiseEffect2Copy.getScaleVar().getSourceVariable());
+
+        noiseEffect.getAmplitudeVar().setValue(88);
+
+        assertEquals("Copy should not be modified by changes to the original", 99, noiseEffectCopy.getAmplitudeVar().getValue());
     }
 
     private void assertListenerCallCount(int expected) {
