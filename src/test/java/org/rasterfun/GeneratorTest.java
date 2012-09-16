@@ -12,6 +12,7 @@ import org.rasterfun.generator.GeneratorListener;
 import org.rasterfun.generator.SimpleGenerator;
 import org.rasterfun.picture.Picture;
 import org.rasterfun.ui.preview.PicturePreviewer;
+import org.rasterfun.ui.preview.PicturePreviewerImpl;
 
 import javax.swing.*;
 import java.util.Arrays;
@@ -97,7 +98,7 @@ public class GeneratorTest {
 
     @Test
     public void testPreviewUI() throws Exception {
-        final PicturePreviewer previewer = generator.createPreviewer();
+        final PicturePreviewer previewer = new PicturePreviewerImpl();
 
         assertNotNull("A previewer should be returned", previewer);
 
@@ -106,9 +107,6 @@ public class GeneratorTest {
 
         final JComponent ui2 = previewer.getUiComponent();
         assertTrue("The ui should be the same each time", ui1 == ui2);
-
-        final PicturePreviewer previewer2 = generator.createPreviewer();
-        assertTrue("The previewer should be a new one each time", previewer != previewer2);
     }
 
     @Test

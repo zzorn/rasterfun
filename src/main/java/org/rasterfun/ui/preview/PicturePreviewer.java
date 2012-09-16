@@ -1,5 +1,7 @@
 package org.rasterfun.ui.preview;
 
+import org.rasterfun.generator.Generator;
+
 import javax.swing.*;
 
 /**
@@ -12,4 +14,7 @@ public interface PicturePreviewer {
      */
     JComponent getUiComponent();
 
+    Generator getGenerator();
+
+    void setGenerator(Generator generator);
 }

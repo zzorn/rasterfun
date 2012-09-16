@@ -187,10 +187,12 @@ public final class PicturePreviewerImpl implements PicturePreviewer {
         this.generator = generator;
     }
 
+    @Override
     public Generator getGenerator() {
         return generator;
     }
 
+    @Override
     public void setGenerator(Generator generator) {
         if (this.generator != generator) {
 
@@ -287,7 +289,7 @@ public final class PicturePreviewerImpl implements PicturePreviewer {
     }
 
     private JButton createRegeneratePictureButton() {
-        JButton button = new JButton("Regenerate");
+        JButton button = new JButton("R");
         button.setMargin(new Insets(2, 1, 1, 1));
         button.setToolTipText("Regenerate picture");
         button.setFocusable(false);

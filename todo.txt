@@ -42,6 +42,9 @@ Preview
 * Export selected picture
 * View sourcecode for a picture (debugging feature mostly)
 
+* Add options to select which channels to show / view
+* Only show progressbar during calculation, show it in place of the status text?
+
 
 Effects
 * Perlin noise effect [DONE]

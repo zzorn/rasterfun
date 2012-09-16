@@ -259,9 +259,9 @@ public final class PerlinNoise {
 
         // Determine this surflet lies on an edge or not, and adjust the base seed based on that
         final boolean onEdge = edgeGridX1 == gridX ||
-                edgeGridX2 == gridX ||
-                edgeGridY1 == gridY ||
-                edgeGridY2 == gridY;
+                               edgeGridX2 == gridX ||
+                               edgeGridY1 == gridY ||
+                               edgeGridY2 == gridY;
         final int baseSeed = onEdge ? edgeSeed : fillSeed;
 
         // Calculate the random seeds for this surflet, ensuring that parallel edges get the same seeds.

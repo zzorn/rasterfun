@@ -5,9 +5,6 @@ import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.core.listeners.PictureCalculationsListener;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.picture.Picture;
-import org.rasterfun.ui.PictureEditor;
-import org.rasterfun.ui.preview.PicturePreviewer;
-import org.rasterfun.ui.preview.PicturePreviewerImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,17 +19,6 @@ public abstract class GeneratorBase implements GeneratorElement, Generator {
     private List<GeneratorListener> listeners = null;
 
     protected GeneratorBase() {
-    }
-
-    @Override
-    public PicturePreviewer createPreviewer() {
-        return new PicturePreviewerImpl(this);
-    }
-
-    @Override
-    public PictureEditor createEditor() {
-        // TODO: Provide default editor? (just edit properties)
-        return null;
     }
 
     @Override

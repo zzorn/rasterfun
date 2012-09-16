@@ -3,8 +3,8 @@ package org.rasterfun;
 import org.rasterfun.effect.NoiseEffect;
 import org.rasterfun.generator.CompositeGenerator;
 import org.rasterfun.generator.SimpleGenerator;
-import org.rasterfun.ui.preview.PicturePreviewer;
-import org.rasterfun.utils.SimpleFrame;
+import org.rasterfun.ui.MainUi;
+import org.rasterfun.ui.MainUiImpl;
 
 import java.util.concurrent.*;
 
@@ -54,6 +54,8 @@ public class RasterfunApplication {
         // Load options
 
         // Create main UI
+        MainUi mainUi = new MainUiImpl();
+        mainUi.show();
 
         // Load default library and any other configured libraries
 
@@ -64,9 +66,7 @@ public class RasterfunApplication {
         compositeGenerator.addGenerator(generator1);
         compositeGenerator.addGenerator(generator2);
 
-        final PicturePreviewer previewer = compositeGenerator.createPreviewer();
-
-        new SimpleFrame("RasterFun", previewer.getUiComponent());
+        mainUi.showGenerator(compositeGenerator);
     }
 
     private static SimpleGenerator createSimpleGenerator(final int width,
