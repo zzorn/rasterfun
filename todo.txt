@@ -46,7 +46,7 @@ Preview
 Effects
 * Perlin noise effect [DONE]
 * pass in picture specific parameter values to the pixel calculator through the builder [DONE]
-* Name passing in effects, system for effects to tell what variables they take and create (both at pixel calculation level and before loop level, or any level?)
+* System for effects to tell what variables they take and create [DONE]
 * System for unique namespaces in effects [DONE]
 
 * Text input, parser checked generic function effect
@@ -84,8 +84,8 @@ Effects
 
 * Normal map generation effect (use height/bump map as source)
 
-* Possibility to group effects into a combined effect, and ungroup a combined effect.
 * Composite effect, contain list of other effects [DONE]
+* Possibility to group effects into a combined effect, and ungroup a combined effect.
 
 
 

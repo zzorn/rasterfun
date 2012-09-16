@@ -74,6 +74,11 @@ public class NoiseEffect extends EffectBase {
         return output;
     }
 
+    @Override
+    public void beforeBuildSource(RendererBuilder builder, String s, EffectContainer container) {
+        builder.addImport(PerlinNoise.class);
+    }
+
     private void initVariables() {
 
         xVar         = addInput("x",         0.5f,      Float.class,   RELATIVE_X, "X coordinate to get the noise at.  Ranges from 0 to 1 normally.");
@@ -101,15 +106,12 @@ public class NoiseEffect extends EffectBase {
                     }
                 });
 
-        // TODO: Add support to specify default channel assignments for outputs.  Only add the code if the channels are actually in the picture
+
+
     }
 
     @Override
-    public void beforeBuildSource(RendererBuilder builder, String s, EffectContainer container) {
-
-        builder.addImport(PerlinNoise.class);
-
+    protected void afterBuildSource(RendererBuilder builder, String namespace, EffectContainer container) {
+        builder.addChannelAssignment(VALUE, output.getCodeIdentifier());
     }
-
-
 }
