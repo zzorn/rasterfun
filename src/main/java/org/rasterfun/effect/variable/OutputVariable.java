@@ -21,23 +21,33 @@ public class OutputVariable extends VariableBase {
     private String codeIdentifier;
 
     private VariableExpression expression;
+    private final boolean trackUsers;
 
 
     public OutputVariable(Class<?> type, String name, String description, VariableExpression expression) {
+        this(type, name, description, expression, true);
+    }
+
+    public OutputVariable(Class<?> type, String name, String description, VariableExpression expression, boolean trackUsers) {
         super(type, name, description);
         this.expression = expression;
+        this.trackUsers = trackUsers;
     }
 
     public void addUser(InputVariable inputVariable) {
-        users.add(inputVariable);
+        if (trackUsers) users.add(inputVariable);
     }
 
     public void removeUser(InputVariable inputVariable) {
-        users.remove(inputVariable);
+        if (trackUsers) users.remove(inputVariable);
     }
 
     public boolean hasUsers() {
         return !users.isEmpty();
+    }
+
+    public boolean isTrackUsers() {
+        return trackUsers;
     }
 
     public List<InputVariable> getUsers() {

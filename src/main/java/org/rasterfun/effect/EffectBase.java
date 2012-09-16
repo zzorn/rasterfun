@@ -5,6 +5,7 @@ import org.rasterfun.effect.container.EffectContainer;
 import org.rasterfun.effect.variable.*;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.utils.ParameterChecker;
+import org.rasterfun.utils.StringUtils;
 
 import java.util.*;
 
@@ -73,11 +74,23 @@ public abstract class EffectBase extends AbstractEffect {
     }
 
     @Override
-    public void getRequiredChannels(Set<String> channelsOut) {
+    public Set<String> getRequiredChannels(Set<String> channelsOut) {
+        if (channelsOut == null) channelsOut = new LinkedHashSet<String>();
         channelsOut.addAll(requiredChannels);
+        return channelsOut;
     }
 
-    public final <T> InputVariable addInput(String name, T initialValue, String description, Class<T> type) {
+    public final <T> InputVariable addInput(String name,
+                                            T initialValue,
+                                            Class<T> type,
+                                            String description) {
+        return addInput(name, initialValue, type, null, description);
+    }
+
+    public final <T> InputVariable addInput(String name,
+                                            T initialValue,
+                                            Class<T> type,
+                                            OutputVariable sourceVar, String description) {
         ParameterChecker.checkIsIdentifier(name, "name");
         ParameterChecker.checkNonEmptyString(description, "description");
         ParameterChecker.checkNotNull(initialValue, "initialValue");
@@ -88,6 +101,7 @@ public abstract class EffectBase extends AbstractEffect {
         inputVariables.add(variable);
 
         variable.addListener(variableListener);
+        if (sourceVar != null) variable.setToVariable(sourceVar);
 
         notifyEffectChanged();
 
@@ -125,7 +139,7 @@ public abstract class EffectBase extends AbstractEffect {
         for (OutputVariable variable : outputVariables) {
 
             // Determine id for variable
-            variable.setCodeIdentifier(effectNamespace + varId);
+            variable.setCodeIdentifier(effectNamespace + "var" + varId + "_" + StringUtils.identifierFromName(variable.getName(), 'Q'));
 
             // Build variable source
             String localNamespace = effectNamespace + varId + "_internal_";
@@ -155,5 +169,9 @@ public abstract class EffectBase extends AbstractEffect {
         requiredChannels.add(BLUE);
         requiredChannels.add(ALPHA);
     }
+
+    @Override
+    protected void onContainerChanged(EffectContainer container) {}
+
 
 }

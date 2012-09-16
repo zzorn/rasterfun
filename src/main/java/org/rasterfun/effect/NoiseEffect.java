@@ -7,8 +7,7 @@ import org.rasterfun.effect.variable.OutputVariable;
 import org.rasterfun.effect.variable.VariableExpression;
 import org.rasterfun.utils.PerlinNoise;
 
-import static org.rasterfun.core.compiler.RendererBuilder.RELATIVE_X;
-import static org.rasterfun.core.compiler.RendererBuilder.RELATIVE_Y;
+import static org.rasterfun.core.compiler.CommonVariables.*;
 
 /**
  *
@@ -20,10 +19,13 @@ public class NoiseEffect extends EffectBase {
     private float amplitude = 1;
     private float offset = 0;
     private OutputVariable output;
-    private InputVariable seedVar;
+    private InputVariable fillSeedVar;
+    private InputVariable edgeSeedVar;
     private InputVariable scaleVar;
     private InputVariable amplitudeVar;
     private InputVariable offsetVar;
+    private InputVariable xVar;
+    private InputVariable yVar;
 
     public NoiseEffect() {
         this(1);
@@ -49,7 +51,11 @@ public class NoiseEffect extends EffectBase {
     }
 
     public InputVariable getSeedVar() {
-        return seedVar;
+        return fillSeedVar;
+    }
+
+    public InputVariable getEdgeSeedVar() {
+        return edgeSeedVar;
     }
 
     public InputVariable getScaleVar() {
@@ -70,14 +76,13 @@ public class NoiseEffect extends EffectBase {
 
     private void initVariables() {
 
-        // TODO: Need references to the default variables available in the pixel renderer, such as x, y, pictureSeed, generatorSeed, localSeed, and channel values.
-        final InputVariable xVar = addInput("x", 0f, "x coordinate to get the noise at", Float.class);
-        final InputVariable yVar = addInput("y", 0f, "y coordinate to get the noise at", Float.class);
-
-        seedVar = addInput("seed", seed, "random seed for the noise", Integer.class);
-        scaleVar = addInput("scale", scale, "frequency of the noise", Float.class);
-        amplitudeVar = addInput("amplitude", amplitude, "contrast of the noise", Float.class);
-        offsetVar = addInput("offset", offset, "brightness / darkness of the noise", Float.class);
+        xVar         = addInput("x",         0.5f,      Float.class,   RELATIVE_X, "X coordinate to get the noise at.  Ranges from 0 to 1 normally.");
+        yVar         = addInput("y",         0.5f,      Float.class,   RELATIVE_Y, "Y coordinate to get the noise at.  Ranges from 0 to 1 normally.");
+        fillSeedVar  = addInput("fillSeed",  seed,      Integer.class, PICTURE_SEED, "Random seed for the noise");
+        edgeSeedVar  = addInput("edgeSeed",  seed,      Integer.class, GENERATOR_SEED, "Random seed for the noise along the picture edges.  Noises with the same edgeSeed will tile seamlessly.");
+        scaleVar     = addInput("scale",     scale,     Float.class, "Frequency of the noise");
+        amplitudeVar = addInput("amplitude", amplitude, Float.class, "Contrast of the noise");
+        offsetVar    = addInput("offset",    offset,    Float.class, "Brightness / darkness of the noise");
 
         output = addOutput("noise", "the created noise", Float.class, new VariableExpression<NoiseEffect>() {
 
@@ -87,10 +92,12 @@ public class NoiseEffect extends EffectBase {
                                                       String internalVarPrefix) {
                         return offsetVar.getExpr() + " + " +
                                amplitudeVar.getExpr() + " * " +
-                               "(float)PerlinNoise.noise(" +
-                               scaleVar.getExpr() + " * " + RELATIVE_X + ", " +
-                               scaleVar.getExpr() + " * " + RELATIVE_Y + ", " +
-                               seedVar.getExpr() + ")";
+                               "(float)PerlinNoise.tilingNoise(" +
+                               scaleVar.getExpr() + " * " + xVar.getExpr() + ", " +
+                               scaleVar.getExpr() + " * " + yVar.getExpr() + ", " +
+                               "0, 0, 1, 1, " +
+                               fillSeedVar.getExpr() + ", " +
+                               edgeSeedVar.getExpr() + ")";
                     }
                 });
 

@@ -20,7 +20,10 @@ public abstract class AbstractEffect implements Effect {
 
     public final void setContainer(EffectContainer container) {
         this.container = container;
+        onContainerChanged(container);
     }
+
+    protected void onContainerChanged(EffectContainer container) {}
 
     /**
      * Notifies listeners that this effect changed.

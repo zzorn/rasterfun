@@ -13,7 +13,6 @@ import java.util.Set;
  * Used to calculate the value at a specific point.
  * Creates the calculation as a java snippet that is compiled to bytecode for better performance.
  */
-// TODO: generator parameters, and channels are visible as outputVariables to effects.
 // TODO: Variables should have availability also, based on source location
 public interface Effect extends GeneratorElement {
 
@@ -81,7 +80,7 @@ public interface Effect extends GeneratorElement {
     /**
      * Puts the names of the channels used in this effect to the channelsOut set.
      */
-    void getRequiredChannels(Set<String> channelsOut);
+    Set<String> getRequiredChannels(Set<String> channelsOut);
 
 
 }

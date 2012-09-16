@@ -127,7 +127,7 @@ public interface EffectContainer {
     /**
      * Puts the names of the channels used in this effect container and any effects to the channelsOut set.
      */
-    void getRequiredChannels(Set<String> channelsOut);
+    Set<String> getRequiredChannels(Set<String> channelsOut);
 
     /**
      * @return a copy of this container.
@@ -143,5 +143,12 @@ public interface EffectContainer {
      * @param listener listener to remove.
      */
     void removeListener(EffectContainerListener listener);
+
+    /**
+     * @return list with output variables for the available channels and builtin varialbes (e.g. x & y pos).
+     */
+    List<OutputVariable> getDefaultOutputVariables();
+
+    Set<String> getAvailableChannels();
 
 }

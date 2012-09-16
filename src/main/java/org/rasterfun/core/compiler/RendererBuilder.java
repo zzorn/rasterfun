@@ -4,7 +4,6 @@ import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.SimpleCompiler;
 import org.rasterfun.core.Renderer;
 import org.rasterfun.core.listeners.CalculationListener;
-import org.rasterfun.parameters.Parameters;
 import org.rasterfun.utils.ClassUtils;
 import org.rasterfun.utils.ParameterChecker;
 import org.rasterfun.utils.StringUtils;
@@ -31,10 +30,14 @@ public class RendererBuilder {
     public static final String CHANNEL_PREFIX = "channel_";
     public static final String PARAMETER_PREFIX = "parameter_";
     public static final String PIXEL_INDEX = "pixelIndex";
-    public static final String X_NAME = "x";
-    public static final String Y_NAME = "x";
+    public static final String X_NAME = "xF";
+    public static final String Y_NAME = "yF";
+    public static final String W_NAME = "widthF";
+    public static final String H_NAME = "heightF";
     public static final String RELATIVE_X = "relX";
     public static final String RELATIVE_Y = "relY";
+    public static final String GENERATOR_SEED = "generatorSeed";
+    public static final String PICTURE_SEED = "pictureSeed";
 
     private static final int DEFAULT_SIZE = 128;
     private static final String DEFAULT_NAME = "Picture";
@@ -91,7 +94,6 @@ public class RendererBuilder {
         // Add default imports
         addImport(Renderer.class);
         addImport(CalculationListener.class);
-        addImport(Parameters.class);
 
         // Add code to get the channel values
         channelIndex = 0;
@@ -234,8 +236,12 @@ public class RendererBuilder {
 
         addImport(parameterType);
 
+        // Skip the index for some builtin parameters, so that they are easier to find.
+        boolean useIndex = !(PICTURE_SEED.equals(namePart) || GENERATOR_SEED.equals(namePart));
+
         final int index = objectParameters.size();
-        String identifier = PARAMETER_PREFIX + "_" + index + (namePart == null ? "" : "_" + StringUtils.identifierFromName(namePart, 'Q'));
+        String indexPart = useIndex ? "" + index + "_": "";
+        String identifier = PARAMETER_PREFIX + indexPart + (namePart == null ? "" : "" + StringUtils.identifierFromName(namePart, 'Q'));
         objectParameters.add(new ObjectParameter(parameterValue, identifier, index, parameterType));
         return identifier;
     }
@@ -299,12 +305,19 @@ public class RendererBuilder {
                  "    if (channelNames.length != "+ getPictureChannelCount()+") \n" +
                  "      throw new IllegalArgumentException(\"The channel count should be correct, expected "+
                  getPictureChannelCount()+", but got \"+channelNames.length+\".\");\n"+
+                 "    \n" +
+                 "    // Setup variables visible to generators \n" +
+                 "    final float widthF  = (float)width;\n" +
+                 "    final float heightF = (float)height;\n" +
+                 "    float yF = 0f;\n" +
+                 "    float xF = 0f;\n" +
+                 "    \n" +
                  sourcesFor(BEFORE_LOOP) +
                  "    // Set up progress reporting\n"+
                  "    final int progressReportInterval = (endY - startY) / "+PROGRESS_REPORT_STEPS+";\n" +
                  "    int completedScanLines = 0;\n" +
                  "    \n"+
-                 "    // Loop the pixels\n" +
+                 "    // Loop the lines\n" +
                  "    final float relXStep = (width == 1) ? 0 : 1f / (width - 1);\n"+
                  "    final float relYStep = (height == 1) ? 0 : 1f / (height - 1);\n"+
                  "    float relX;\n"+
@@ -312,17 +325,22 @@ public class RendererBuilder {
                  "    int pixelIndex = (startY * width + startX) * "+ getPictureChannelCount()+";\n" +
                  "    for (int y = startY; (y < endY) && running; y++) {\n" +
 //                             "       try {Thread.sleep(1);} catch (Exception e) {}\n" +
+                 "      yF = y;\n" +
                  sourcesFor(BEFORE_LINE) +
+                 "      // Loop along line\n"+
                  "      relX = (width == 1) ? 0.5f : (float)startX / (width - 1);\n"+
                  "      for (int x = startX; (x < endX) && running; x++) {\n" +
+                 "        xF = x;\n" +
                  "\n" +
                  sourcesFor(BEFORE_PIXEL) +
                  sourcesFor(AT_PIXEL) +
                  sourcesFor(AFTER_PIXEL) +
+                 "        // Move to next pixel\n"+
                  "        "+PIXEL_INDEX+" += "+ getPictureChannelCount()+";\n" +
                  "        relX += relXStep;\n" +
                  "      }\n" +
                  sourcesFor(AFTER_LINE) +
+                 "      // Move to next line\n"+
                  "      relY += relYStep;\n" +
                  "\n" +
                  "      // Report progress\n" +
@@ -525,11 +543,15 @@ public class RendererBuilder {
         }
 
         public String generateFieldDeclaration() {
-            return "  private final " + ClassUtils.getTypeDeclaration(type) + " " + identifier + ";\n";
+            String typeName = ClassUtils.getPrimitiveTypeNameOrNull(type);
+            if (typeName == null) typeName = ClassUtils.getTypeDeclaration(type);
+
+            return "  private final " + typeName + " " + identifier + ";\n";
         }
 
         public String generateInitialization() {
-            return "    " + identifier + " = parameters["+index+"];\n";
+            String typeName = ClassUtils.getTypeDeclaration(type);
+            return "    " + identifier + " = ("+typeName+") parameters["+index+"];\n";
         }
     }
 

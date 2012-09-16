@@ -9,10 +9,7 @@ import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.utils.ParameterChecker;
 import scala.actors.threadpool.Arrays;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Generates one or more pictures using a set of effects.
@@ -24,6 +21,7 @@ public final class SimpleGenerator extends GeneratorBase {
     private int width = 128;
     private int height = 128;
     private int count = 1;
+    private int generatorSeed = 42;
 
     private final EffectContainer effectContainer;
 
@@ -149,6 +147,17 @@ public final class SimpleGenerator extends GeneratorBase {
         }
     }
 
+    public int getGeneratorSeed() {
+        return generatorSeed;
+    }
+
+    public void setGeneratorSeed(int generatorSeed) {
+        if (this.generatorSeed != generatorSeed) {
+            this.generatorSeed = generatorSeed;
+            notifyGeneratorChanged();
+        }
+    }
+
     public Collection<String> getChannels() {
         return effectContainer.getChannels();
     }
@@ -174,14 +183,15 @@ public final class SimpleGenerator extends GeneratorBase {
 
         final ArrayList<RendererBuilder> builders = new ArrayList<RendererBuilder>();
 
+        Random random = new Random(generatorSeed);
         for (int i = 0; i < count; i++) {
-            builders.add(createPictureBuilder(i, count));
+            builders.add(createPictureBuilder(i, count, generatorSeed, random.nextInt()));
         }
 
         return builders;
     }
 
-    private RendererBuilder createPictureBuilder(int pictureIndex, int totalCount) {
+    private RendererBuilder createPictureBuilder(int pictureIndex, int totalCount, int generatorSeed, int pictureSeed) {
         final LinkedHashSet<String> temporaryChannels = new LinkedHashSet<String>();
         effectContainer.getRequiredChannels(temporaryChannels);
 
@@ -194,6 +204,8 @@ public final class SimpleGenerator extends GeneratorBase {
                                                             temporaryChannels,
                                                             pictureIndex,
                                                             totalCount);
+        builder.addParameter(RendererBuilder.GENERATOR_SEED, generatorSeed, Integer.class);
+        builder.addParameter(RendererBuilder.PICTURE_SEED, pictureSeed, Integer.class);
 
         effectContainer.buildSource(builder, "var_", null);
 

@@ -80,6 +80,7 @@ public final class PerlinNoise {
     /**
      * @return a tiling noise value at the specific position, with the specified tiling.
      */
+    // TODO: Support tiling at non-integer scales
     public static double tilingNoise(double x, double y,
                                      double edgeX1, double edgeY1,
                                      double edgeX2, double edgeY2,

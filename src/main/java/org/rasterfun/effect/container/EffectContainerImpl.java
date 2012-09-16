@@ -1,10 +1,12 @@
 package org.rasterfun.effect.container;
 
+import org.rasterfun.core.compiler.CommonVariables;
 import org.rasterfun.core.compiler.RendererBuilder;
 import org.rasterfun.effect.Effect;
 import org.rasterfun.effect.EffectListener;
 import org.rasterfun.effect.variable.*;
 import org.rasterfun.utils.ParameterChecker;
+import org.rasterfun.utils.StringUtils;
 
 import java.util.*;
 
@@ -37,6 +39,7 @@ public class EffectContainerImpl implements EffectContainer {
     };
 
 
+
     @Override
     public EffectContainer getParentContainer() {
         return parent;
@@ -55,7 +58,7 @@ public class EffectContainerImpl implements EffectContainer {
         int inputNum = 1;
         for (InputOutputVariable input : inputs) {
             final OutputVariable target = input.getOutputVariable();
-            target.setCodeIdentifier(namespace + "in" + (inputNum++));
+            target.setCodeIdentifier(namespace + "in" + (inputNum++) + "_" + StringUtils.identifierFromName(input.getName(), 'Q'));
             input.generateCode(builder);
         }
 
@@ -78,7 +81,7 @@ public class EffectContainerImpl implements EffectContainer {
         int outputNum = 1;
         for (InputOutputVariable output : outputs) {
             final OutputVariable target = output.getOutputVariable();
-            target.setCodeIdentifier(namespace + "out" + (outputNum++));
+            target.setCodeIdentifier(namespace + "out" + (outputNum++)+ "_" + StringUtils.identifierFromName(output.getName(), 'Q'));
             output.generateCode(builder);
         }
     }
@@ -118,6 +121,35 @@ public class EffectContainerImpl implements EffectContainer {
     public List<InputOutputVariable> getOutputs() {
         return Collections.unmodifiableList(outputs);
     }
+
+    @Override
+    public List<OutputVariable> getDefaultOutputVariables() {
+        if (parent != null) return parent.getDefaultOutputVariables();
+        else {
+            List<OutputVariable> variables = new ArrayList<OutputVariable>();
+
+            // Get channels that will be available
+            Set<String> channels = getAvailableChannels();
+
+            // Create output variables for the channels
+            for (final String channel : channels) {
+                variables.add(CommonVariables.getChannelAsOutputVar(channel));
+            }
+
+            // Get builtin output variables
+            variables.addAll(CommonVariables.BUILT_IN_VARS);
+
+            return variables;
+        }
+    }
+
+    @Override
+    public Set<String> getAvailableChannels() {
+        Set<String> channels = new LinkedHashSet<String>(getChannels());
+        getRequiredChannels(channels);
+        return channels;
+    }
+
 
     @Override
     public <T> void addInput(String name, String description, Class<T> type, T defaultValue) {
@@ -319,7 +351,9 @@ public class EffectContainerImpl implements EffectContainer {
     }
 
     @Override
-    public void getRequiredChannels(Set<String> channelsOut) {
+    public Set<String> getRequiredChannels(Set<String> channelsOut) {
+        if (channelsOut == null) channelsOut = new LinkedHashSet<String>();
+
         // TODO: Add the channels we read anything from
 
         // Add the channels we assign anything to
@@ -331,6 +365,8 @@ public class EffectContainerImpl implements EffectContainer {
         for (Effect effect : effects) {
             effect.getRequiredChannels(channelsOut);
         }
+
+        return channelsOut;
     }
 
     @Override
@@ -340,6 +376,11 @@ public class EffectContainerImpl implements EffectContainer {
         // Maintain mapping from original output variables to the copies,
         // so that we can copy the references inside the copy as well.
         Map<OutputVariable, OutputVariable> originalToCopy = new HashMap<OutputVariable, OutputVariable>();
+
+        // Add mappings for static builtin variables
+        for (OutputVariable builtinVariable : CommonVariables.BUILT_IN_VARS) {
+            originalToCopy.put(builtinVariable, builtinVariable);
+        }
 
         // Copy channels
         for (Map.Entry<String, OutputVariable> entry : channels.entrySet()) {

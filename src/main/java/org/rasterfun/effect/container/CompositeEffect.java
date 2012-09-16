@@ -70,8 +70,8 @@ public final class CompositeEffect extends AbstractEffect {
     }
 
     @Override
-    public void getRequiredChannels(Set<String> channelsOut) {
-        effectContainer.getRequiredChannels(channelsOut);
+    public Set<String> getRequiredChannels(Set<String> channelsOut) {
+        return effectContainer.getRequiredChannels(channelsOut);
     }
 
 
