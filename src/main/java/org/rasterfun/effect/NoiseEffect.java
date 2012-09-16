@@ -43,6 +43,8 @@ public class NoiseEffect extends EffectBase {
         this.offset = offset;
         this.amplitude = amplitude;
 
+        requireValueChannel();
+
         initVariables();
     }
 
@@ -92,6 +94,7 @@ public class NoiseEffect extends EffectBase {
                     }
                 });
 
+        // TODO: Add support to specify default channel assignments for outputs.  Only add the code if the channels are actually in the picture
     }
 
     @Override

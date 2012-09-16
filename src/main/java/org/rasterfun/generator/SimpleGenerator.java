@@ -11,6 +11,7 @@ import scala.actors.threadpool.Arrays;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -181,7 +182,18 @@ public final class SimpleGenerator extends GeneratorBase {
     }
 
     private RendererBuilder createPictureBuilder(int pictureIndex, int totalCount) {
-        final RendererBuilder builder = new RendererBuilder(name, width, height, effectContainer.getChannels(), pictureIndex, totalCount);
+        final LinkedHashSet<String> temporaryChannels = new LinkedHashSet<String>();
+        effectContainer.getRequiredChannels(temporaryChannels);
+
+        final Collection<String> pictureChannels = effectContainer.getChannels();
+        temporaryChannels.removeAll(pictureChannels);
+
+        final RendererBuilder builder = new RendererBuilder(name,
+                                                            width, height,
+                                                            pictureChannels,
+                                                            temporaryChannels,
+                                                            pictureIndex,
+                                                            totalCount);
 
         effectContainer.buildSource(builder, "var_", null);
 

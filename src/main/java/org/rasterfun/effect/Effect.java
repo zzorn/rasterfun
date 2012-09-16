@@ -7,6 +7,7 @@ import org.rasterfun.effect.variable.OutputVariable;
 import org.rasterfun.library.GeneratorElement;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used to calculate the value at a specific point.
@@ -17,6 +18,30 @@ import java.util.List;
 // Variables should have availability also, based on source location
 // TODO: Rethink namespace concept, best if it is independent of the effect (pass in where needed)
 public interface Effect extends GeneratorElement {
+
+    // Names for common channels
+    // TODO: Check these, in particular, what was the shadow/highlight channel called?
+
+    static final String VALUE = "value";
+
+    static final String RED = "red";
+    static final String GREEN = "green";
+    static final String BLUE = "blue";
+
+    static final String ALPHA = "alpha";
+
+    static final String HUE = "hue";
+    static final String SAT = "sat";
+    static final String LUM = "lum";
+
+    static final String HEIGHT = "height"; // Also used for bumpmap (or should they be separate?)
+    static final String SPECULAR = "specular";
+    static final String LUMINOSITY = "luminosity";
+
+    static final String NORMAL_X = "normal_x";
+    static final String NORMAL_Y = "normal_y";
+    static final String NORMAL_Z = "normal_z";
+
 
     /**
      * @return the container that this effect is in, or null if it is free floating (e.g. in library).
@@ -54,5 +79,11 @@ public interface Effect extends GeneratorElement {
      * @param listener listener to remove.
      */
     void removeListener(EffectListener listener);
+
+    /**
+     * Puts the names of the channels used in this effect to the channelsOut set.
+     */
+    void getRequiredChannels(Set<String> channelsOut);
+
 
 }

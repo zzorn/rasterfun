@@ -256,6 +256,21 @@ public class GeneratorTest {
         innerComposite.addEffect(noiseEffect2);
         assertListenerCallCount(calls++);
 
+        innerComposite.getEffectContainer().addChannel("red");
+        innerComposite.getEffectContainer().addChannel("green");
+        innerComposite.getEffectContainer().addChannel("blue");
+        innerComposite.getEffectContainer().addChannel("alpha");
+        innerComposite.getEffectContainer().addChannel("value");
+        calls += 4;
+        assertListenerCallCount(calls++);
+
+        innerComposite.getEffectContainer().setChannelVar("alpha", noiseEffect.getOutput());
+        assertListenerCallCount(calls++);
+        innerComposite.getEffectContainer().setChannelVar("red", noiseEffect2.getOutput());
+        assertListenerCallCount(calls++);
+        innerComposite.getEffectContainer().setChannelVar("value", noiseEffect2.getOutput());
+        assertListenerCallCount(calls++);
+
         // Bind noise 2 scale to noise 1 output
         noiseEffect2.getScaleVar().setToVariable(noiseEffect.getOutput());
         assertListenerCallCount(calls++);

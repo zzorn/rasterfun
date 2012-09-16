@@ -24,13 +24,13 @@ public class BuilderTest {
 
     @Before
     public void setUp() throws Exception {
-        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("roses", "violets"), 0, 1);
+        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("roses", "violets"), channelsList(), 0, 1);
     }
 
     @Test
     public void testPictureCalculation() throws CompilationException {
         // Create builder with some output
-        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("xs", "ys"), 0, 1);
+        rendererBuilder = new RendererBuilder("TestPic", 100, 100, channelsList("xs", "ys"), channelsList(), 0, 1);
         rendererBuilder.addChannelAssignment("xs", "x");
         rendererBuilder.addChannelAssignment("ys", "y");
 

@@ -6,9 +6,7 @@ import org.rasterfun.effect.variable.*;
 import org.rasterfun.library.GeneratorElement;
 import org.rasterfun.utils.ParameterChecker;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for effect implementations.
@@ -24,6 +22,8 @@ public abstract class EffectBase extends AbstractEffect {
             notifyEffectChanged();
         }
     };
+
+    private final Set<String> requiredChannels = new LinkedHashSet<String>(4);
 
     @Override
     public final GeneratorElement copy() {
@@ -72,6 +72,11 @@ public abstract class EffectBase extends AbstractEffect {
         return Collections.unmodifiableList(outputVariables);
     }
 
+    @Override
+    public void getRequiredChannels(Set<String> channelsOut) {
+        channelsOut.addAll(requiredChannels);
+    }
+
     public final <T> InputVariable addInput(String name, T initialValue, String description, Class<T> type) {
         ParameterChecker.checkIsIdentifier(name, "name");
         ParameterChecker.checkNonEmptyString(description, "description");
@@ -113,28 +118,42 @@ public abstract class EffectBase extends AbstractEffect {
     @Override
     public void generateCode(RendererBuilder builder, String effectNamespace, EffectContainer container) {
 
-        beforeBuildSource(builder, effectNamespace + "_before", container);
+        beforeBuildSource(builder, effectNamespace + "before", container);
 
         // Generate code for output variables
         int varId = 0;
         for (OutputVariable variable : outputVariables) {
 
             // Determine id for variable
-            variable.setCodeIdentifier(effectNamespace + "_" + varId);
+            variable.setCodeIdentifier(effectNamespace + varId);
 
             // Build variable source
-            String localNamespace = effectNamespace + "_" + varId + "_internal_";
+            String localNamespace = effectNamespace + varId + "_internal_";
             variable.buildSource(builder, container, this, localNamespace);
 
             varId++;
         }
 
-        afterBuildSource(builder, effectNamespace + "_after", container);
+        afterBuildSource(builder, effectNamespace + "after", container);
 
     }
 
     protected void beforeBuildSource(RendererBuilder builder, String namespace, EffectContainer container) {}
     protected void afterBuildSource(RendererBuilder builder, String namespace, EffectContainer container) {}
 
+    protected final void requireChannel(String channelName) {
+        requiredChannels.add(channelName);
+    }
+
+    protected final void requireValueChannel() {
+        requiredChannels.add(VALUE);
+    }
+
+    protected final void requireRGBAChannels() {
+        requiredChannels.add(RED);
+        requiredChannels.add(GREEN);
+        requiredChannels.add(BLUE);
+        requiredChannels.add(ALPHA);
+    }
 
 }

@@ -7,6 +7,7 @@ import org.rasterfun.effect.variable.OutputVariable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Something that contains effects, and forms a namespace for them.
@@ -122,6 +123,11 @@ public interface EffectContainer {
      * @return the names of the supported channels.
      */
     Collection<String> getChannels();
+
+    /**
+     * Puts the names of the channels used in this effect container and any effects to the channelsOut set.
+     */
+    void getRequiredChannels(Set<String> channelsOut);
 
     /**
      * @return a copy of this container.

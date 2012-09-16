@@ -10,6 +10,7 @@ import org.rasterfun.library.GeneratorElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An effect that consist of a number of other effects, applied in sequence.
@@ -68,6 +69,10 @@ public final class CompositeEffect extends AbstractEffect {
         return outputVars;
     }
 
+    @Override
+    public void getRequiredChannels(Set<String> channelsOut) {
+        effectContainer.getRequiredChannels(channelsOut);
+    }
 
 
     @Override

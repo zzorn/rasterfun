@@ -319,6 +319,21 @@ public class EffectContainerImpl implements EffectContainer {
     }
 
     @Override
+    public void getRequiredChannels(Set<String> channelsOut) {
+        // TODO: Add the channels we read anything from
+
+        // Add the channels we assign anything to
+        for (Map.Entry<String, OutputVariable> entry : channels.entrySet()) {
+            if (entry.getValue() != null) channelsOut.add(entry.getKey());
+        }
+
+        // Add the channels used by effects
+        for (Effect effect : effects) {
+            effect.getRequiredChannels(channelsOut);
+        }
+    }
+
+    @Override
     public EffectContainer copy() {
         final EffectContainerImpl theCopy = new EffectContainerImpl();
 

@@ -42,7 +42,9 @@ public class RendererBuilder {
     private final String name;
     private final int width;
     private final int height;
-    private final List<String> channels;
+    private final List<String> pictureChannels;
+    private final List<String> temporaryChannels;
+    private final Set<String> allChannels;
     private final int index;
     private final int count;
     private final float relativeIndex;
@@ -58,18 +60,26 @@ public class RendererBuilder {
     private final Set<Class<?>> alreadyImported = new HashSet<Class<?>>();
 
 
-    public RendererBuilder(String name, int width, int height, Collection<String> channels, int currentIndex, int totalCount) {
+    public RendererBuilder(String name, int width, int height, Collection<String> pictureChannels, Collection<String> temporaryChannels, int currentIndex, int totalCount) {
         this.name = name;
         this.width = width;
         this.height = height;
-        this.channels = new ArrayList<String>(channels);
+        this.pictureChannels = new ArrayList<String>(pictureChannels);
+        this.temporaryChannels = new ArrayList<String>(temporaryChannels);
+        this.allChannels = new LinkedHashSet<String>();
         this.index = currentIndex;
         this.count = totalCount;
         this.relativeIndex = totalCount == 1 ? 0.5f : (float) currentIndex / (totalCount - 1);
 
+        // Setup channels
+        this.temporaryChannels.removeAll(this.pictureChannels);
+        allChannels.addAll(pictureChannels);
+        allChannels.addAll(temporaryChannels);
+
+
         // Ensure channel names are valid
         int channelIndex = 0;
-        for (String channelName : getChannels()) {
+        for (String channelName : allChannels) {
             ParameterChecker.checkIsIdentifier(channelName, "name for channel number " + (channelIndex++));
         }
 
@@ -85,37 +95,42 @@ public class RendererBuilder {
 
         // Add code to get the channel values
         channelIndex = 0;
-        for (String channel : getChannels()) {
+        for (String channel : this.pictureChannels) {
             final String expression = PIXEL_DATA+"[" + PIXEL_INDEX + " + " + channelIndex + "]";
             addVariable(BEFORE_PIXEL, CHANNEL_PREFIX + channel, expression, Float.class, false);
             channelIndex++;
         }
 
+        // Add code to initialize the temporary channels
+        for (String channel : this.temporaryChannels) {
+            addVariable(BEFORE_PIXEL, CHANNEL_PREFIX + channel, "0f", Float.class, false);
+        }
+
         // Add code to write the updated channel values
         channelIndex = 0;
-        for (String channel : getChannels()) {
+        for (String channel : this.pictureChannels) {
             addSourceLine(AFTER_PIXEL,
                           PIXEL_DATA + "[" + PIXEL_INDEX + " + " + channelIndex + "] = " + CHANNEL_PREFIX + channel);
             channelIndex++;
         }
     }
 
-    public String getChannelVariable(int channelIndex) {
-        if (channelIndex < 0 || channelIndex >= getChannelCount()) {
+    public String getPictureChannelVariable(int channelIndex) {
+        if (channelIndex < 0 || channelIndex >= getPictureChannelCount()) {
             throw new IllegalArgumentException("There is no channel with the index " + channelIndex + ", " +
-                                               "valid channels indexes are: 0.." + (getChannelCount() - 1));
+                                               "valid channels indexes are: 0.." + (getPictureChannelCount() - 1));
         }
-        return getChannelVariable(channels.get(channelIndex));
+        return getChannelVariable(pictureChannels.get(channelIndex));
     }
 
     public String getChannelVariable(String channelName) {
-        for (String existingChannelName : channels) {
+        for (String existingChannelName : allChannels) {
             if (channelName.equals(existingChannelName)) {
-                return VAR_PREFIX + existingChannelName;
+                return CHANNEL_PREFIX + existingChannelName;
             }
         }
         throw new IllegalArgumentException("There is no channel with the name '" + channelName + "', valid channels are: " +
-                                           Arrays.toString(channels.toArray()));
+                                           Arrays.toString(allChannels.toArray()));
     }
 
     // Helper methods for adding variables, contexts, etc.
@@ -187,7 +202,7 @@ public class RendererBuilder {
     public void addChannelAssignment(String channel, String expression) {
         ParameterChecker.checkNotNull(channel, "location");
         ParameterChecker.checkNotNull(expression, "variableType");
-        ParameterChecker.checkContained(channel, channels, "channels");
+        ParameterChecker.checkContained(channel, allChannels, "allChannels");
 
         addSourceLine(AT_PIXEL, CHANNEL_PREFIX + channel + " = " + expression);
     }
@@ -281,8 +296,9 @@ public class RendererBuilder {
                  "                                    final int calculatorIndex) {\n" +
                  "    \n"+
                  "    // Check that the passed in picture has the correct number of channels\n"+
-                 "    if (channelNames.length != "+getChannelCount()+") \n" +
-                 "      throw new IllegalArgumentException(\"The channel count should be correct, expected "+getChannelCount()+", but got \"+channelNames.length+\".\");\n"+
+                 "    if (channelNames.length != "+ getPictureChannelCount()+") \n" +
+                 "      throw new IllegalArgumentException(\"The channel count should be correct, expected "+
+                 getPictureChannelCount()+", but got \"+channelNames.length+\".\");\n"+
                  sourcesFor(BEFORE_LOOP) +
                  "    // Set up progress reporting\n"+
                  "    final int progressReportInterval = (endY - startY) / "+PROGRESS_REPORT_STEPS+";\n" +
@@ -293,7 +309,7 @@ public class RendererBuilder {
                  "    final float relYStep = (height == 1) ? 0 : 1f / (height - 1);\n"+
                  "    float relX;\n"+
                  "    float relY = (height == 1) ? 0.5f : (float)startY / (height - 1);\n"+
-                 "    int pixelIndex = (startY * width + startX) * "+getChannelCount()+";\n" +
+                 "    int pixelIndex = (startY * width + startX) * "+ getPictureChannelCount()+";\n" +
                  "    for (int y = startY; (y < endY) && running; y++) {\n" +
 //                             "       try {Thread.sleep(1);} catch (Exception e) {}\n" +
                  sourcesFor(BEFORE_LINE) +
@@ -303,7 +319,7 @@ public class RendererBuilder {
                  sourcesFor(BEFORE_PIXEL) +
                  sourcesFor(AT_PIXEL) +
                  sourcesFor(AFTER_PIXEL) +
-                 "        "+PIXEL_INDEX+" += "+getChannelCount()+";\n" +
+                 "        "+PIXEL_INDEX+" += "+ getPictureChannelCount()+";\n" +
                  "        relX += relXStep;\n" +
                  "      }\n" +
                  sourcesFor(AFTER_LINE) +
@@ -449,15 +465,15 @@ public class RendererBuilder {
     /**
      * @return number of channels in the generated picture.
      */
-    public int getChannelCount() {
-        return channels.size();
+    public int getPictureChannelCount() {
+        return pictureChannels.size();
     }
 
     /**
      * @return names of the channels in the generated picture.
      */
-    public List<String> getChannels() {
-        return Collections.unmodifiableList(channels);
+    public List<String> getPictureChannels() {
+        return Collections.unmodifiableList(pictureChannels);
     }
 
 
@@ -468,13 +484,15 @@ public class RendererBuilder {
                "\n";
     }
 
+    /*
     public boolean hasChannel(String channel) {
         if (channel == null) return false;
-        for (String s : getChannels()) {
+        for (String s : getPictureChannels()) {
             if (channel.equals(s)) return true;
         }
         return false;
     }
+    */
 
 
     private static class ObjectParameter {

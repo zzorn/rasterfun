@@ -215,7 +215,7 @@ public class PictureCalculations {
                 final String   name         = builder.getName();
                 final int      width        = builder.getWidth();
                 final int      height       = builder.getHeight();
-                final List<String> channels = builder.getChannels();
+                final List<String> channels = builder.getPictureChannels();
 
                 // Check the passed in images, if any are missing or the wrong size then we re-create them
                 Picture picture = getPictureAtOrNull(pictures, pictureIndex);
