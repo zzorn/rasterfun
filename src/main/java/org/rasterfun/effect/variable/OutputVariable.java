@@ -14,7 +14,6 @@ import static org.rasterfun.core.compiler.SourceLocation.AT_PIXEL;
  * Represents code fields created by effects, or from the picture generator parameters.
  * Can generate an unique variable name to the source code.
  */
-// TODO: Remove channel from here, add to effect.  For each channel allow specifying what output variable to write there, if any.  Same variable could be written to many channels.
 public class OutputVariable extends VariableBase {
 
     private List<InputVariable> users = new ArrayList<InputVariable>();

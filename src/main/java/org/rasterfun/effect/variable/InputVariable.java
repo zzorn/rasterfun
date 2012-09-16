@@ -12,7 +12,6 @@ import org.rasterfun.utils.ParameterChecker;
  */
 // TODO: Should we return an editor directly, or pass parameters to editor from here?
 // We need e.g. range information.  Maybe input variable subtype for numbers with range info?
-// TODO: Store references to input variables as variable name, pass in map of collected variable names + effect id etc when generating source/expression
 public class InputVariable extends VariableBase {
 
     private OutputVariable sourceVariable;

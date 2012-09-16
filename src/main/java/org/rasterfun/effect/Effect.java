@@ -13,10 +13,8 @@ import java.util.Set;
  * Used to calculate the value at a specific point.
  * Creates the calculation as a java snippet that is compiled to bytecode for better performance.
  */
-// TODO: generator parameters / properties are visible as outputVariables to effects.
-// TODO: Variables and variable binding might completely replace parameters
-// Variables should have availability also, based on source location
-// TODO: Rethink namespace concept, best if it is independent of the effect (pass in where needed)
+// TODO: generator parameters, and channels are visible as outputVariables to effects.
+// TODO: Variables should have availability also, based on source location
 public interface Effect extends GeneratorElement {
 
     // Names for common channels
