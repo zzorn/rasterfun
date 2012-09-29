@@ -1,30 +1,23 @@
 package org.rasterfun.distribution;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
  * Note: Do not use for any large number of points!
  */
-public class BruteForceDistribution implements Distribution {
+public class BruteForceDistribution extends ManualDistributionBase {
 
     private List<DistributionPoint> points = new ArrayList<DistributionPoint>();
 
 
-    public DistributionPoint addPoint() {
-        return addPoint(new DistributionPoint());
-    }
-
+    @Override
     public DistributionPoint addPoint(DistributionPoint point) {
         points.add(point);
         return point;
     }
 
-    public void addPoints(Collection<DistributionPoint> pointsToAdd) {
-        points.addAll(pointsToAdd);
-    }
-
+    @Override
     public void removePoint(DistributionPoint point) {
         points.remove(point);
     }
