@@ -3,8 +3,10 @@ package org.rasterfun.distribution;
 import java.util.List;
 
 /**
- *
+ * Point distribution over space / over an area.
+ * Basis for noise and texture particles.
  */
+// TODO: Respect wraps
 public interface Distribution {
 
     DistributionPoint getClosestPoint(float x, float y, DistributionPoint closestOut);
