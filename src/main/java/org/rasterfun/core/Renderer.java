@@ -25,7 +25,7 @@ public interface Renderer {
      * @param width width of the picture.
      * @param height height of the picture.
      * @param channelNames the names of the channels in the picture, in the order they are stored.
-     * @param pixelData an array with width * height * getChannels().length number of float entries.
+     * @param pixelData an array with width * height * channelNames.length number of float entries.
      * @param startX the x column to start calculating at.
      * @param startY the y row to start calculating at.
      * @param endX the x column to stop calculating before.

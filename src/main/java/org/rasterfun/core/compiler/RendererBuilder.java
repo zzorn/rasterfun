@@ -355,7 +355,7 @@ public class RendererBuilder {
                  sourcesFor(METHODS) +
                  "}\n\n";
 
-        // TODO: DEBUG
+        // TODO: DEBUG, remove
         System.out.println("source = " + source);
 
         try {
